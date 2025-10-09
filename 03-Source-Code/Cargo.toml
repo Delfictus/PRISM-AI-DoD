@@ -1,0 +1,221 @@
+[package]
+name = "prism-ai"
+version = "0.1.0"
+edition = "2021"
+authors = ["Prism-AI Research Team"]
+description = "PRISM: Predictive Reasoning via Information-theoristic Statistical Manifolds - GPU-accelerated neuromorphic and quantum computing analogues"
+license = "MIT"
+build = "build.rs"
+
+[workspace]
+members = [
+    "src/neuromorphic",
+    "src/quantum",
+    "src/foundation",
+    "src/shared-types",
+    "src/prct-core",
+    "src/adapters",
+    "src/mathematics",
+    "validation",
+]
+
+[features]
+default = ["cuda"]
+# Real CUDA GPU acceleration (requires NVIDIA drivers + RTX GPU)
+cuda = ["neuromorphic-engine/cuda", "prct-core/cuda", "dep:bindgen"]
+# MLIR support for advanced optimizations
+mlir = []
+# CPU-based simulation (DEPRECATED - only for testing without GPU)
+simulation = ["neuromorphic-engine/simulation"]
+
+[build-dependencies]
+cc = "1.0"
+bindgen = { version = "0.69", optional = true }
+cuda-config = "0.1"
+
+[dependencies]
+neuromorphic-engine = { path = "src/neuromorphic", default-features = false, features = ["cuda"] }
+quantum-engine = { path = "src/quantum" }
+platform-foundation = { path = "src/foundation" }
+shared-types = { path = "src/shared-types" }
+prct-core = { path = "src/prct-core", features = [] }
+prct-adapters = { path = "src/adapters" }
+mathematics = { path = "src/mathematics" }
+
+tokio = { version = "1.0", features = ["full"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+anyhow = "1.0"
+rayon = "1.10"
+ndarray = { version = "0.15", default-features = false, features = ["std"] }
+approx = "0.5"
+num-complex = "0.4"
+nalgebra = "0.32"
+rustfft = "6.1"
+statrs = "0.16"
+kdtree = "0.7"
+ordered-float = "3.0"
+env_logger = "0.11"
+log = "0.4"
+rand = "0.8"
+rand_chacha = "0.3"
+rand_distr = "0.4"
+uuid = { version = "1.0", features = ["v4"] }
+chrono = "0.4"
+# cudarc = "0.12"  # Removed - using patched version for CUDA 12.8 support
+dashmap = "5.5"
+bincode = "1.3"
+tempfile = "3.8"
+sha2 = "0.10"
+fastrand = "2.0"
+parking_lot = "0.12"
+cudarc = { version = "0.17", features = ["driver", "nvrtc", "cublas", "curand"] }
+candle-core = { version = "0.9", features = ["cuda"] }
+candle-nn = "0.9"
+colored = "2.1"
+
+[[example]]
+name = "platform_demo"
+path = "examples/platform_demo.rs"
+
+[[example]]
+name = "simple_usage"
+path = "examples/simple_usage.rs"
+
+[[example]]
+name = "financial_validation"
+path = "examples/financial_validation.rs"
+
+[[example]]
+name = "working_demo"
+path = "examples/working_demo.rs"
+
+[[example]]
+name = "gpu_performance_demo"
+path = "examples/gpu_performance_demo.rs"
+
+[[example]]
+name = "performance_optimization_demo"
+path = "examples/performance_optimization_demo.rs"
+
+[[example]]
+name = "rtx5070_validation_demo"
+path = "examples/rtx5070_validation_demo.rs"
+
+[[example]]
+name = "test_gpu_detection"
+path = "examples/test_gpu_detection.rs"
+
+[[example]]
+name = "stdp_learning_demo"
+path = "examples/stdp_learning_demo.rs"
+
+[[example]]
+name = "prct_demonstration"
+path = "examples/prct_demonstration.rs"
+
+[[example]]
+name = "streaming_demo"
+path = "examples/streaming_demo.rs"
+
+[[example]]
+name = "error_handling_demo"
+path = "examples/error_handling_demo.rs"
+
+[[example]]
+name = "stress_test_demo"
+path = "examples/stress_test_demo.rs"
+
+[[example]]
+name = "dimacs_benchmark_runner_gpu"
+path = "examples/dimacs_benchmark_runner_gpu.rs"
+
+[[example]]
+name = "test_gpu_minimal"
+path = "examples/test_gpu_minimal.rs"
+
+[[example]]
+name = "debug_gpu_coloring"
+path = "examples/debug_gpu_coloring.rs"
+
+[[example]]
+name = "verify_gpu_usage"
+path = "examples/verify_gpu_usage.rs"
+
+[[example]]
+name = "test_gpu_tsp"
+path = "examples/test_gpu_tsp.rs"
+
+[[example]]
+name = "tsp_benchmark_runner_gpu"
+path = "examples/tsp_benchmark_runner_gpu.rs"
+
+[[example]]
+name = "large_scale_tsp_demo"
+path = "examples/large_scale_tsp_demo.rs"
+
+[[example]]
+name = "qubo_loihi_benchmark"
+path = "examples/qubo_loihi_benchmark.rs"
+
+[[example]]
+name = "lkh_comparison_benchmark"
+path = "examples/lkh_comparison_benchmark.rs"
+
+[[example]]
+name = "lkh_large_scale_comparison"
+path = "examples/lkh_large_scale_comparison.rs"
+
+[[example]]
+name = "full_platform_benchmark"
+path = "examples/full_platform_benchmark.rs"
+
+[[example]]
+name = "full_platform_coloring_benchmark"
+path = "examples/full_platform_coloring_benchmark.rs"
+
+[[example]]
+name = "comprehensive_benchmark"
+path = "examples/comprehensive_benchmark.rs"
+
+[lib]
+name = "prism_ai"
+path = "src/lib.rs"
+
+[[test]]
+name = "transfer_entropy"
+path = "tests/transfer_entropy_tests.rs"
+
+[dev-dependencies]
+criterion = { version = "0.5", features = ["html_reports"] }
+
+[[bench]]
+name = "performance_benchmarks"
+harness = false
+
+# ═══════════════════════════════════════════════════════════════════════════
+# DEPENDENCY COMPATIBILITY PATCH
+# ═══════════════════════════════════════════════════════════════════════════
+#
+# Purpose: Resolve CUDA 12.8 compatibility issue
+#
+# Problem:
+#   - cudarc v0.12.1 (crates.io) only supports CUDA up to 12.6
+#   - System has CUDA 12.8 installed
+#   - candle-core depends on cudarc v0.12.1
+#   - Build fails: "Unsupported cuda toolkit version: 12.8"
+#
+# Solution:
+#   - Override cudarc dependency with latest git version
+#   - Git main branch supports CUDA 12.8 (verified in build.rs)
+#   - Applies to ALL transitive dependencies (candle, neuromorphic, quantum)
+#
+# Governance:
+#   - Constitutional Amendment proposed: Task 0.3 DependencyValidator
+#   - Future: Automated CUDA version compatibility checking
+#   - CI/CD: Dependency validation on every PR
+#
+# ═══════════════════════════════════════════════════════════════════════════
+[patch.crates-io]
+# Pinned to specific commit for reproducibility (CUDA 12.8 support)
+cudarc = { git = "https://github.com/coreylowman/cudarc.git", rev = "fdf313cc10cf5504953ac9fe6a5dc78dc6ec4152" }

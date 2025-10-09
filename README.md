@@ -1,97 +1,145 @@
-# PRISM-AI Obsidian Vault
+# PRISM-AI DoD
+## Unified Platform: World Record + PWSA SBIR + LLM Orchestration
 
-Welcome to the PRISM-AI development knowledge base!
-
-## Opening This Vault in Obsidian
-
-1. **Install Obsidian** (if not already installed)
-   - Download from https://obsidian.md
-   - Available for Windows, Mac, and Linux
-
-2. **Open Vault**
-   - Launch Obsidian
-   - Click "Open folder as vault"
-   - Navigate to: `/home/diddy/Desktop/PRISM-AI/docs/obsidian-vault/`
-   - Click "Open"
-
-3. **Start with Home**
-   - Open `00-Index/Home.md`
-   - Follow the links to explore
-
-## What's Inside
-
-This vault contains comprehensive documentation for PRISM-AI development:
-
-- **00-Index/** - Main navigation and dashboard
-- **01-Project-Overview/** - High-level project information
-- **02-Architecture/** - System design and structure
-- **03-Modules/** - Module-by-module documentation
-- **04-Development/** - Development guides and workflows
-- **05-Status/** - Progress tracking and current status
-- **06-Issues/** - Bug tracking and TODO lists
-- **07-API-Reference/** - API documentation
-- **08-Performance/** - Benchmarks and optimization
-- **09-Testing/** - Test documentation
-
-## Quick Navigation
-
-Start here: [[Home]]
-
-Essential pages:
-- [[Project Overview]] - What is PRISM-AI?
-- [[Current Status]] - What's working now?
-- [[Getting Started]] - How to set up and develop
-- [[Architecture Overview]] - System design
-- [[Active Issues]] - What needs work?
-
-## Features
-
-- Full-text search (Ctrl/Cmd + O)
-- Graph view of connections
-- Daily notes for tracking progress
-- Tags for organization
-- Markdown formatting
-- Embedded images and diagrams
-
-## Recommended Plugins
-
-Core (built-in):
-- Graph view
-- Backlinks
-- Quick switcher
-- File explorer
-
-Community (optional):
-- Dataview - For querying notes
-- Calendar - For daily notes
-- Kanban - For task management
-
-## Maintenance
-
-This vault is automatically updated during development sessions. Each major change to the codebase should trigger updates to:
-
-- [[Current Status]]
-- [[Recent Changes]]
-- [[Active Issues]]
-
-## Contributing
-
-When adding new documentation:
-
-1. Place files in appropriate folder
-2. Use [[Wikilinks]] for internal references
-3. Update relevant index pages
-4. Keep [[Home]] dashboard current
-5. Tag with relevant categories
-
-## Support
-
-- **Project:** https://github.com/Delfictus/PRISM-AI
-- **Contacts:**
-  - Technical: BV@Delfictus.com
-  - Scientific: IS@Delfictus.com
+**Status:** Active Development
+**Hardware:** 8× H200 GPUs
+**Timeline:** 30 days to deployment
 
 ---
 
-**Last Updated:** 2025-10-04
-**Vault Version:** 1.0
+## Triple Mission
+
+### 1. Graph Coloring World Record (Alpha)
+- **Target:** ≤82 colors on DSJC1000-5
+- **Current:** 130 colors
+- **Plan:** [06-Plans/ULTRA_TARGETED_WORLD_RECORD_PLAN.md](06-Plans/ULTRA_TARGETED_WORLD_RECORD_PLAN.md)
+
+### 2. PWSA Data Fusion SBIR (Bravo)
+- **Target:** $1.5-2M Phase II funding
+- **Requirement:** <5ms fusion latency
+- **Plan:** [01-Rapid-Implementation/](01-Rapid-Implementation/)
+
+### 3. Thermodynamic LLM Orchestration (Charlie)
+- **Target:** Patent-worthy consensus system
+- **Innovation:** Physics-based multi-LLM orchestration
+- **Plan:** [06-Plans/THERMODYNAMIC_LLM_INTEGRATION.md](06-Plans/THERMODYNAMIC_LLM_INTEGRATION.md)
+
+---
+
+## Repository Structure
+
+```
+DoD/
+├── 00-Constitution/
+│   ├── IMPLEMENTATION_CONSTITUTION.md  # Hard constraints & enforcement
+│   └── GOVERNANCE_ENGINE.md           # Runtime governance implementation
+│
+├── 01-Rapid-Implementation/           # PWSA SBIR 30-day sprint
+│   ├── 30-Day-Sprint.md
+│   └── Week-1-Core-Infrastructure.md
+│
+├── 03-Source-Code/                    # Latest working PRISM-AI code
+│   ├── Cargo.toml
+│   └── src/
+│       ├── core/                      # Shared components (ALL missions)
+│       ├── quantum/                   # Quantum annealing
+│       ├── neuromorphic/              # Spiking networks
+│       └── integration/               # Transfer entropy, active inference
+│
+├── 06-Plans/
+│   ├── ULTRA_TARGETED_WORLD_RECORD_PLAN.md
+│   └── THERMODYNAMIC_LLM_INTEGRATION.md
+│
+└── PHASE_6_EXPANDED_CAPABILITIES.md   # Platform transformation vision
+```
+
+---
+
+## Quick Start
+
+### Build & Test
+```bash
+cd 03-Source-Code
+cargo build --release --features constitutional_validation
+cargo test --all-features
+```
+
+### Run Governance Checks
+```bash
+cargo run --bin governance_validator
+```
+
+### Deploy Mission
+```bash
+# Alpha: World Record
+cargo run --release --bin world_record_attempt
+
+# Bravo: PWSA Demo
+cargo run --release --bin pwsa_demo
+
+# Charlie: LLM Orchestration
+cargo run --release --bin llm_consensus
+```
+
+---
+
+## Governance Enforcement
+
+### Build-Time
+- Mandatory trait implementation
+- 95% test coverage requirement
+- Memory limit validation
+
+### Runtime
+- Entropy non-decreasing check
+- Convergence monitoring
+- GPU utilization >80%
+- Automatic violation handling
+
+### Deployment Gates
+- Performance benchmarks must pass
+- Security audit required
+- Constraint validation mandatory
+
+---
+
+## Shared Infrastructure
+
+All three missions leverage:
+- **Transfer Entropy** - Information flow analysis
+- **Active Inference** - Free energy minimization
+- **Neuromorphic Computing** - Spike-based processing
+- **GPU Acceleration** - H200 optimization
+- **Constitutional Constraints** - Thermodynamic laws
+
+---
+
+## Development Timeline
+
+**Week 1:** Foundation
+- [x] Implementation Constitution
+- [x] Governance Engine
+- [x] Core source code
+- [ ] CI/CD pipeline
+
+**Week 2:** Mission-Specific
+- [ ] Alpha: TDA integration
+- [ ] Bravo: PWSA adapters
+- [ ] Charlie: LLM clients
+
+**Week 3:** Integration
+- [ ] Cross-mission synergies
+- [ ] Unified benchmarking
+- [ ] Performance optimization
+
+**Week 4:** Delivery
+- [ ] World record attempt
+- [ ] SBIR demonstration
+- [ ] Patent filing
+
+---
+
+## Contact
+
+**Classification:** UNCLASSIFIED // FOR OFFICIAL USE ONLY
+**Distribution:** PRISM-AI Development Team

@@ -1,0 +1,29 @@
+[package]
+name = "platform-foundation"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+neuromorphic-engine = { path = "../neuromorphic" }
+quantum-engine = { path = "../quantum" }
+tokio = { version = "1.0", features = ["full"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+anyhow = "1.0"
+uuid = { version = "1.0", features = ["v4", "serde"] }
+crossbeam = "0.8"
+dashmap = "6.0"
+parking_lot = "0.12"
+chrono = { version = "0.4", features = ["serde"] }
+ndarray = "0.15"
+num-complex = "0.4"
+nalgebra = "0.33"
+async-trait = "0.1"
+log = "0.4"
+reqwest = { version = "0.11", default-features = false, features = ["json", "rustls-tls"] }
+rand = "0.8"
+toml = "0.8"
+
+[lib]
+name = "platform_foundation"
+path = "src/lib.rs"
