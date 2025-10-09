@@ -20,6 +20,10 @@ pub mod resilience;
 pub mod optimization;
 pub mod cma; // Phase 6: Causal Manifold Annealing
 
+// PWSA (Proliferated Warfighter Space Architecture) Integration
+#[cfg(feature = "pwsa")]
+pub mod pwsa;
+
 // GPU acceleration modules (OBSOLETE - quantum_mlir replaces this)
 // #[cfg(feature = "cuda")]
 // pub mod cuda_bindings;

@@ -25,6 +25,8 @@ default = ["cuda"]
 cuda = ["neuromorphic-engine/cuda", "prct-core/cuda", "dep:bindgen"]
 # MLIR support for advanced optimizations
 mlir = []
+# PWSA (Proliferated Warfighter Space Architecture) Integration
+pwsa = ["cuda"]
 # CPU-based simulation (DEPRECATED - only for testing without GPU)
 simulation = ["neuromorphic-engine/simulation"]
 
