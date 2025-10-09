@@ -2,6 +2,9 @@
 .obsidian/workspace.json
 .obsidian/workspace-mobile.json
 
+# Ignore nested DoD folders (old vault structure)
+DoD/
+
 # Obsidian cache
 .obsidian/cache
 
