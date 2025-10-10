@@ -829,15 +829,53 @@ pub struct OctTelemetry {
 }
 
 /// IR sensor frame structure
+///
+/// **Enhancement 2:** Now supports real pixel data for operational deployment
+///
+/// Supports two modes:
+/// - **Operational:** Process raw 1024×1024 pixel arrays from SDA sensors
+/// - **Demo:** Use pre-computed metadata (backward compatible)
 #[derive(Debug, Clone)]
 pub struct IrSensorFrame {
+    // === SENSOR IDENTIFICATION ===
     pub sv_id: u32,
     pub timestamp: SystemTime,
     pub width: u32,
     pub height: u32,
+
+    // === RAW PIXEL DATA (Enhancement 2) ===
+    /// Raw pixel intensities (width × height)
+    /// None = metadata-only mode (current demos)
+    /// Some = full pixel processing (operational mode with real SDA data)
+    pub pixels: Option<Array2<u16>>,
+
+    // === DERIVED SPATIAL FEATURES (Enhancement 2) ===
+    /// Detected hotspot positions [(x, y), ...]
+    /// Computed from pixels if available, otherwise empty
+    pub hotspot_positions: Vec<(f64, f64)>,
+
+    /// Intensity histogram (16 bins)
+    /// Computed from pixels, or None if metadata-only
+    pub intensity_histogram: Option<Vec<usize>>,
+
+    /// Spatial entropy [0, 1] (Shannon entropy)
+    /// Computed from histogram, or None if metadata-only
+    pub spatial_entropy: Option<f64>,
+
+    // === COMPUTED METADATA (Backward Compatible) ===
+    /// Maximum pixel intensity
+    /// Computed from pixels if available, otherwise provided
     pub max_intensity: f64,
+
+    /// Background intensity level
+    /// Computed from pixels if available, otherwise provided
     pub background_level: f64,
+
+    /// Number of detected hotspots
+    /// Computed from pixels if available, otherwise provided
     pub hotspot_count: u32,
+
+    // === EXISTING FIELDS (Unchanged) ===
     pub centroid_x: f64,
     pub centroid_y: f64,
     pub velocity_estimate_mps: f64,

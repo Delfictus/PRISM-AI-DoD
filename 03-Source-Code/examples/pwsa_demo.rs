@@ -125,9 +125,16 @@ impl TelemetryGenerator {
             timestamp: SystemTime::now(),
             width: 1024,
             height: 1024,
+            // Enhancement 2: Pixel data support (None for demo mode)
+            pixels: None,
+            hotspot_positions: Vec::new(),
+            intensity_histogram: None,
+            spatial_entropy: None,
+            // Metadata (computed values for demo)
             max_intensity: thermal * 1000.0,
             background_level: 100.0,
             hotspot_count: hotspots,
+            // Existing fields
             centroid_x: self.rng.gen_range(0.0..1024.0),
             centroid_y: self.rng.gen_range(0.0..1024.0),
             velocity_estimate_mps: velocity,
