@@ -245,13 +245,20 @@ All 20 tasks finished, all documentation delivered.
 ### Week 4: Stakeholder Demos & Submission (Days 22-30)
 **Focus:** Demonstrations and final submission
 
-### Post-SBIR: High Priority Enhancements
-**Reference:** See `HIGH-PRIORITY-ENHANCEMENTS-TODO.md`
-- Enhancement 1: ML Threat Classifier (2-3 days)
-- Enhancement 2: Spatial Entropy (4-6 hours)
-- Enhancement 3: Frame Tracking (1-2 days)
+### Current Work: Enhancement 2 (Spatial Entropy)
+**Status:** ⏳ STARTING NOW
+**Reference:** See `ENHANCEMENT-2-TODO.md` + `ENHANCEMENT-2-PROGRESS-TRACKER.md`
 
-**Total:** 5-7 days for v2.0 enhancements
+**Tasks:** 14 tasks (12 hours estimated)
+**Focus:** Real pixel processing + Shannon entropy
+**Goal:** Operational readiness for SDA sensor data
+
+**Progress:** 0/14 tasks (0%)
+
+### Post-SBIR: Remaining Enhancements
+- Enhancement 1: ✅ COMPLETE (ML framework ready)
+- Enhancement 2: ⏳ IN PROGRESS (spatial entropy)
+- Enhancement 3: Deferred to Phase II (frame tracking)
 
 ---
 
