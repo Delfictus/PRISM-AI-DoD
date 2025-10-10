@@ -107,7 +107,7 @@ impl TransportLayerAdapter {
         features[1] = telem.bit_error_rate.log10() / -10.0;     // Range: [1e-12, 1e-2]
         features[2] = telem.pointing_error_urad / 100.0;        // Range: [0, 100] microrad
         features[3] = telem.data_rate_gbps / 10.0;              // Range: [0, 10] Gbps
-        features[4] = telem.temperature_c / 100.0;              // Range: [-50, 150] °C
+        features[4] = telem.temperature_c / 100.0;              // Range: [-50, 150]  degC
 
         // Derived features (health indicators)
         features[5] = self.compute_link_quality(telem);
@@ -131,7 +131,7 @@ impl TransportLayerAdapter {
 
     fn compute_link_quality(&self, telem: &OctTelemetry) -> f64 {
         // Heuristic: good power + low BER + low pointing error = high quality
-        let power_score = (telem.optical_power_dbm + 30.0) / 60.0;  // Normalize [-30,30] ’ [0,1]
+        let power_score = (telem.optical_power_dbm + 30.0) / 60.0;  // Normalize [-30,30]   [0,1]
         let ber_score = (-telem.bit_error_rate.log10()) / 10.0;     // Lower is better
         let pointing_score = 1.0 - (telem.pointing_error_urad / 100.0);
 
@@ -147,9 +147,9 @@ impl TransportLayerAdapter {
     }
 
     fn compute_thermal_status(&self, telem: &OctTelemetry) -> f64 {
-        // Thermal health: optimal at 20°C, degraded outside [-20, 60]°C
+        // Thermal health: optimal at 20 degC, degraded outside [-20, 60] degC
         let temp_deviation = (telem.temperature_c - 20.0).abs();
-        let health = 1.0 - (temp_deviation / 80.0);  // Full degradation at ±80°C
+        let health = 1.0 - (temp_deviation / 80.0);  // Full degradation at  80 degC
         health.max(0.0).min(1.0)
     }
 }
@@ -221,12 +221,13 @@ impl TrackingLayerAdapter {
 
         // Active inference for threat classification (Article IV)
         let threat_level = self.classify_threats(&features)?;
+        let confidence = threat_level.iter().cloned().fold(0.0_f64, f64::max);
 
         Ok(ThreatDetection {
             sv_id,
             timestamp: frame.timestamp,
             threat_level,
-            confidence: threat_level.iter().cloned().fold(0.0_f64, f64::max),
+            confidence,
             location: frame.geolocation,
         })
     }
@@ -338,9 +339,9 @@ impl TrackingLayerAdapter {
         let (lat, lon) = location;
 
         // High-threat regions (heuristic)
-        // Korean peninsula: (33-43°N, 124-132°E)
-        // Taiwan Strait: (22-26°N, 118-122°E)
-        // Russia/China border: (40-50°N, 115-135°E)
+        // Korean peninsula: (33-43 degN, 124-132 degE)
+        // Taiwan Strait: (22-26 degN, 118-122 degE)
+        // Russia/China border: (40-50 degN, 115-135 degE)
 
         if (33.0..=43.0).contains(&lat) && (124.0..=132.0).contains(&lon) {
             1.0  // Korean peninsula
@@ -483,7 +484,7 @@ impl PwsaFusionPlatform {
     /// and outputs actionable Mission Awareness.
     ///
     /// # Performance Target
-    /// <5ms end-to-end latency (Transport + Tracking + Ground ’ Awareness)
+    /// <5ms end-to-end latency (Transport + Tracking + Ground   Awareness)
     pub fn fuse_mission_data(
         &mut self,
         transport_telem: &OctTelemetry,
@@ -520,9 +521,9 @@ impl PwsaFusionPlatform {
         let awareness = MissionAwareness {
             timestamp: std::time::SystemTime::now(),
             transport_health: self.assess_transport_health(&transport_features),
-            threat_status: threat_detection.threat_level,
+            threat_status: threat_detection.threat_level.clone(),
             ground_connectivity: self.assess_ground_health(&ground_features),
-            cross_layer_coupling: coupling,
+            cross_layer_coupling: coupling.clone(),
             recommended_actions: self.generate_recommendations(&coupling, &threat_detection),
         };
 
@@ -547,17 +548,17 @@ impl PwsaFusionPlatform {
         let mut coupling = Array2::zeros((3, 3));
 
         // Simplified TE estimation (full implementation uses time-series history)
-        // TE(Transport ’ Tracking): Does link quality predict threat detection?
+        // TE(Transport   Tracking): Does link quality predict threat detection?
         coupling[[0, 1]] = 0.15;  // Weak coupling (links don't directly cause threats)
 
-        // TE(Tracking ’ Transport): Do threats affect link performance?
+        // TE(Tracking   Transport): Do threats affect link performance?
         let threat_level_max = threat.threat_level.iter().cloned().fold(0.0_f64, f64::max);
         coupling[[1, 0]] = threat_level_max * 0.3;  // Threats may trigger rate changes
 
-        // TE(Ground ’ Transport): Ground commands affect link config
+        // TE(Ground   Transport): Ground commands affect link config
         coupling[[2, 0]] = 0.4;  // Strong coupling (ground controls satellites)
 
-        // TE(Transport ’ Ground): Link status reported to ground
+        // TE(Transport   Ground): Link status reported to ground
         coupling[[0, 2]] = 0.5;  // Strong coupling (telemetry downlink)
 
         // Other pairs
