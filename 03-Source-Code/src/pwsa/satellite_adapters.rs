@@ -315,11 +315,317 @@ impl TrackingLayerAdapter {
         }
     }
 
-    fn compute_spatial_entropy(&self, _frame: &IrSensorFrame) -> f64 {
-        // Placeholder: compute Shannon entropy of intensity histogram
-        0.5
+    /// Compute spatial entropy from IR sensor frame
+    ///
+    /// **Enhancement 2:** Now uses real Shannon entropy with multi-tier fallback
+    ///
+    /// Tiers (best to worst):
+    /// 1. Compute from raw pixels (operational mode)
+    /// 2. Use pre-computed histogram
+    /// 3. Use pre-computed entropy
+    /// 4. Approximate from metadata (demo mode)
+    fn compute_spatial_entropy(&self, frame: &IrSensorFrame) -> f64 {
+        // TIER 1: Compute from raw pixels (operational mode)
+        if let Some(ref pixels) = frame.pixels {
+            let histogram = Self::compute_intensity_histogram(pixels, 16);
+            return Self::compute_shannon_entropy(&histogram);
+        }
+
+        // TIER 2: Use pre-computed histogram (if available)
+        if let Some(ref histogram) = frame.intensity_histogram {
+            return Self::compute_shannon_entropy(histogram);
+        }
+
+        // TIER 3: Use pre-computed entropy (if available)
+        if let Some(entropy) = frame.spatial_entropy {
+            return entropy;
+        }
+
+        // TIER 4: Approximate from metadata (demo mode fallback)
+        // Maintains backward compatibility with existing demos
+        self.approximate_entropy_from_metadata(frame)
     }
 
+    /// Approximate spatial entropy from metadata (fallback for demos)
+    ///
+    /// Uses hotspot count as proxy for spatial distribution
+    fn approximate_entropy_from_metadata(&self, frame: &IrSensorFrame) -> f64 {
+        if frame.hotspot_count == 0 {
+            return 0.5;  // Neutral (no clear signal)
+        }
+
+        if frame.hotspot_count == 1 {
+            return 0.2;  // Low entropy (concentrated threat)
+        }
+
+        // Multiple hotspots: Higher entropy (more dispersed)
+        let normalized_count = (frame.hotspot_count as f64 / 10.0).min(1.0);
+        0.2 + normalized_count * 0.6  // Range: 0.2-0.8
+    }
+
+    //=========================================================================
+    // ENHANCEMENT 2: PIXEL PROCESSING ALGORITHMS
+    //=========================================================================
+
+    /// Compute background intensity level from pixel data
+    ///
+    /// Uses 25th percentile (robust to hotspots and outliers)
+    ///
+    /// # Arguments
+    /// * `pixels` - Raw IR sensor pixel array
+    ///
+    /// # Returns
+    /// Background intensity level (robust estimate)
+    fn compute_background_level(pixels: &Array2<u16>) -> f64 {
+        // Collect all pixel values
+        let mut pixel_vec: Vec<u16> = pixels.iter().copied().collect();
+
+        if pixel_vec.is_empty() {
+            return 0.0;
+        }
+
+        // Sort for percentile computation
+        pixel_vec.sort_unstable();
+
+        // Use 25th percentile as background
+        // (Robust to bright hotspots which would skew mean)
+        let idx = pixel_vec.len() / 4;
+
+        pixel_vec.get(idx).copied().unwrap_or(0) as f64
+    }
+
+    /// Detect hotspots from pixel data
+    ///
+    /// Uses adaptive thresholding (3× background level) and simple clustering
+    ///
+    /// # Arguments
+    /// * `pixels` - Raw IR sensor pixel array
+    /// * `background_level` - Background intensity (from compute_background_level)
+    ///
+    /// # Returns
+    /// List of hotspot centroid positions
+    fn detect_hotspots(pixels: &Array2<u16>, background_level: f64) -> Vec<(f64, f64)> {
+        let threshold = (background_level * 3.0) as u16;
+
+        let mut hotspot_pixels = Vec::new();
+
+        // Find all pixels above threshold
+        for ((y, x), &intensity) in pixels.indexed_iter() {
+            if intensity > threshold {
+                hotspot_pixels.push((x as f64, y as f64));
+            }
+        }
+
+        if hotspot_pixels.is_empty() {
+            return Vec::new();
+        }
+
+        // Simple clustering: Group pixels within 10-pixel radius
+        Self::cluster_hotspots(hotspot_pixels, 10.0)
+    }
+
+    /// Cluster hotspot pixels into centroids
+    ///
+    /// Simple connected-components approach
+    fn cluster_hotspots(pixels: Vec<(f64, f64)>, radius: f64) -> Vec<(f64, f64)> {
+        let mut clusters = Vec::new();
+        let mut remaining = pixels;
+
+        while !remaining.is_empty() {
+            // Start new cluster with first pixel
+            let seed = remaining.remove(0);
+            let mut cluster_pixels = vec![seed];
+
+            // Find all pixels within radius
+            let mut i = 0;
+            while i < remaining.len() {
+                let pixel = remaining[i];
+                let dist = ((pixel.0 - seed.0).powi(2) + (pixel.1 - seed.1).powi(2)).sqrt();
+
+                if dist <= radius {
+                    cluster_pixels.push(remaining.remove(i));
+                } else {
+                    i += 1;
+                }
+            }
+
+            // Compute cluster centroid
+            let centroid_x = cluster_pixels.iter().map(|(x, _)| x).sum::<f64>() / cluster_pixels.len() as f64;
+            let centroid_y = cluster_pixels.iter().map(|(_, y)| y).sum::<f64>() / cluster_pixels.len() as f64;
+
+            clusters.push((centroid_x, centroid_y));
+        }
+
+        clusters
+    }
+
+    /// Compute intensity histogram from pixel data
+    ///
+    /// # Arguments
+    /// * `pixels` - Raw IR sensor pixel array
+    /// * `n_bins` - Number of histogram bins (typically 16)
+    ///
+    /// # Returns
+    /// Histogram bin counts
+    fn compute_intensity_histogram(pixels: &Array2<u16>, n_bins: usize) -> Vec<usize> {
+        let min_val = *pixels.iter().min().unwrap_or(&0) as f64;
+        let max_val = *pixels.iter().max().unwrap_or(&0) as f64;
+        let range = max_val - min_val;
+
+        let mut histogram = vec![0; n_bins];
+
+        if range == 0.0 {
+            // All pixels same intensity
+            if !pixels.is_empty() {
+                histogram[0] = pixels.len();
+            }
+            return histogram;
+        }
+
+        // Bin each pixel
+        for &pixel in pixels.iter() {
+            let normalized = (pixel as f64 - min_val) / range;
+            let bin = (normalized * (n_bins - 1) as f64) as usize;
+            histogram[bin.min(n_bins - 1)] += 1;
+        }
+
+        histogram
+    }
+
+    /// Compute Shannon entropy from intensity histogram
+    ///
+    /// Returns normalized entropy [0, 1]
+    /// - 0.0 = Completely ordered (single intensity)
+    /// - 1.0 = Maximum disorder (uniform distribution)
+    ///
+    /// # Arguments
+    /// * `histogram` - Intensity histogram bin counts
+    ///
+    /// # Returns
+    /// Normalized Shannon entropy
+    fn compute_shannon_entropy(histogram: &[usize]) -> f64 {
+        let total_pixels: usize = histogram.iter().sum();
+
+        if total_pixels == 0 {
+            return 0.0;
+        }
+
+        // Shannon entropy: H = -Σ p(i) log2(p(i))
+        let mut entropy = 0.0;
+
+        for &count in histogram {
+            if count > 0 {
+                let p = count as f64 / total_pixels as f64;
+                entropy -= p * p.log2();
+            }
+        }
+
+        // Normalize by maximum possible entropy
+        let max_entropy = (histogram.len() as f64).log2();
+
+        if max_entropy > 0.0 {
+            entropy / max_entropy  // Returns [0, 1]
+        } else {
+            0.0
+        }
+    }
+
+    /// Compute intensity-weighted centroid
+    fn compute_weighted_centroid(pixels: &Array2<u16>) -> (f64, f64) {
+        let mut sum_x = 0.0;
+        let mut sum_y = 0.0;
+        let mut sum_intensity = 0.0;
+
+        for ((y, x), &intensity) in pixels.indexed_iter() {
+            let weight = intensity as f64;
+            sum_x += x as f64 * weight;
+            sum_y += y as f64 * weight;
+            sum_intensity += weight;
+        }
+
+        if sum_intensity > 0.0 {
+            (sum_x / sum_intensity, sum_y / sum_intensity)
+        } else {
+            (0.0, 0.0)
+        }
+    }
+
+    /// Estimate thermal signature from pixel intensity
+    fn estimate_thermal_signature(pixels: &Array2<u16>, background_level: f64) -> f64 {
+        let threshold = (background_level * 2.0) as u16;
+        let bright_pixels = pixels.iter().filter(|&&p| p > threshold).count();
+        let total_pixels = pixels.len();
+
+        if total_pixels > 0 {
+            (bright_pixels as f64 / total_pixels as f64).min(1.0)
+        } else {
+            0.0
+        }
+    }
+}
+
+impl IrSensorFrame {
+    /// Create IrSensorFrame from raw pixel data (operational mode)
+    ///
+    /// **Enhancement 2:** For real SDA sensor data
+    ///
+    /// Automatically computes all metadata from pixels:
+    /// - Background level, max intensity
+    /// - Hotspot detection and positions
+    /// - Intensity histogram (16 bins)
+    /// - Spatial entropy (Shannon)
+    /// - Centroid position
+    /// - Thermal signature
+    ///
+    /// # Arguments
+    /// * `sv_id` - Satellite vehicle ID
+    /// * `pixels` - Raw IR sensor pixel array (1024×1024×u16 for SDA)
+    /// * `geolocation` - (latitude, longitude) of sensor footprint
+    /// * `velocity_estimate` - Target velocity (m/s)
+    /// * `acceleration_estimate` - Target acceleration (m/s²)
+    pub fn from_pixels(
+        sv_id: u32,
+        pixels: Array2<u16>,
+        geolocation: (f64, f64),
+        velocity_estimate_mps: f64,
+        acceleration_estimate: f64,
+    ) -> Result<Self> {
+        let (height, width) = pixels.dim();
+
+        // Compute all metadata from pixels
+        let background_level = TrackingLayerAdapter::compute_background_level(&pixels);
+        let hotspot_positions = TrackingLayerAdapter::detect_hotspots(&pixels, background_level);
+        let hotspot_count = hotspot_positions.len() as u32;
+        let max_intensity = *pixels.iter().max().unwrap_or(&0) as f64;
+        let (centroid_x, centroid_y) = TrackingLayerAdapter::compute_weighted_centroid(&pixels);
+        let intensity_histogram = TrackingLayerAdapter::compute_intensity_histogram(&pixels, 16);
+        let spatial_entropy = TrackingLayerAdapter::compute_shannon_entropy(&intensity_histogram);
+        let thermal_signature = TrackingLayerAdapter::estimate_thermal_signature(&pixels, background_level);
+
+        Ok(Self {
+            sv_id,
+            timestamp: SystemTime::now(),
+            width: width as u32,
+            height: height as u32,
+            pixels: Some(pixels),
+            hotspot_positions,
+            intensity_histogram: Some(intensity_histogram),
+            spatial_entropy: Some(spatial_entropy),
+            max_intensity,
+            background_level,
+            hotspot_count,
+            centroid_x,
+            centroid_y,
+            velocity_estimate_mps,
+            acceleration_estimate,
+            swir_band_ratio: 1.0,  // Default (would need multi-band data)
+            thermal_signature,
+            geolocation,
+        })
+    }
+}
+
+impl TrackingLayerAdapter {
     fn classify_trajectory_type(&self, frame: &IrSensorFrame) -> f64 {
         // Heuristic classification:
         // - Ballistic: constant velocity (0.0)
