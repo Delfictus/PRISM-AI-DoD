@@ -196,6 +196,11 @@ colored = "2.0"
 name = "performance_benchmarks"
 harness = false
 
+[[bench]]
+name = "pwsa_benchmarks"
+harness = false
+required-features = ["pwsa"]
+
 # ═══════════════════════════════════════════════════════════════════════════
 # DEPENDENCY COMPATIBILITY PATCH
 # ═══════════════════════════════════════════════════════════════════════════

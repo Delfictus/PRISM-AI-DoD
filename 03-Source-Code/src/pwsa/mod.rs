@@ -11,6 +11,7 @@
 
 pub mod satellite_adapters;
 pub mod vendor_sandbox;
+pub mod gpu_kernels;
 
 // Re-export primary types for convenient access
 pub use satellite_adapters::{
