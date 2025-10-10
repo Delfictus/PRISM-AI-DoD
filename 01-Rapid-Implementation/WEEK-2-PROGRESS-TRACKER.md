@@ -78,10 +78,10 @@ Rationale:
 - Rust auto-vectorization is excellent
 - <1ms latency still achievable without custom CUDA
 
-**Next Steps:**
-- [ ] Profile current fusion pipeline
-- [ ] Integrate SIMD optimizations
-- [ ] Create benchmarking suite
+**Tasks Completed:**
+- [x] Profiled current fusion pipeline
+- [x] Integrated SIMD optimizations (via gpu_kernels.rs)
+- [x] Created comprehensive benchmarking suite (pwsa_benchmarks.rs)
 
 ---
 
