@@ -75,6 +75,10 @@ cudarc = { version = "0.17", features = ["driver", "nvrtc", "cublas", "curand"] 
 candle-core = { version = "0.9", features = ["cuda"] }
 candle-nn = "0.9"
 colored = "2.1"
+# Week 2: Encryption for classified data
+aes-gcm = "0.10"
+argon2 = "0.5"
+zeroize = "1.7"
 
 [[example]]
 name = "platform_demo"
