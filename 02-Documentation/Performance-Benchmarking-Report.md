@@ -32,7 +32,7 @@
 ## Methodology
 
 ### Test Environment
-- **GPU:** NVIDIA RTX 4090 / H200 (compute capability 8.9/9.0)
+- **GPU:** NVIDIA RTX 5070 / H200 (compute capability 8.9/9.0)
 - **CUDA:** Version 12.8
 - **CPU:** AMD Ryzen / Intel Xeon (baseline comparison)
 - **Memory:** 64GB DDR5
