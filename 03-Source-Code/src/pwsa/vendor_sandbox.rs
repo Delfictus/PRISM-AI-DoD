@@ -17,13 +17,20 @@ use std::collections::HashMap;
 use anyhow::{Result, Context, bail};
 use uuid::Uuid;
 use cudarc::driver::CudaContext;
+use aes_gcm::{
+    aead::{Aead, KeyInit, OsRng},
+    Aes256Gcm, Nonce, Key
+};
+use argon2::{Argon2, PasswordHasher};
+use argon2::password_hash::{SaltString, PasswordHash};
+use zeroize::Zeroize;
 
 //=============================================================================
 // DATA CLASSIFICATION
 //=============================================================================
 
 /// Security classification levels for data
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum DataClassification {
     Unclassified,
     ControlledUnclassified,  // CUI
@@ -42,25 +49,220 @@ impl DataClassification {
 // SECURE DATA SLICE
 //=============================================================================
 
-/// Secure reference to data with classification metadata
+/// Secure data container with encryption support
+///
+/// **Week 2 Enhancement:** Now includes AES-256-GCM encryption for classified data
 #[derive(Debug, Clone)]
 pub struct SecureDataSlice {
     pub data_id: Uuid,
     pub classification: DataClassification,
+    /// Actual data (encrypted if classification >= Secret)
+    pub data: Vec<u8>,
     pub size_bytes: usize,
     pub encrypted: bool,
     pub checksum: Option<u64>,
+    /// Nonce for AES-GCM (12 bytes)
+    pub nonce: Option<Vec<u8>>,
 }
 
 impl SecureDataSlice {
+    /// Create new secure data slice with optional encryption
     pub fn new(classification: DataClassification, size_bytes: usize) -> Self {
+        let should_encrypt = classification >= DataClassification::Secret;
+
         Self {
             data_id: Uuid::new_v4(),
             classification,
+            data: vec![0u8; size_bytes],  // Placeholder data
             size_bytes,
-            encrypted: classification >= DataClassification::Secret,
+            encrypted: should_encrypt,
             checksum: None,
+            nonce: if should_encrypt {
+                Some(Self::generate_nonce())
+            } else {
+                None
+            },
         }
+    }
+
+    /// Create from actual data bytes
+    pub fn from_bytes(data: Vec<u8>, classification: DataClassification) -> Self {
+        let size_bytes = data.len();
+        let should_encrypt = classification >= DataClassification::Secret;
+
+        Self {
+            data_id: Uuid::new_v4(),
+            classification,
+            data,
+            size_bytes,
+            encrypted: false,  // Starts unencrypted
+            checksum: None,
+            nonce: if should_encrypt {
+                Some(Self::generate_nonce())
+            } else {
+                None
+            },
+        }
+    }
+
+    /// Generate cryptographically secure nonce (12 bytes for AES-GCM)
+    fn generate_nonce() -> Vec<u8> {
+        use rand::RngCore;
+        let mut nonce = vec![0u8; 12];
+        rand::thread_rng().fill_bytes(&mut nonce);
+        nonce
+    }
+
+    /// Encrypt data using AES-256-GCM
+    ///
+    /// Automatically encrypts if classification is Secret or TopSecret.
+    /// Uses provided key for encryption.
+    pub fn encrypt(&mut self, key: &[u8; 32]) -> Result<()> {
+        if self.encrypted {
+            return Ok(());  // Already encrypted
+        }
+
+        if self.classification >= DataClassification::Secret {
+            let cipher = Aes256Gcm::new(Key::<Aes256Gcm>::from_slice(key));
+
+            // Ensure we have a nonce
+            if self.nonce.is_none() {
+                self.nonce = Some(Self::generate_nonce());
+            }
+
+            let nonce_bytes = self.nonce.as_ref().unwrap();
+            let nonce = Nonce::from_slice(&nonce_bytes[..12]);
+
+            let ciphertext = cipher.encrypt(nonce, self.data.as_ref())
+                .map_err(|e| anyhow::anyhow!("Encryption failed: {:?}", e))?;
+
+            self.data = ciphertext;
+            self.encrypted = true;
+            self.size_bytes = self.data.len();
+        }
+
+        Ok(())
+    }
+
+    /// Decrypt data using AES-256-GCM
+    pub fn decrypt(&mut self, key: &[u8; 32]) -> Result<()> {
+        if !self.encrypted {
+            return Ok(());  // Already decrypted
+        }
+
+        let cipher = Aes256Gcm::new(Key::<Aes256Gcm>::from_slice(key));
+
+        let nonce_bytes = self.nonce.as_ref()
+            .ok_or_else(|| anyhow::anyhow!("No nonce available for decryption"))?;
+        let nonce = Nonce::from_slice(&nonce_bytes[..12]);
+
+        let plaintext = cipher.decrypt(nonce, self.data.as_ref())
+            .map_err(|e| anyhow::anyhow!("Decryption failed: {:?}", e))?;
+
+        self.data = plaintext;
+        self.encrypted = false;
+        self.size_bytes = self.data.len();
+
+        Ok(())
+    }
+
+    /// Verify data integrity with checksum
+    pub fn verify_integrity(&self) -> bool {
+        if let Some(expected) = self.checksum {
+            let actual = self.compute_checksum();
+            actual == expected
+        } else {
+            true  // No checksum to verify
+        }
+    }
+
+    fn compute_checksum(&self) -> u64 {
+        use std::collections::hash_map::DefaultHasher;
+        use std::hash::{Hash, Hasher};
+
+        let mut hasher = DefaultHasher::new();
+        self.data.hash(&mut hasher);
+        hasher.finish()
+    }
+}
+
+//=============================================================================
+// KEY MANAGEMENT SYSTEM
+//=============================================================================
+
+/// Key management for classified data encryption
+///
+/// **Week 2 Enhancement:** Secure key derivation and storage
+///
+/// Uses Argon2 for key derivation from passphrase.
+/// Maintains separate Data Encryption Keys (DEK) per classification level.
+pub struct KeyManager {
+    master_key: [u8; 32],
+    dek_cache: HashMap<DataClassification, [u8; 32]>,
+}
+
+impl KeyManager {
+    /// Create new key manager from passphrase
+    ///
+    /// Uses Argon2id for secure key derivation.
+    pub fn new(passphrase: &str) -> Result<Self> {
+        let salt = SaltString::generate(&mut OsRng);
+        let argon2 = Argon2::default();
+
+        // Derive master key from passphrase
+        let password_hash = argon2.hash_password(passphrase.as_bytes(), &salt)
+            .map_err(|e| anyhow::anyhow!("Key derivation failed: {:?}", e))?;
+
+        let mut master_key = [0u8; 32];
+        if let Some(hash_bytes) = password_hash.hash {
+            let bytes = hash_bytes.as_bytes();
+            master_key[..bytes.len().min(32)].copy_from_slice(&bytes[..bytes.len().min(32)]);
+        }
+
+        Ok(Self {
+            master_key,
+            dek_cache: HashMap::new(),
+        })
+    }
+
+    /// Get or derive Data Encryption Key for specific classification
+    pub fn get_dek(&mut self, classification: DataClassification) -> [u8; 32] {
+        if let Some(key) = self.dek_cache.get(&classification) {
+            return *key;
+        }
+
+        let dek = self.derive_dek(classification);
+        self.dek_cache.insert(classification, dek);
+        dek
+    }
+
+    /// Derive classification-specific DEK from master key
+    fn derive_dek(&self, classification: DataClassification) -> [u8; 32] {
+        use sha2::{Sha256, Digest};
+
+        let mut hasher = Sha256::new();
+        hasher.update(&self.master_key);
+        hasher.update(format!("{:?}", classification).as_bytes());
+
+        let result = hasher.finalize();
+        let mut dek = [0u8; 32];
+        dek.copy_from_slice(&result);
+        dek
+    }
+
+    /// Clear all keys from memory (security cleanup)
+    pub fn zeroize_keys(&mut self) {
+        self.master_key.zeroize();
+        for (_, key) in self.dek_cache.iter_mut() {
+            key.zeroize();
+        }
+        self.dek_cache.clear();
+    }
+}
+
+impl Drop for KeyManager {
+    fn drop(&mut self) {
+        self.zeroize_keys();
     }
 }
 
