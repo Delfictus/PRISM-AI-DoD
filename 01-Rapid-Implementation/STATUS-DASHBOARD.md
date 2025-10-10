@@ -174,9 +174,11 @@ coupling[[0, 1]] = te_result.effective_te;  // Computed from data
 |---------|--------|--------|---------|
 | I: Thermodynamics | ✅ | ✅ | Compliant |
 | II: Neuromorphic | ✅ | ✅ | Compliant |
-| III: Transfer Entropy | ⚠️ Placeholder | ✅ Real TE | **FIXED** |
+| III: Transfer Entropy | ⚠️ Placeholder | ✅ **REAL TE** | **FULLY COMPLIANT** |
 | IV: Active Inference | ✅ | ✅ | Compliant |
 | V: GPU Context | ✅ | ✅ | Compliant |
+
+**Note:** Article III now uses TRUE transfer entropy computation from time-series (lines 663-684). Placeholder only used during initial warmup (<20 samples), then switches to real algorithm permanently.
 
 ---
 

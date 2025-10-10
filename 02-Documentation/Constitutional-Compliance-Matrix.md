@@ -10,13 +10,13 @@
 
 ## Compliance Summary
 
-| Article | Status | Week 1 | Week 2 | Critical Issues |
-|---------|--------|--------|--------|-----------------|
-| I: Thermodynamics | ✅ | Compliant | Compliant | None |
-| II: Neuromorphic | ✅ | Compliant | Compliant | None |
-| III: Transfer Entropy | ✅ | ⚠️ Placeholder | **FIXED** | **Resolved** |
-| IV: Active Inference | ✅ | Compliant | Compliant | Heuristic (acceptable) |
-| V: GPU Context | ✅ | Compliant | Compliant | None |
+| Article               | Status | Week 1         | Week 2    | Critical Issues        |
+| --------------------- | ------ | -------------- | --------- | ---------------------- |
+| I: Thermodynamics     | ✅      | Compliant      | Compliant | None                   |
+| II: Neuromorphic      | ✅      | Compliant      | Compliant | None                   |
+| III: Transfer Entropy | ✅      | ⚠️ Placeholder | **FIXED** | **Resolved**           |
+| IV: Active Inference  | ✅      | Compliant      | Compliant | Heuristic (acceptable) |
+| V: GPU Context        | ✅      | Compliant      | Compliant | None                   |
 
 **Overall Assessment:** ✅ FULLY COMPLIANT
 
