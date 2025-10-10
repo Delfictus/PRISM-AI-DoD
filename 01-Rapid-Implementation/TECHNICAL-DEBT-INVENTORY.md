@@ -77,19 +77,25 @@ fn classify_threats_ml(&self, features: &Array1<f64>) -> Result<Array1<f64>> {
 
 ---
 
-### Item 2: Spatial Entropy Computation
+### Item 2: Spatial Entropy Computation ✅ RESOLVED
 
-**Location:** `src/pwsa/satellite_adapters.rs:289-293`
+**Location:** `src/pwsa/satellite_adapters.rs:318-364`
+
+**Status:** ✅ **IMPLEMENTED** (Enhancement 2 complete - January 9, 2025)
 
 **Current Implementation:**
 ```rust
-fn compute_spatial_entropy(&self, _frame: &IrSensorFrame) -> f64 {
-    // Placeholder: compute Shannon entropy of intensity histogram
-    0.5
+fn compute_spatial_entropy(&self, frame: &IrSensorFrame) -> f64 {
+    // TIER 1: Compute from raw pixels (operational mode)
+    if let Some(ref pixels) = frame.pixels {
+        let histogram = Self::compute_intensity_histogram(pixels, 16);
+        return Self::compute_shannon_entropy(&histogram);
+    }
+    // ... 3 more tiers for graceful fallback
 }
 ```
 
-**Current Status:** Returns fixed value (0.5)
+**Resolution:** Now computes real Shannon entropy from pixel data (+309 lines of code)
 
 **Why Acceptable for v1.0:**
 - ✅ Non-critical feature (used for hotspot analysis refinement)
