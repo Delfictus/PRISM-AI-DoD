@@ -22,6 +22,7 @@ pub mod monitoring;
 pub mod optimization;
 pub mod caching;
 pub mod routing;
+pub mod validation;
 
 // Re-exports will be added as modules are implemented
 // pub use llm_clients::{LLMClient, LLMResponse, OpenAIClient};
