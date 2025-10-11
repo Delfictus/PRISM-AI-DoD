@@ -88,6 +88,7 @@ governor = "0.6"  # Rate limiting
 rust_decimal = "1.33"  # Cost tracking
 async-trait = "0.1"  # Async trait support
 futures = "0.3"  # Async utilities
+zstd = "0.13"  # Kolmogorov complexity estimation
 
 [[example]]
 name = "platform_demo"
