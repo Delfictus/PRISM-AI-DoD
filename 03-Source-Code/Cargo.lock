@@ -2813,6 +2813,7 @@ dependencies = [
  "anyhow",
  "approx 0.5.1",
  "argon2",
+ "async-trait",
  "bincode",
  "bindgen",
  "candle-core 0.9.1",
