@@ -32,3 +32,4 @@ pub mod multimodal;
 // pub use llm_clients::{LLMClient, LLMResponse, OpenAIClient};
 // pub use thermodynamic::{ThermodynamicConsensus, ConsensusState};
 // pub use integration::{PwsaLLMFusionPlatform, CompleteIntelligence};
+pub mod production;
