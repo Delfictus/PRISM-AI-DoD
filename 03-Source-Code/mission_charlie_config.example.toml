@@ -1,0 +1,81 @@
+# Mission Charlie Production Configuration
+# Copy this file to mission_charlie_config.toml and edit with your settings
+
+[llm_config]
+global_timeout_secs = 60
+max_retries = 3
+enable_cost_tracking = true
+
+[llm_config.openai]
+enabled = true
+api_key_env = "OPENAI_API_KEY"
+model_name = "gpt-4"
+temperature = 0.7
+max_tokens = 4096
+rate_limit_rpm = 500
+initial_quality = 0.8
+
+[llm_config.claude]
+enabled = true
+api_key_env = "ANTHROPIC_API_KEY"
+model_name = "claude-3-5-sonnet-20250110"
+temperature = 0.7
+max_tokens = 4096
+rate_limit_rpm = 500
+initial_quality = 0.85
+
+[llm_config.gemini]
+enabled = true
+api_key_env = "GEMINI_API_KEY"
+model_name = "gemini-2.0-flash-exp"
+temperature = 0.7
+max_tokens = 4096
+rate_limit_rpm = 500
+initial_quality = 0.75
+
+[llm_config.grok]
+enabled = true
+api_key_env = "XAI_API_KEY"
+model_name = "grok-2-1212"
+temperature = 0.7
+max_tokens = 4096
+rate_limit_rpm = 500
+initial_quality = 0.7
+
+[cache_config]
+enable_semantic_cache = true
+similarity_threshold = 0.85
+max_cache_size = 10000
+cache_ttl_secs = 3600
+lsh_hash_count = 5
+lsh_bucket_count = 100
+
+[consensus_config]
+enable_quantum_voting = true
+enable_thermodynamic = true
+enable_neuromorphic = false  # Experimental
+min_llms_for_consensus = 3
+confidence_threshold = 0.7
+temperature = 1.0
+
+[error_config]
+circuit_breaker_threshold = 5
+circuit_breaker_timeout_secs = 60
+enable_graceful_degradation = true
+enable_heuristic_fallback = true
+max_recovery_attempts = 3
+
+[logging_config]
+min_level = "info"  # Options: trace, debug, info, warn, error, critical
+enable_structured_logging = true
+enable_json = false
+buffer_size = 1000
+enable_request_tracing = true
+
+[performance_config]
+enable_gpu = true
+worker_threads = 4
+enable_prompt_compression = true
+compression_level = 3  # 0-10, higher = more compression
+enable_parallel_queries = true
+max_parallel_queries = 4

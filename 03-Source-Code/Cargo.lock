@@ -2868,6 +2868,7 @@ dependencies = [
  "statrs",
  "tempfile",
  "tokio",
+ "toml",
  "uuid",
  "zeroize",
  "zstd",

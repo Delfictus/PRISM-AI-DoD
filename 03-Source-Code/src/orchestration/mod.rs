@@ -27,9 +27,44 @@ pub mod semantic_analysis;
 pub mod neuromorphic;
 pub mod manifold;
 pub mod multimodal;
-
-// Re-exports will be added as modules are implemented
-// pub use llm_clients::{LLMClient, LLMResponse, OpenAIClient};
-// pub use thermodynamic::{ThermodynamicConsensus, ConsensusState};
-// pub use integration::{PwsaLLMFusionPlatform, CompleteIntelligence};
 pub mod production;
+
+// New algorithm modules
+pub mod cache;
+pub mod consensus;
+pub mod decomposition;
+pub mod inference;
+pub mod causality;
+pub mod quantum;
+
+// Core exports
+pub use production::{ProductionErrorHandler, ProductionLogger, MissionCharlieConfig};
+
+// Algorithm exports
+pub use cache::quantum_cache::QuantumApproximateCache;
+pub use consensus::quantum_voting::QuantumVotingConsensus;
+pub use thermodynamic::thermodynamic_consensus::ThermodynamicConsensus;
+pub use routing::transfer_entropy_router::TransferEntropyRouter;
+pub use decomposition::pid_synergy::PIDSynergyDecomposition;
+pub use inference::hierarchical_active_inference::HierarchicalActiveInference;
+pub use inference::joint_active_inference::JointActiveInference;
+pub use neuromorphic::unified_neuromorphic::UnifiedNeuromorphicProcessor;
+pub use causality::bidirectional_causality::BidirectionalCausalityAnalyzer;
+pub use optimization::geometric_manifold::GeometricManifoldOptimizer;
+pub use quantum::quantum_entanglement_measures::QuantumEntanglementAnalyzer;
+pub use integration::mission_charlie_integration::MissionCharlieIntegration;
+
+// Main orchestrator
+pub use llm_clients::LLMOrchestrator;
+
+// Common types
+#[derive(Debug, Clone)]
+pub struct LLMResponse {
+    pub content: String,
+    pub confidence: f64,
+    pub model: String,
+    pub latency_ms: u64,
+}
+
+// Error type
+pub use errors::OrchestrationError;
