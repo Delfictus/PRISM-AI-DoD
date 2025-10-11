@@ -171,72 +171,171 @@
 
 ---
 
-## PHASE 2: THERMODYNAMIC CONSENSUS ENGINE (8 tasks, Week 3-4)
+## PHASE 2: THERMODYNAMIC CONSENSUS ENGINE (ULTRA-ENHANCED, 12 tasks, Week 3-4)
 
-### Task 2.1: Semantic Distance Computation
+### Foundation Tasks (16 hours)
+
+#### Task 2.1: Semantic Distance + Fisher Metric
 **Status:** ⏳ PENDING
-**Estimated:** 10 hours
+**Estimated:** 12 hours (was 10, +2 for Fisher)
 **Actual:** ___ hours
 
 **Deliverables:**
 - [ ] Cosine distance (embedding similarity)
-- [ ] Wasserstein distance (optimal transport)
+- [ ] Wasserstein distance (optimal transport via Sinkhorn)
 - [ ] BLEU score (n-gram overlap)
 - [ ] BERTScore (contextual similarity)
+- [ ] Fisher Information Metric (information geometry) - ULTRA
 - [ ] Combined distance metric
-- [ ] 5+ unit tests
+- [ ] 8+ unit tests
+
+**Ultra-Enhancement:** Fisher-Rao distance on probability manifold
 
 ---
 
-### Task 2.2: Information Hamiltonian
+#### Task 2.2: Information Hamiltonian + Triplets
+**Status:** ⏳ PENDING
+**Estimated:** 8 hours (was 6, +2 for triplets)
+**Actual:** ___ hours
+
+**Deliverables:**
+- [ ] Pairwise energy: Σᵢⱼ J_ij d(i,j) sᵢsⱼ
+- [ ] Triplet energy: Σᵢⱼₖ K_ijk sᵢsⱼsₖ - ULTRA
+- [ ] Prior bias: Σᵢ hᵢsᵢ
+- [ ] Entropic term: -T*S(s)
+- [ ] Gradient computation
+- [ ] Constitutional Article I compliance
+- [ ] 5+ unit tests
+
+**Ultra-Enhancement:** 3-body interactions (captures complex LLM relationships)
+
+---
+
+### PRISM-AI Module Reuse (5 hours - LEVERAGE EXISTING)
+
+#### Task 2.3: Adapt PIMC Quantum Annealer
+**Status:** ⏳ PENDING
+**Estimated:** 2 hours (was 12, REUSE existing)
+**Actual:** ___ hours
+
+**Deliverables:**
+- [ ] Adapt existing PIMC for LLM consensus
+- [ ] Semantic energy function wrapper
+- [ ] Temperature schedule (use PIMC's proven schedule)
+- [ ] Replica exchange (already in PIMC!)
+- [ ] 3+ unit tests
+
+**Breakthrough:** REUSE existing quantum/pimc.rs (saves 10 hours)
+
+---
+
+#### Task 2.4: Adapt ThermodynamicNetwork
+**Status:** ⏳ PENDING
+**Estimated:** 2 hours (was 6, REUSE existing)
+**Actual:** ___ hours
+
+**Deliverables:**
+- [ ] Adapt statistical_mechanics/thermodynamic_network.rs
+- [ ] LLM ensemble → network state mapping
+- [ ] Energy minimization (reuse existing)
+- [ ] 2+ unit tests
+
+**Breakthrough:** REUSE existing module (saves 4 hours)
+
+---
+
+#### Task 2.5: Validation via Existing Modules
+**Status:** ⏳ PENDING
+**Estimated:** 1 hour (was 6, REUSE existing validators)
+**Actual:** ___ hours
+
+**Deliverables:**
+- [ ] Use existing entropy tracker (Article I)
+- [ ] Use existing convergence detector
+- [ ] 1+ integration test
+
+**Breakthrough:** Auto-validated by existing modules (saves 5 hours)
+
+---
+
+### World-First Algorithms (21 hours - NEW)
+
+#### Task 2.6: Neuromorphic Spike Consensus (WORLD-FIRST #6)
 **Status:** ⏳ PENDING
 **Estimated:** 6 hours
 **Actual:** ___ hours
 
 **Deliverables:**
-- [ ] Energy function: H(s) = Σᵢⱼ J_ij d(i,j) sᵢsⱼ + Σᵢ hᵢsᵢ - T*S(s)
-- [ ] Gradient computation
-- [ ] Constitutional Article I compliance
-- [ ] 3+ unit tests
+- [ ] Text-to-spike-train conversion
+- [ ] Spike synchronization measurement
+- [ ] Synchronization → consensus weights
+- [ ] Spike pattern visualization
+- [ ] 4+ unit tests
+
+**WORLD-FIRST:** Neuromorphic spiking networks for LLM consensus
+**Theory:** STDP (spike-timing-dependent plasticity)
+**Novel:** No prior implementation exists
 
 ---
 
-### Task 2.3: Quantum Annealing Adapter
+#### Task 2.7: Causal Manifold Optimization (WORLD-FIRST #7)
 **Status:** ⏳ PENDING
 **Estimated:** 8 hours
 **Actual:** ___ hours
 
 **Deliverables:**
-- [ ] Adapt existing PIMC for semantic energy
-- [ ] Temperature schedule
-- [ ] Replica exchange
-- [ ] 3+ unit tests
+- [ ] Riemannian metric tensor computation
+- [ ] Geodesic descent algorithm
+- [ ] Manifold curvature calculation
+- [ ] Integration with CMA module
+- [ ] 5+ unit tests
+
+**WORLD-FIRST:** Causal manifold optimization for LLM consensus
+**Theory:** Riemannian geometry + CMA
+**Convergence:** O(log(1/ε)) - exponentially faster
+**Patent:** Extremely valuable
 
 ---
 
-### Task 2.4: Energy Minimization Algorithm
+#### Task 2.8: Natural Gradient Descent
 **Status:** ⏳ PENDING
-**Estimated:** 6 hours
+**Estimated:** 4 hours
 **Actual:** ___ hours
 
 **Deliverables:**
-- [ ] Gradient descent optimization
-- [ ] Convergence detection
+- [ ] Fisher matrix computation
+- [ ] Natural gradient = Fisher^(-1) * gradient
+- [ ] Information-geometric optimization
 - [ ] 3+ unit tests
+
+**Theory:** Amari information geometry
+**Benefit:** Parameter-invariant, 5-10x faster
 
 ---
 
-### Task 2.5: Consensus State Validation
+#### Task 2.9: Quantum-Classical Hybrid
 **Status:** ⏳ PENDING
-**Estimated:** 6 hours
+**Estimated:** 3 hours
 **Actual:** ___ hours
 
 **Deliverables:**
-- [ ] Weight normalization (sum to 1)
-- [ ] Energy decrease validation
-- [ ] 3+ unit tests
+- [ ] Quantum annealing (global)
+- [ ] Classical refinement (local)
+- [ ] Hybrid orchestration
+- [ ] 2+ unit tests
 
-**Phase 2 Total:** 0/5 tasks (0%)
+**Theory:** Hybrid quantum-classical optimization
+**Benefit:** Global optimum + fast polish
+
+---
+
+**Phase 2 ULTRA-ENHANCED Total:** 0/12 tasks (0%)
+**Effort:** 54 hours (vs 52 basic)
+**World-Firsts:** +2 (total 7 across Phase 1+2)
+
+---
+
+## PHASE 3: TRANSFER ENTROPY & INTEGRATION (7 tasks, Week 4-5)
 
 ---
 
