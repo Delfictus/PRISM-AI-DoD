@@ -10,12 +10,20 @@ pub mod openai_client;
 pub mod claude_client;
 pub mod gemini_client;
 pub mod grok_client;
+pub mod ensemble;
 
 // Re-export primary types
 pub use openai_client::{OpenAIClient, LLMResponse, Usage};
 pub use claude_client::ClaudeClient;
 pub use gemini_client::GeminiClient;
 pub use grok_client::GrokClient;
+pub use ensemble::{
+    LLMOrchestrator,
+    BanditLLMEnsemble,
+    BayesianLLMEnsemble,
+    BanditResponse,
+    BayesianConsensusResponse,
+};
 
 /// Unified LLM client trait
 #[async_trait::async_trait]

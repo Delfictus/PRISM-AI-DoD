@@ -2827,6 +2827,7 @@ dependencies = [
  "dashmap 5.5.3",
  "env_logger",
  "fastrand",
+ "futures",
  "governor",
  "kdtree",
  "log",
