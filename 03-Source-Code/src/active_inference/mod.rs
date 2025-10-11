@@ -12,6 +12,8 @@ pub mod variational_inference;
 pub mod recognition_model;
 pub mod policy_selection;
 pub mod controller;
+pub mod gpu_optimization;
+
 #[cfg(feature = "cuda")]
 pub mod gpu_inference;
 
@@ -35,3 +37,4 @@ pub use observation_model::{ObservationModel, MeasurementPattern};
 pub use transition_model::{TransitionModel, ControlAction};
 pub use variational_inference::{VariationalInference, FreeEnergyComponents};
 pub use policy_selection::{PolicySelector, ActiveInferenceController, SensingStrategy, Policy};
+pub use gpu_optimization::ActiveInferenceGpuExt;

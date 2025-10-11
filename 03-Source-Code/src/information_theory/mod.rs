@@ -24,11 +24,8 @@ pub use advanced_transfer_entropy::{
 };
 
 // GPU-accelerated transfer entropy
-#[cfg(feature = "cuda")]
-pub mod gpu;
-
-#[cfg(feature = "cuda")]
-pub use gpu::TransferEntropyGpu;
+pub mod gpu_transfer_entropy;
+pub use gpu_transfer_entropy::{GpuTransferEntropy, TransferEntropyGpuExt};
 
 /// Information-theoretic measures for the Active Inference Platform
 pub trait InformationMeasure {

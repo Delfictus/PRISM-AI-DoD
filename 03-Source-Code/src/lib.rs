@@ -18,7 +18,6 @@ pub mod active_inference;
 pub mod integration;
 pub mod resilience;
 pub mod optimization;
-pub mod cma; // Phase 6: Causal Manifold Annealing
 
 // PWSA (Proliferated Warfighter Space Architecture) Integration
 #[cfg(feature = "pwsa")]

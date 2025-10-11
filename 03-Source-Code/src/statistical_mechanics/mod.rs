@@ -27,6 +27,7 @@
 
 pub mod thermodynamic_network;
 pub mod gpu_bindings;
+pub mod gpu_integration;
 
 // GPU-accelerated thermodynamic network
 #[cfg(feature = "cuda")]
@@ -44,3 +45,4 @@ pub use thermodynamic_network::{
 };
 
 pub use gpu_bindings::GpuThermodynamicNetwork;
+pub use gpu_integration::ThermodynamicNetworkGpuExt;
