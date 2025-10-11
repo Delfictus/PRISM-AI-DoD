@@ -24,6 +24,7 @@ pub mod caching;
 pub mod routing;
 pub mod validation;
 pub mod semantic_analysis;
+pub mod neuromorphic;
 
 // Re-exports will be added as modules are implemented
 // pub use llm_clients::{LLMClient, LLMResponse, OpenAIClient};
