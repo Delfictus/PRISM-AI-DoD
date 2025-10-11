@@ -64,7 +64,7 @@ impl GnnLLMSelector {
 }
 
 impl BanditLLMEnsemble {
-    pub fn new(llm_clients: Vec<Box<dyn LLMClient>>) -> Self {
+    pub fn new(llm_clients: Vec<Arc<dyn LLMClient>>) -> Self {
         let n = llm_clients.len();
 
         let stats = llm_clients.iter().map(|client| {
@@ -251,7 +251,7 @@ impl TdaTopologyAnalyzer {
 }
 
 impl BayesianLLMEnsemble {
-    pub fn new(llm_clients: Vec<Box<dyn LLMClient>>) -> Self {
+    pub fn new(llm_clients: Vec<Arc<dyn LLMClient>>) -> Self {
         let n = llm_clients.len();
         let priors = Array1::from_elem(n, 1.0 / n as f64);
 
