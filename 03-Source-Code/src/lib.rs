@@ -47,6 +47,12 @@ pub mod quantum_mlir;
 #[cfg(feature = "cuda")]
 pub mod gpu_coloring;
 
+// Phase 6: Adaptive Problem-Space Modeling (NEW!)
+pub mod phase6;
+
+// CMA: Causal Manifold Annealing (includes GNN)
+pub mod cma;
+
 // Re-export key components
 pub use mathematics::{
     MathematicalStatement, ProofResult, Assumption,
@@ -82,6 +88,14 @@ pub use resilience::{
 pub use optimization::{
     PerformanceTuner, TuningProfile, SearchAlgorithm, SearchSpace, PerformanceMetrics,
     KernelTuner, GpuProperties, KernelConfig, OccupancyInfo,
+};
+
+// Phase 6 exports
+pub use phase6::{
+    TdaAdapter, TdaPort, PersistenceBarcode,
+    PredictiveNeuromorphic, PredictionError, DendriticModel,
+    MetaLearningCoordinator, ModulatedHamiltonian,
+    Phase6Integration, AdaptiveSolver, AdaptiveSolution,
 };
 
 /// Platform version information
