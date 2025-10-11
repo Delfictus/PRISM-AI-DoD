@@ -11,6 +11,14 @@
 //! - Bit-for-bit deterministic reproducibility
 //! - Validated against QuTiP reference implementation
 
+// GPU kernel launcher for actual GPU execution
+#[cfg(feature = "cuda")]
+pub mod gpu_launcher;
+
+// GPU FFI for direct kernel execution
+#[cfg(feature = "cuda")]
+pub mod gpu_ffi;
+
 pub mod mathematics;
 pub mod information_theory;
 pub mod statistical_mechanics;

@@ -39,11 +39,8 @@ impl ThermodynamicNetworkGpuExt for ThermodynamicNetwork {
         // Check if CUDA is available and kernels are compiled
         #[cfg(feature = "cuda")]
         {
-            // In production, would check for:
-            // - CUDA device availability
-            // - Compiled thermodynamic PTX kernels
-            // - GPU memory for oscillator states
-            false // Kernels not yet compiled
+            // Check for compiled thermodynamic PTX kernel
+            std::path::Path::new("src/kernels/ptx/thermodynamic.ptx").exists()
         }
         #[cfg(not(feature = "cuda"))]
         {
