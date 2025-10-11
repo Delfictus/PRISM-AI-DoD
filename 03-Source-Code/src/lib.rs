@@ -28,6 +28,10 @@ pub mod pwsa;
 #[cfg(feature = "mission_charlie")]
 pub mod orchestration;
 
+// Unified PRISM-AI Platform Integration
+#[cfg(all(feature = "mission_charlie", feature = "pwsa"))]
+pub use orchestration::{PrismAIOrchestrator, OrchestratorConfig, UnifiedResponse};
+
 // GPU acceleration modules (OBSOLETE - quantum_mlir replaces this)
 // #[cfg(feature = "cuda")]
 // pub mod cuda_bindings;

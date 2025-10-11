@@ -19,6 +19,15 @@ use crate::orchestration::quantum::quantum_entanglement_measures::QuantumEntangl
 
 use nalgebra::{DVector, DMatrix};
 use std::collections::HashMap;
+use std::sync::Arc;
+use parking_lot::RwLock;
+
+// PWSA imports for real integration
+#[cfg(feature = "pwsa")]
+use crate::pwsa::satellite_adapters::{
+    PwsaFusionPlatform, MissionAwareness, ThreatDetection,
+    OctTelemetry, IrSensorFrame, GroundStationData,
+};
 
 /// Mission Charlie Complete Integration System
 pub struct MissionCharlieIntegration {
@@ -28,6 +37,9 @@ pub struct MissionCharlieIntegration {
     /// Tier 1: Fully Realized Algorithms
     quantum_cache: QuantumApproximateCache,
     mdl_optimizer: MDLPromptOptimizer,
+    #[cfg(feature = "pwsa")]
+    pwsa_bridge: Arc<RwLock<PwsaFusionPlatform>>,
+    #[cfg(not(feature = "pwsa"))]
     pwsa_bridge: PWSAIntegrationBridge,
 
     /// Tier 2: Functional Framework Algorithms
@@ -117,11 +129,20 @@ impl MissionCharlieIntegration {
         // Initialize thermodynamic consensus
         let thermodynamic = ThermodynamicConsensus::new(config.num_llms)?;
 
+        // Initialize PWSA bridge
+        #[cfg(feature = "pwsa")]
+        let pwsa_bridge = {
+            let platform = PwsaFusionPlatform::new_with_governance()?;
+            Arc::new(RwLock::new(platform))
+        };
+        #[cfg(not(feature = "pwsa"))]
+        let pwsa_bridge = PWSAIntegrationBridge;
+
         Ok(Self {
             orchestrator,
             quantum_cache,
             mdl_optimizer: MDLPromptOptimizer,
-            pwsa_bridge: PWSAIntegrationBridge,
+            pwsa_bridge,
             quantum_voting,
             pid_decomposition,
             hierarchical_inference,
@@ -344,6 +365,43 @@ impl MissionCharlieIntegration {
             let performance = 1.0 / (1.0 + *count as f64 / 100.0); // Simplified
             self.metrics.performance.insert(algo.clone(), performance);
         }
+    }
+
+    /// Process query with PWSA sensor context
+    #[cfg(feature = "pwsa")]
+    pub async fn process_query_with_sensor_context(
+        &mut self,
+        query: &str,
+        transport_data: &OctTelemetry,
+        tracking_data: &IrSensorFrame,
+        ground_data: &GroundStationData,
+    ) -> Result<IntegratedResponse, OrchestrationError> {
+        // First, fuse sensor data
+        let sensor_assessment = {
+            let mut pwsa = self.pwsa_bridge.write();
+            pwsa.fuse_mission_data(transport_data, tracking_data, ground_data)
+                .map_err(|e| OrchestrationError::ExternalService {
+                    service: "PWSA".to_string(),
+                    error: e.to_string(),
+                })?
+        };
+
+        // Augment query with sensor context
+        let augmented_query = format!(
+            "{}\n\nSensor Context:\n- Threat Level: {:?}\n- Confidence: {:.2}%\n- Priority Objects: {}",
+            query,
+            sensor_assessment.threat_level,
+            sensor_assessment.confidence * 100.0,
+            sensor_assessment.priority_objects.len()
+        );
+
+        // Process through full integration pipeline
+        let mut response = self.process_query_full_integration(&augmented_query).await?;
+
+        // Add sensor fusion to algorithms used
+        response.algorithms_used.push("pwsa_fusion".to_string());
+
+        Ok(response)
     }
 
     /// Get comprehensive system status

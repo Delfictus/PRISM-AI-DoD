@@ -53,9 +53,14 @@ pub use causality::bidirectional_causality::BidirectionalCausalityAnalyzer;
 pub use optimization::geometric_manifold::GeometricManifoldOptimizer;
 pub use quantum::quantum_entanglement_measures::QuantumEntanglementAnalyzer;
 pub use integration::mission_charlie_integration::MissionCharlieIntegration;
+pub use integration::prism_ai_integration::{PrismAIOrchestrator, OrchestratorConfig, UnifiedResponse};
 
 // Main orchestrator
 pub use llm_clients::LLMOrchestrator;
+
+// Error handling
+pub mod errors;
+pub use errors::OrchestrationError;
 
 // Common types
 #[derive(Debug, Clone)]
@@ -65,6 +70,3 @@ pub struct LLMResponse {
     pub model: String,
     pub latency_ms: u64,
 }
-
-// Error type
-pub use errors::OrchestrationError;
