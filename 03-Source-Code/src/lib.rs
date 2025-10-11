@@ -24,6 +24,10 @@ pub mod cma; // Phase 6: Causal Manifold Annealing
 #[cfg(feature = "pwsa")]
 pub mod pwsa;
 
+// Mission Charlie: Thermodynamic LLM Intelligence Fusion
+#[cfg(feature = "mission_charlie")]
+pub mod orchestration;
+
 // GPU acceleration modules (OBSOLETE - quantum_mlir replaces this)
 // #[cfg(feature = "cuda")]
 // pub mod cuda_bindings;

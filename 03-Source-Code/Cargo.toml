@@ -27,6 +27,8 @@ cuda = ["neuromorphic-engine/cuda", "prct-core/cuda", "dep:bindgen"]
 mlir = []
 # PWSA (Proliferated Warfighter Space Architecture) Integration
 pwsa = ["cuda"]
+# Mission Charlie: Thermodynamic LLM Intelligence Fusion
+mission_charlie = ["cuda"]
 # CPU-based simulation (DEPRECATED - only for testing without GPU)
 simulation = ["neuromorphic-engine/simulation"]
 
@@ -79,6 +81,11 @@ colored = "2.1"
 aes-gcm = "0.10"
 argon2 = "0.5"
 zeroize = "1.7"
+
+# Mission Charlie: LLM Integration
+reqwest = { version = "0.11", features = ["json"] }
+governor = "0.6"  # Rate limiting
+rust_decimal = "1.33"  # Cost tracking
 
 [[example]]
 name = "platform_demo"
