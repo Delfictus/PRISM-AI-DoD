@@ -139,7 +139,7 @@ impl PredictiveNeuromorphic {
         let output_weights = Array2::zeros((output_dim, reservoir_size));
 
         // Initialize generative model for active inference
-        let generative_model = GenerativeModel::new(reservoir_size);
+        let generative_model = GenerativeModel::new();
 
         Ok(Self {
             reservoir_size,

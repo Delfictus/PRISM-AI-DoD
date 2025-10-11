@@ -17,7 +17,7 @@ pub mod integration;
 pub use tda::{TdaAdapter, TdaPort, PersistenceBarcode};
 pub use predictive_neuro::{PredictiveNeuromorphic, PredictionError, DendriticModel};
 pub use meta_learning::{MetaLearningCoordinator, ModulatedHamiltonian};
-pub use integration::{Phase6Integration, AdaptiveSolver};
+pub use integration::{Phase6Integration, AdaptiveSolver, AdaptiveSolution};
 
 // Re-export GNN from CMA module (already implemented)
-pub use crate::cma::neural::gnn_integration::{E3EquivariantGNN, GnnSolutionHint};
+pub use crate::cma::neural::gnn_integration::E3EquivariantGNN;

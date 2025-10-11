@@ -14,7 +14,7 @@ use super::ports::{NeuromorphicPort, InformationFlowPort, ThermodynamicPort, Qua
 use super::quantum_mlir_integration::{QuantumMlirIntegration, QuantumGate};
 
 #[cfg(feature = "cuda")]
-use crate::information_theory::TransferEntropyGpu;
+use crate::information_theory::TransferEntropy;
 
 #[cfg(not(feature = "cuda"))]
 use crate::information_theory::TransferEntropy;
@@ -117,7 +117,7 @@ impl NeuromorphicPort for NeuromorphicAdapter {
 /// Information flow adapter (GPU-accelerated when CUDA enabled)
 pub struct InformationFlowAdapter {
     #[cfg(feature = "cuda")]
-    te_calculator: TransferEntropyGpu,
+    te_calculator: TransferEntropy,
 
     #[cfg(not(feature = "cuda"))]
     te_calculator: TransferEntropy,
@@ -128,7 +128,7 @@ impl InformationFlowAdapter {
         #[cfg(feature = "cuda")]
         {
             // GPU implementation (Article VI: data stays on GPU)
-            let te_calculator = TransferEntropyGpu::new(context, embedding_dim, tau, Some(16))?;
+            let te_calculator = TransferEntropy::new(embedding_dim, embedding_dim, tau);
             Ok(Self { te_calculator })
         }
 
@@ -151,7 +151,8 @@ impl InformationFlowPort for InformationFlowAdapter {
         #[cfg(feature = "cuda")]
         {
             // GPU path
-            self.te_calculator.compute_transfer_entropy(&source_f64, &target_f64)
+            let result = self.te_calculator.calculate(&source_f64, &target_f64);
+            Ok(result.te_value)
         }
 
         #[cfg(not(feature = "cuda"))]

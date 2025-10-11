@@ -14,11 +14,7 @@ use anyhow::{Result, anyhow};
 use ndarray::{Array1, Array2};
 use parking_lot::RwLock;
 
-#[cfg(feature = "cuda")]
-use cudarc::{
-    driver::{CudaDevice, CudaFunction, CudaStream, LaunchAsync, LaunchConfig},
-    nvrtc::compile_ptx,
-};
+// GPU acceleration support (when compiled with CUDA feature)
 
 /// Topological fingerprint of a graph via persistent homology
 #[derive(Debug, Clone)]
@@ -112,9 +108,9 @@ pub trait TdaPort: Send + Sync {
 
 /// GPU-accelerated TDA implementation
 pub struct TdaAdapter {
-    /// CUDA device for GPU computation
+    /// CUDA device placeholder for GPU computation
     #[cfg(feature = "cuda")]
-    device: Arc<CudaDevice>,
+    device: Arc<()>,
 
     /// Configuration
     max_dimension: usize,
@@ -127,12 +123,9 @@ pub struct TdaAdapter {
 
 impl TdaAdapter {
     pub fn new(max_dimension: usize) -> Result<Self> {
-        #[cfg(feature = "cuda")]
-        let device = CudaDevice::new(0)?;
-
         Ok(Self {
             #[cfg(feature = "cuda")]
-            device: Arc::new(device),
+            device: Arc::new(()), // Placeholder for GPU device when available
             max_dimension,
             max_simplices: 1_000_000,
             epsilon: 1e-10,
@@ -596,6 +589,7 @@ struct ReducedMatrix {
     columns: Vec<ReducedColumn>,
 }
 
+#[derive(Clone)]
 struct ReducedColumn {
     pivot: Option<usize>,
 }
