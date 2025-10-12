@@ -21,9 +21,15 @@ use crate::information_theory::TransferEntropy;
 
 pub mod market_regime;
 pub mod forecasting;
+pub mod risk_analysis;
+pub mod rebalancing;
+pub mod backtest;
 
 pub use market_regime::{MarketRegime, MarketRegimeDetector};
 pub use forecasting::{PortfolioForecaster, ForecastOptimizationConfig};
+pub use risk_analysis::{RiskAnalyzer, RiskDecomposition, VarResult, VarMethod, FactorRiskDecomposition};
+pub use rebalancing::{PortfolioRebalancer, RebalancingConfig, RebalancingPlan, RebalancingStrategy, TransactionCost, TaxConfig};
+pub use backtest::{Backtester, BacktestConfig, BacktestResult, PerformanceMetrics, DrawdownInfo, ComparisonResult};
 
 /// Represents a financial asset
 #[derive(Debug, Clone, Serialize, Deserialize)]
