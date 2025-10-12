@@ -68,6 +68,9 @@ pub mod cma;
 // Application domains
 pub mod applications;
 
+// Finance applications
+pub mod finance;
+
 // Re-export key components
 pub use mathematics::{
     MathematicalStatement, ProofResult, Assumption,
