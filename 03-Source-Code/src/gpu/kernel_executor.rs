@@ -1759,9 +1759,23 @@ pub mod kernels {
     ) {
         int idx = blockIdx.x * blockDim.x + threadIdx.x;
         if (idx < n) {
-            // Convert FP32 to FP16 using CUDA intrinsic
-            // __float2half_rn: round to nearest even
-            output[idx] = __float2half_rn(input[idx]);
+            // Manual FP32 to FP16 conversion (IEEE 754)
+            unsigned int f32 = *((unsigned int*)&input[idx]);
+            unsigned int sign = (f32 >> 16) & 0x8000;
+            int exponent = ((f32 >> 23) & 0xFF) - 127 + 15;
+            unsigned int mantissa = (f32 >> 13) & 0x3FF;
+
+            // Handle special cases
+            if (exponent <= 0) {
+                // Zero or denorm
+                output[idx] = (unsigned short)sign;
+            } else if (exponent >= 31) {
+                // Infinity or NaN
+                output[idx] = (unsigned short)(sign | 0x7C00);
+            } else {
+                // Normal number
+                output[idx] = (unsigned short)(sign | (exponent << 10) | mantissa);
+            }
         }
     }
     "#;
@@ -1772,8 +1786,25 @@ pub mod kernels {
     ) {
         int idx = blockIdx.x * blockDim.x + threadIdx.x;
         if (idx < n) {
-            // Convert FP16 to FP32 using CUDA intrinsic
-            output[idx] = __half2float(input[idx]);
+            // Manual FP16 to FP32 conversion (IEEE 754)
+            unsigned short fp16 = input[idx];
+            unsigned int sign = (fp16 & 0x8000) << 16;
+            int exponent = (fp16 & 0x7C00) >> 10;
+            unsigned int mantissa = (fp16 & 0x3FF) << 13;
+
+            unsigned int result;
+            if (exponent == 0) {
+                // Zero or denorm -> zero
+                result = sign;
+            } else if (exponent == 31) {
+                // Infinity or NaN
+                result = sign | 0x7F800000 | mantissa;
+            } else {
+                // Normal number
+                result = sign | (((exponent - 15 + 127) & 0xFF) << 23) | mantissa;
+            }
+
+            output[idx] = *((float*)&result);
         }
     }
     "#;
@@ -1804,24 +1835,41 @@ pub mod kernels {
                 if (threadIdx.y < 16 && tile + threadIdx.x < k && row < m) {
                     As[threadIdx.y][threadIdx.x] = a[row * k + tile + threadIdx.x];
                 } else {
-                    As[threadIdx.y][threadIdx.x] = __float2half(0.0f);
+                    As[threadIdx.y][threadIdx.x] = 0;
                 }
 
                 // Load B tile
                 if (threadIdx.x < 16 && tile + threadIdx.y < k && col < n) {
                     Bs[threadIdx.y][threadIdx.x] = b[(tile + threadIdx.y) * n + col];
                 } else {
-                    Bs[threadIdx.y][threadIdx.x] = __float2half(0.0f);
+                    Bs[threadIdx.y][threadIdx.x] = 0;
                 }
 
                 __syncthreads();
 
                 // Compute partial sum (convert FP16 to FP32 for accumulation)
+                // Manual FP16 to FP32 conversion inline
                 #pragma unroll
                 for (int i = 0; i < 16; i++) {
                     if (tile + i < k) {
-                        float a_val = __half2float(As[threadIdx.y][i]);
-                        float b_val = __half2float(Bs[i][threadIdx.x]);
+                        // Convert FP16 to FP32 manually
+                        unsigned short fp16_a = As[threadIdx.y][i];
+                        unsigned short fp16_b = Bs[i][threadIdx.x];
+
+                        // Convert A
+                        unsigned int sign_a = (fp16_a & 0x8000) << 16;
+                        int exp_a = (fp16_a & 0x7C00) >> 10;
+                        unsigned int mant_a = (fp16_a & 0x3FF) << 13;
+                        unsigned int result_a = (exp_a == 0) ? sign_a : (sign_a | (((exp_a - 15 + 127) & 0xFF) << 23) | mant_a);
+                        float a_val = *((float*)&result_a);
+
+                        // Convert B
+                        unsigned int sign_b = (fp16_b & 0x8000) << 16;
+                        int exp_b = (fp16_b & 0x7C00) >> 10;
+                        unsigned int mant_b = (fp16_b & 0x3FF) << 13;
+                        unsigned int result_b = (exp_b == 0) ? sign_b : (sign_b | (((exp_b - 15 + 127) & 0xFF) << 23) | mant_b);
+                        float b_val = *((float*)&result_b);
+
                         sum += a_val * b_val;
                     }
                 }
