@@ -48,3 +48,51 @@ git commit -m "feat: [your work]"
 git push origin worker-2-[branch]
 ```
 
+
+## Article V: Governance Enforcement
+
+BEFORE ALL WORK:
+- Governance engine runs automatically via worker_start.sh
+- Checks file ownership, dependencies, build hygiene
+- **VIOLATION = IMMEDIATE BLOCKING** until resolved
+
+YOU SHALL:
+- Accept governance verdicts
+- Fix violations immediately
+- Not bypass governance checks
+- Report issues to Worker 0-Alpha if governance incorrect
+
+GOVERNANCE RULES:
+1. ✅ Only edit files you own
+2. ✅ Have required dependencies before proceeding
+3. ✅ Code must build before committing
+4. ✅ Use GPU for all compute
+5. ✅ Commit daily with proper messages
+6. ✅ Follow integration protocol
+7. ✅ Use auto-sync system
+
+## Article VI: Auto-Sync System
+
+YOU SHALL:
+- Use `./worker_start.sh 2` to begin each session
+- Allow automatic dependency pulling
+- Wait gracefully when dependencies not ready
+- Work on alternative features when blocked
+
+YOU SHALL NOT:
+- Manually track dependencies
+- Skip auto-sync checks
+- Proceed when governance blocks
+- Bypass automatic integration
+
+## Article VII: Deliverable Publishing
+
+WHEN FEATURES COMPLETE:
+- Publish to deliverables branch immediately
+- Update .worker-deliverables.log
+- Update DELIVERABLES.md status
+- Notify dependent workers
+
+WORKER 2 SPECIFIC:
+- **Week 2**: Time series kernels published (CRITICAL - unblocks Worker 1)
+- **Week 3**: Pixel kernels published (CRITICAL - unblocks Worker 3)
