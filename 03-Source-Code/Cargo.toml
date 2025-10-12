@@ -6,6 +6,7 @@ authors = ["Prism-AI Research Team"]
 description = "PRISM: Predictive Reasoning via Information-theoristic Statistical Manifolds - GPU-accelerated neuromorphic and quantum computing analogues"
 license = "MIT"
 build = "build.rs"
+autobins = false  # Disable auto-discovery of binaries (explicit [[bin]] declarations only)
 
 [workspace]
 members = [
