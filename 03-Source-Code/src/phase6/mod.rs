@@ -20,4 +20,5 @@ pub use meta_learning::{MetaLearningCoordinator, ModulatedHamiltonian};
 pub use integration::{Phase6Integration, AdaptiveSolver, AdaptiveSolution};
 
 // Re-export GNN from CMA module (already implemented)
-pub use crate::cma::neural::gnn_integration::E3EquivariantGNN;
+pub use crate::cma::neural::gnn_integration::E3EquivariantGNN;pub mod gpu_tda;
+pub use gpu_tda::GpuTDA;

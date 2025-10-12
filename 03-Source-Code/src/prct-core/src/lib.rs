@@ -30,3 +30,5 @@ pub use dimacs_parser::{parse_dimacs_file, parse_mtx_file, parse_graph_file};
 
 // Re-export shared types for convenience
 pub use shared_types::*;
+pub mod gpu_prct;
+pub use gpu_prct::GpuPRCT;

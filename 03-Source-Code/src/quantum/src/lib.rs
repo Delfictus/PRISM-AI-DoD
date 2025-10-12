@@ -22,4 +22,5 @@ pub use prct_coloring::ChromaticColoring;
 pub use gpu_coloring::GpuChromaticColoring;
 pub use prct_tsp::TSPPathOptimizer;
 pub use gpu_tsp::GpuTspSolver;
-pub use qubo::GpuQuboSolver;
+pub use qubo::GpuQuboSolver;pub mod gpu_k_opt;
+pub use gpu_k_opt::GpuKOpt;

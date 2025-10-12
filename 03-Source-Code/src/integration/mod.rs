@@ -72,3 +72,4 @@ pub use adapters::{
     QuantumAdapter,
     ActiveInferenceAdapter,
 };
+pub mod multi_modal_reasoner;
