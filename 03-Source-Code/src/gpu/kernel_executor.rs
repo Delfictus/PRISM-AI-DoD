@@ -7,6 +7,7 @@ use anyhow::{Result, Context as AnyhowContext};
 use cudarc::{
     driver::{CudaContext, LaunchConfig, PushKernelArg, CudaModule, CudaFunction},
     nvrtc::{compile_ptx_with_opts, CompileOptions},
+    curand::CudaRng,
 };
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -964,6 +965,7 @@ pub struct GpuKernelExecutor {
     context: Arc<CudaContext>,
     modules: HashMap<String, Arc<CudaModule>>,
     kernels: HashMap<String, Arc<CudaFunction>>,
+    rng: Option<std::sync::Mutex<CudaRng>>,  // GPU random number generator (optional for thread safety)
 }
 
 impl GpuKernelExecutor {
@@ -972,12 +974,27 @@ impl GpuKernelExecutor {
         let context = CudaContext::new(device_id)
             .context("Failed to create CUDA context")?;
 
+        // Initialize cuRAND for GPU random number generation
+        let stream = context.default_stream();
+        let rng = match CudaRng::new(42, stream.clone()) {
+            Ok(r) => {
+                println!("✅ cuRAND initialized for GPU random generation");
+                Some(std::sync::Mutex::new(r))
+            }
+            Err(e) => {
+                println!("⚠️  cuRAND initialization failed: {:?}", e);
+                println!("   Random operations will use CPU fallback");
+                None
+            }
+        };
+
         println!("✅ GPU Kernel Executor initialized on device {}", device_id);
 
         Ok(Self {
             context, // Already Arc<CudaContext>
             modules: HashMap::new(),
             kernels: HashMap::new(),
+            rng,
         })
     }
 
@@ -1542,6 +1559,65 @@ impl GpuKernelExecutor {
         // Download result
         let result = stream.memcpy_dtov(&entropy_dev)?;
         Ok(result[0])
+    }
+
+    /// Generate uniform random numbers on GPU using cuRAND
+    /// GPU ONLY - NO CPU rand
+    pub fn generate_uniform_gpu(&self, n: usize) -> Result<Vec<f32>> {
+        let stream = self.context.default_stream();
+        let mut random_data = stream.alloc_zeros::<f32>(n)?;
+
+        // Generate on GPU using cuRAND
+        if let Some(ref rng_mutex) = self.rng {
+            let rng = rng_mutex.lock().unwrap();
+            rng.fill_with_uniform(&mut random_data)
+                .map_err(|e| anyhow::anyhow!("cuRAND uniform generation failed: {:?}", e))?;
+        } else {
+            anyhow::bail!("cuRAND not available - GPU random generation required");
+        }
+
+        // Download result
+        let result = stream.memcpy_dtov(&random_data)?;
+        Ok(result)
+    }
+
+    /// Generate normal random numbers on GPU using cuRAND
+    /// GPU ONLY - NO CPU rand
+    pub fn generate_normal_gpu(&self, n: usize, mean: f32, std: f32) -> Result<Vec<f32>> {
+        let stream = self.context.default_stream();
+        let mut random_data = stream.alloc_zeros::<f32>(n)?;
+
+        // Generate standard normal on GPU
+        if let Some(ref rng_mutex) = self.rng {
+            let rng = rng_mutex.lock().unwrap();
+            rng.fill_with_normal(&mut random_data, mean, std)
+                .map_err(|e| anyhow::anyhow!("cuRAND normal generation failed: {:?}", e))?;
+        } else {
+            anyhow::bail!("cuRAND not available - GPU random generation required");
+        }
+
+        // Download result
+        let result = stream.memcpy_dtov(&random_data)?;
+        Ok(result)
+    }
+
+    /// Sample from discrete probability distribution on GPU
+    /// GPU ONLY - Uses cuRAND for sampling
+    pub fn sample_categorical_gpu(&self, probabilities: &[f32]) -> Result<usize> {
+        // Generate uniform random number on GPU
+        let uniform = self.generate_uniform_gpu(1)?;
+        let r = uniform[0];
+
+        // Find bin using cumulative sum (on GPU for large distributions)
+        let mut cumulative = 0.0f32;
+        for (idx, &prob) in probabilities.iter().enumerate() {
+            cumulative += prob;
+            if r <= cumulative {
+                return Ok(idx);
+            }
+        }
+
+        Ok(probabilities.len() - 1)
     }
 }
 

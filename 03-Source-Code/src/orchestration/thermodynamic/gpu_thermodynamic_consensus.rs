@@ -222,26 +222,18 @@ impl GpuThermodynamicConsensus {
         entropy as f64
     }
 
-    /// Sample model from probability distribution
+    /// Sample model from probability distribution ON GPU
+    /// Uses cuRAND - NO CPU rand
     fn sample_from_distribution(&self, probabilities: &[f64]) -> Result<usize> {
-        use rand::Rng;
-        let mut rng = rand::thread_rng();
-        let r: f64 = rng.gen();
+        // Convert to f32 for GPU
+        let probs_f32: Vec<f32> = probabilities.iter().map(|&p| p as f32).collect();
 
-        let mut cumulative = 0.0;
-        for (idx, &prob) in probabilities.iter().enumerate() {
-            cumulative += prob;
-            if r <= cumulative {
-                return Ok(idx);
-            }
-        }
+        // GPU SAMPLING using cuRAND
+        let executor = self.gpu_executor.lock().unwrap();
+        let selected = executor.sample_categorical_gpu(&probs_f32)
+            .expect("GPU categorical sampling failed - NO CPU FALLBACK");
 
-        // Fallback to highest probability
-        Ok(probabilities.iter()
-            .enumerate()
-            .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-            .map(|(i, _)| i)
-            .unwrap_or(0))
+        Ok(selected)
     }
 
     /// Update model quality estimates from feedback
