@@ -65,6 +65,9 @@ pub mod phase6;
 // CMA: Causal Manifold Annealing (includes GNN)
 pub mod cma;
 
+// Applications: Financial & Universal Solver (Worker 4)
+pub mod applications;
+
 // Re-export key components
 pub use mathematics::{
     MathematicalStatement, ProofResult, Assumption,
@@ -108,6 +111,12 @@ pub use phase6::{
     PredictiveNeuromorphic, PredictionError, DendriticModel,
     MetaLearningCoordinator, ModulatedHamiltonian,
     Phase6Integration, AdaptiveSolver, AdaptiveSolution,
+};
+
+// Applications exports (Worker 4)
+pub use applications::{
+    PortfolioOptimizer, Asset, Portfolio,
+    UniversalSolver, ProblemType, Solution,
 };
 
 /// Platform version information
