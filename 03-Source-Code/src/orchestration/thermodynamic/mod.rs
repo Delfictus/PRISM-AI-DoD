@@ -15,6 +15,7 @@ pub mod advanced_multi_objective;
 pub mod advanced_replica_exchange;
 pub mod gpu_schedule_kernels;
 pub mod adaptive_temperature_control;
+pub mod bayesian_hyperparameter_learning;
 
 pub use hamiltonian::InformationHamiltonian;
 pub use quantum_consensus::{QuantumConsensusOptimizer, ConsensusState};
@@ -90,4 +91,11 @@ pub use adaptive_temperature_control::{
     PIDController,
     AdaptiveControllerStats,
     OPTIMAL_ACCEPTANCE_RATE,
+};
+
+pub use bayesian_hyperparameter_learning::{
+    BayesianHyperparameterLearner,
+    ThompsonSampler,
+    PriorDistribution,
+    PerformanceObservation,
 };
