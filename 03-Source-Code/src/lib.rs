@@ -65,6 +65,9 @@ pub mod phase6;
 // CMA: Causal Manifold Annealing (includes GNN)
 pub mod cma;
 
+// Application domains
+pub mod applications;
+
 // Re-export key components
 pub use mathematics::{
     MathematicalStatement, ProofResult, Assumption,
