@@ -42,9 +42,5 @@ impl ThermodynamicNetworkGpuExt for ThermodynamicNetwork {
             // Check for compiled thermodynamic PTX kernel
             std::path::Path::new("src/kernels/ptx/thermodynamic.ptx").exists()
         }
-        #[cfg(not(feature = "cuda"))]
-        {
-            false
-        }
-    }
+            }
 }

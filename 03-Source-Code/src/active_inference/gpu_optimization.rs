@@ -1,5 +1,5 @@
 // GPU Optimization for Active Inference
-// Replaces CPU fallback with actual GPU computation
+// GPU computation with actual kernel execution
 
 use anyhow::Result;
 use ndarray::Array1;

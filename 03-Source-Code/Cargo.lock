@@ -2680,24 +2680,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "prct-adapters"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "cudarc",
- "nalgebra 0.33.2",
- "ndarray",
- "neuromorphic-engine",
- "num-complex",
- "parking_lot",
- "platform-foundation",
- "prct-core",
- "quantum-engine",
- "shared-types",
- "tokio",
-]
-
-[[package]]
 name = "prct-core"
 version = "0.1.0"
 dependencies = [
@@ -2763,7 +2745,6 @@ dependencies = [
  "ordered-float",
  "parking_lot",
  "platform-foundation",
- "prct-adapters",
  "prct-core",
  "quantum-engine",
  "rand 0.8.5",

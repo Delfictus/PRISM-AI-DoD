@@ -7,7 +7,7 @@ use ndarray::{Array1, Array2};
 use anyhow::{Result, Context};
 use std::collections::VecDeque;
 
-use crate::gpu::simple_gpu::{SimpleGpuContext, SimpleGpuTensor, SimpleGpuLinear};
+use crate::gpu::gpu_enabled::{SimpleGpuContext, SimpleGpuTensor, SimpleGpuLinear};
 
 /// Threat classification result
 #[derive(Debug, Clone)]
@@ -438,7 +438,7 @@ mod tests {
             println!("  Speedup (single): {:.1}x", benchmark.speedup_single);
             println!("  Speedup (batch): {:.1}x", benchmark.speedup_batch);
 
-            // Even with CPU fallback, batch processing should be faster
+            // Batch processing on GPU for optimal performance
             assert!(benchmark.gpu_batch_time_ms < benchmark.gpu_time_ms);
         }
     }

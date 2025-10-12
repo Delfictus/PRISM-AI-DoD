@@ -199,12 +199,7 @@ fn show_status() {
         let gpu_available = gpu_ffi::is_gpu_available();
         println!("  GPU Acceleration: {}", if gpu_available { "✅ Available" } else { "❌ Not Available" });
     }
-    #[cfg(not(feature = "cuda"))]
-    {
-        println!("  GPU Acceleration: ❌ Disabled (CPU only)");
-    }
-
-    // Check PTX files
+        // Check PTX files
     let ptx_files = [
         "transfer_entropy.ptx",
         "thermodynamic.ptx",

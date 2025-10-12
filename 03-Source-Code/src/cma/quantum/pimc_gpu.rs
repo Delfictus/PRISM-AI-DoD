@@ -23,11 +23,6 @@ pub struct GpuPathIntegralMonteCarlo {
     beta: f64,
 }
 
-#[cfg(not(feature = "cuda"))]
-pub struct GpuPathIntegralMonteCarlo {
-    n_beads: usize,
-    beta: f64,
-}
 
 #[cfg(feature = "cuda")]
 impl GpuPathIntegralMonteCarlo {
@@ -255,29 +250,6 @@ impl GpuPathIntegralMonteCarlo {
     }
 }
 
-/// CPU fallback implementation when CUDA is not available
-#[cfg(not(feature = "cuda"))]
-impl GpuPathIntegralMonteCarlo {
-    /// Create new PIMC annealer (CPU fallback)
-    pub fn new(n_beads: usize, beta: f64) -> Result<Self> {
-        Ok(Self {
-            n_beads,
-            beta,
-        })
-    }
-
-    /// Quantum anneal (CPU fallback)
-    pub fn quantum_anneal_gpu(
-        &self,
-        _hamiltonian: &ProblemHamiltonian,
-        _manifold: &CausalManifold,
-        initial: &Solution,
-    ) -> Result<Solution> {
-        // Simple CPU fallback - just return initial solution
-        println!("[CPU-PIMC] Running CPU fallback");
-        Ok(initial.clone())
-    }
-}
 
 #[cfg(test)]
 mod tests {

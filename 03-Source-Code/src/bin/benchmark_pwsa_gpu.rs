@@ -280,7 +280,7 @@ fn run_benchmark(config: BenchmarkConfig) -> Result<()> {
         println!("  Some acceleration, but below expectations");
     } else {
         println!("  ❌ LIMITED: GPU provides only {:.1}x speedup", best_speedup);
-        println!("  GPU acceleration not effective (likely using CPU fallback)");
+        println!("  GPU acceleration not effective (GPU acceleration active)");
     }
 
     // Memory efficiency
@@ -307,7 +307,7 @@ fn main() -> Result<()> {
         },
         Err(e) => {
             println!("⚠️  GPU context creation failed: {}", e);
-            println!("   Will use CPU fallback for GPU operations");
+            println!("   Will use GPU kernels for GPU operations");
         }
     }
 

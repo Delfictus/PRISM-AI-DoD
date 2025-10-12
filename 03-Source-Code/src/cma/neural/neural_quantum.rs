@@ -20,25 +20,19 @@ use std::sync::Arc;
 #[cfg(feature = "cuda")]
 use cudarc::driver::CudaContext;
 
-/// Device abstraction for CPU/GPU
+/// Device abstraction - GPU ONLY
 #[derive(Clone)]
 pub enum Device {
-    Cpu,
-    #[cfg(feature = "cuda")]
+    Cpu,  // Kept for backward compatibility but GPU always used
     Cuda(Arc<CudaContext>),
 }
 
 impl Device {
     pub fn cuda_if_available(_device_id: usize) -> Result<Self> {
-        #[cfg(feature = "cuda")]
-        {
-            match CudaContext::new(_device_id) {
-                Ok(device) => Ok(Device::Cuda(device)),
-                Err(_) => Ok(Device::Cpu),
-            }
-        }
-        #[cfg(not(feature = "cuda"))]
-        Ok(Device::Cpu)
+        // GPU ONLY - NO CPU FALLBACK
+        let device = CudaContext::new(_device_id)
+            .expect("GPU REQUIRED - NO CPU FALLBACK");
+        Ok(Device::Cuda(device))
     }
 }
 

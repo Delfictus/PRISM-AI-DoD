@@ -160,53 +160,39 @@ impl GpuSolvable for GpuTspBridge {
     }
 
     fn get_device_properties(&self) -> Result<GpuProperties> {
-        #[cfg(feature = "cuda")]
-        {
-            // Get actual GPU properties via CUDA
-            use cudarc::driver::sys;
+        // GPU ONLY - NO CPU FALLBACK
+        use cudarc::driver::sys;
 
-            let device = CudaContext::new(0)
-                .context("Failed to access GPU device")?;
+        let device = CudaContext::new(0)
+            .context("GPU REQUIRED")?;
 
-            // Get device name and properties
-            let name = device.name()?;
+        // Get device name and properties
+        let name = device.name()?;
 
-            // Compute capability from device
-            let major = device.attribute(sys::CUdevice_attribute::CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MAJOR)? as u32;
-            let minor = device.attribute(sys::CUdevice_attribute::CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MINOR)? as u32;
+        // Compute capability from device
+        let major = device.attribute(sys::CUdevice_attribute::CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MAJOR)? as u32;
+        let minor = device.attribute(sys::CUdevice_attribute::CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MINOR)? as u32;
 
-            // Memory in bytes to GB (use cudarc API correctly)
-            let memory_bytes = unsafe {
-                let mut bytes: usize = 0;
-                let result = sys::cuMemGetInfo_v2(&mut bytes, std::ptr::null_mut());
-                if result != sys::cudaError_enum::CUDA_SUCCESS {
-                    return Err(anyhow::anyhow!("Failed to get memory info"));
-                }
-                bytes
-            };
-            let memory_gb = memory_bytes as f32 / (1024.0 * 1024.0 * 1024.0);
+        // Memory in bytes to GB
+        let memory_bytes = unsafe {
+            let mut bytes: usize = 0;
+            let result = sys::cuMemGetInfo_v2(&mut bytes, std::ptr::null_mut());
+            if result != sys::cudaError_enum::CUDA_SUCCESS {
+                return Err(anyhow::anyhow!("Failed to get memory info"));
+            }
+            bytes
+        };
+        let memory_gb = memory_bytes as f32 / (1024.0 * 1024.0 * 1024.0);
 
-            // Multiprocessor count
-            let multiprocessors = device.attribute(sys::CUdevice_attribute::CU_DEVICE_ATTRIBUTE_MULTIPROCESSOR_COUNT)? as u32;
+        // Multiprocessor count
+        let multiprocessors = device.attribute(sys::CUdevice_attribute::CU_DEVICE_ATTRIBUTE_MULTIPROCESSOR_COUNT)? as u32;
 
-            Ok(GpuProperties {
-                device_name: name,
-                compute_capability: (major, minor),
-                memory_gb,
-                multiprocessors,
-            })
-        }
-
-        #[cfg(not(feature = "cuda"))]
-        {
-            // Return mock properties when CUDA is not available
-            Ok(GpuProperties {
-                device_name: "CPU Fallback".to_string(),
-                compute_capability: (0, 0),
-                memory_gb: 0.0,
-                multiprocessors: 0,
-            })
-        }
+        Ok(GpuProperties {
+            device_name: name,
+            compute_capability: (major, minor),
+            memory_gb,
+            multiprocessors,
+        })
     }
 }
 

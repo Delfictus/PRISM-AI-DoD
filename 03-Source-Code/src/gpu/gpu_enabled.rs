@@ -1,81 +1,94 @@
-//! Simple GPU-Enabled Implementation
+//! GPU-Enabled Implementation with ACTUAL GPU EXECUTION
 //!
-//! This version enables GPU context but keeps operations simple
+//! NO CPU FALLBACK - GPU ONLY!
 
-use anyhow::{Result, Context};
-use std::sync::Arc;
+use anyhow::{Result, Context as AnyhowContext};
+use std::sync::{Arc, Mutex, OnceLock};
+use cudarc::driver::CudaContext;
+use super::kernel_executor::{GpuKernelExecutor, get_global_executor};
 
-/// GPU context that actually reports GPU as available
-pub struct GpuContext {
-    gpu_available: bool,
+/// Global GPU context and executor (shared across all tensors)
+static GPU_STATE: OnceLock<Arc<GpuState>> = OnceLock::new();
+
+struct GpuState {
+    cuda_context: Arc<CudaContext>,
+    kernel_executor: Arc<Mutex<GpuKernelExecutor>>,
     device_ordinal: usize,
 }
 
-impl GpuContext {
-    /// Create new GPU context - ACTUALLY ENABLES GPU
-    pub fn new() -> Result<Self> {
-        #[cfg(feature = "cuda")]
-        {
-            // Try to create CUDA context
-            match cudarc::driver::CudaContext::new(0) {
-                Ok(ctx) => {
-                    let ordinal = ctx.ordinal();
-                    println!("✅ GPU ENABLED: Successfully created CUDA context");
-                    println!("   Device ordinal: {}", ordinal);
-                    println!("   GPU acceleration is now ACTIVE!");
+impl GpuState {
+    fn initialize() -> Result<Arc<Self>> {
+        // Create CUDA context
+        let cuda_context = CudaContext::new(0)
+            .context("Failed to create CUDA context - GPU REQUIRED!")?;
+        let device_ordinal = cuda_context.ordinal();
 
-                    // Context goes out of scope here, but we've verified GPU works
-                    return Ok(Self {
-                        gpu_available: true,  // ← GPU IS ENABLED!
-                        device_ordinal: ordinal,
-                    });
-                }
-                Err(e) => {
-                    eprintln!("⚠️ GPU initialization failed: {}", e);
-                }
-            }
-        }
+        // Create kernel executor
+        let mut kernel_executor = GpuKernelExecutor::new(0)?;
+        kernel_executor.register_standard_kernels()?;
 
-        #[cfg(not(feature = "cuda"))]
-        {
-            println!("⚠️ CUDA feature not enabled, using CPU");
-        }
+        println!("🚀 GPU INITIALIZED: Real kernel execution enabled!");
+        println!("   Device ordinal: {}", device_ordinal);
+        println!("   NO CPU FALLBACK - GPU ONLY!");
 
-        // CPU fallback
-        Ok(Self {
-            gpu_available: false,
-            device_ordinal: 0,
-        })
+        Ok(Arc::new(Self {
+            cuda_context,
+            kernel_executor: Arc::new(Mutex::new(kernel_executor)),
+            device_ordinal,
+        }))
     }
 
-    /// Check if GPU is available
-    pub fn is_gpu_available(&self) -> bool {
-        self.gpu_available
+    fn get() -> Result<Arc<Self>> {
+        if let Some(state) = GPU_STATE.get() {
+            Ok(state.clone())
+        } else {
+            let state = Self::initialize()?;
+            let _ = GPU_STATE.set(state.clone());
+            Ok(state)
+        }
     }
 }
 
-/// GPU Tensor that reports GPU usage
+/// GPU context that REQUIRES GPU
+pub struct GpuContext {
+    gpu_state: Arc<GpuState>,
+}
+
+impl GpuContext {
+    /// Create new GPU context - GPU REQUIRED, NO FALLBACK
+    pub fn new() -> Result<Self> {
+        let gpu_state = GpuState::get()?;
+        Ok(Self { gpu_state })
+    }
+
+    /// Always returns true - we don't work without GPU
+    pub fn is_gpu_available(&self) -> bool {
+        true // NO CPU FALLBACK - always true or we fail
+    }
+
+    pub fn device_ordinal(&self) -> usize {
+        self.gpu_state.device_ordinal
+    }
+}
+
+/// GPU Tensor with ACTUAL GPU operations
 pub struct GpuTensor {
-    data: Vec<f32>,
+    data: Vec<f32>, // Host-side buffer for transfers
     shape: Vec<usize>,
-    context: Arc<GpuContext>,
+    gpu_state: Arc<GpuState>,
 }
 
 impl GpuTensor {
-    /// Create from CPU data
+    /// Create from CPU data - uploads to GPU
     pub fn from_cpu(data: Vec<f32>, shape: Vec<usize>) -> Result<Self> {
-        let context = Arc::new(GpuContext::new()?);
+        let gpu_state = GpuState::get()?;
 
-        if context.gpu_available {
-            println!("  📊 Tensor created (GPU-enabled, size: {})", data.len());
-        } else {
-            println!("  📊 Tensor created (CPU fallback, size: {})", data.len());
-        }
+        println!("  📊 Tensor created (GPU KERNEL EXECUTION, size: {})", data.len());
 
         Ok(Self {
             data,
             shape,
-            context,
+            gpu_state,
         })
     }
 
@@ -91,7 +104,7 @@ impl GpuTensor {
         Ok(self.data.clone())
     }
 
-    /// Matrix multiply
+    /// Matrix multiply - ACTUAL GPU KERNEL EXECUTION
     pub fn matmul(&self, other: &GpuTensor) -> Result<GpuTensor> {
         if self.shape.len() != 2 || other.shape.len() != 2 {
             anyhow::bail!("matmul requires 2D tensors");
@@ -105,81 +118,83 @@ impl GpuTensor {
             anyhow::bail!("Shape mismatch for matmul");
         }
 
-        // For demonstration, use CPU computation but report GPU status
-        if self.context.gpu_available {
-            println!("  🚀 Matrix multiply (GPU-ENABLED mode, {}x{}x{})", m, k, n);
-            println!("     [Real GPU kernels would execute here once PTX is loaded]");
-        } else {
-            println!("  🐌 Matrix multiply (CPU mode, {}x{}x{})", m, k, n);
-        }
+        println!("  🚀 Matrix multiply (GPU KERNEL EXECUTION, {}x{}x{})", m, k, n);
 
-        let a_data = &self.data;
-        let b_data = &other.data;
-        let mut c_data = vec![0.0f32; m * n];
+        // ACTUAL GPU KERNEL EXECUTION - NO CPU COMPUTATION!
+        let executor = self.gpu_state.kernel_executor.lock().unwrap();
+        let c_data = executor.matrix_multiply(&self.data, &other.data, m, k, n)?;
 
-        // CPU computation (placeholder until GPU kernels are loaded)
-        for i in 0..m {
-            for j in 0..n {
-                let mut sum = 0.0f32;
-                for l in 0..k {
-                    sum += a_data[i * k + l] * b_data[l * n + j];
-                }
-                c_data[i * n + j] = sum;
-            }
-        }
+        println!("     ✅ GPU kernel executed successfully!");
 
         GpuTensor::from_cpu(c_data, vec![m, n])
     }
 
-    /// ReLU activation
+    /// ReLU activation - ACTUAL GPU KERNEL EXECUTION
     pub fn relu(&mut self) -> Result<()> {
-        if self.context.gpu_available {
-            println!("  🚀 ReLU (GPU-ENABLED mode)");
-        } else {
-            println!("  🐌 ReLU (CPU mode)");
-        }
+        println!("  🚀 ReLU (GPU KERNEL EXECUTION)");
 
-        for x in &mut self.data {
-            *x = x.max(0.0);
-        }
+        // ACTUAL GPU KERNEL EXECUTION - NO CPU LOOPS!
+        let executor = self.gpu_state.kernel_executor.lock().unwrap();
+        executor.relu_inplace(&mut self.data)?;
+
+        println!("     ✅ GPU kernel executed successfully!");
         Ok(())
     }
 
-    /// Softmax activation
+    /// Softmax activation - ACTUAL GPU KERNEL EXECUTION
     pub fn softmax(&mut self, dim: usize) -> Result<()> {
         if dim != 1 || self.shape.len() != 2 {
             anyhow::bail!("Softmax only supports dim=1 on 2D tensors");
         }
 
-        if self.context.gpu_available {
-            println!("  🚀 Softmax (GPU-ENABLED mode)");
-        } else {
-            println!("  🐌 Softmax (CPU mode)");
-        }
-
         let batch_size = self.shape[0];
         let num_classes = self.shape[1];
 
-        for b in 0..batch_size {
-            let offset = b * num_classes;
+        println!("  🚀 Softmax (GPU KERNEL EXECUTION)");
 
-            let max_val = self.data[offset..offset + num_classes]
-                .iter()
-                .cloned()
-                .fold(f32::NEG_INFINITY, f32::max);
+        // ACTUAL GPU KERNEL EXECUTION - NO CPU LOOPS!
+        let executor = self.gpu_state.kernel_executor.lock().unwrap();
+        executor.softmax(&mut self.data, batch_size, num_classes)?;
 
-            let mut sum = 0.0f32;
-            for i in 0..num_classes {
-                self.data[offset + i] = (self.data[offset + i] - max_val).exp();
-                sum += self.data[offset + i];
-            }
+        println!("     ✅ GPU kernel executed successfully!");
+        Ok(())
+    }
 
-            for i in 0..num_classes {
-                self.data[offset + i] /= sum;
-            }
+    /// Sigmoid activation - ACTUAL GPU KERNEL
+    pub fn sigmoid(&mut self) -> Result<()> {
+        println!("  🚀 Sigmoid (GPU KERNEL EXECUTION)");
+
+        let executor = self.gpu_state.kernel_executor.lock().unwrap();
+        executor.sigmoid_inplace(&mut self.data)?;
+
+        println!("     ✅ GPU kernel executed successfully!");
+        Ok(())
+    }
+
+    /// Tanh activation - ACTUAL GPU KERNEL
+    pub fn tanh(&mut self) -> Result<()> {
+        println!("  🚀 Tanh (GPU KERNEL EXECUTION)");
+
+        let executor = self.gpu_state.kernel_executor.lock().unwrap();
+        executor.tanh_inplace(&mut self.data)?;
+
+        println!("     ✅ GPU kernel executed successfully!");
+        Ok(())
+    }
+
+    /// Element-wise addition - ACTUAL GPU KERNEL
+    pub fn add(&self, other: &GpuTensor) -> Result<GpuTensor> {
+        if self.shape != other.shape {
+            anyhow::bail!("Shape mismatch for addition");
         }
 
-        Ok(())
+        println!("  🚀 Element-wise add (GPU KERNEL EXECUTION)");
+
+        let executor = self.gpu_state.kernel_executor.lock().unwrap();
+        let result = executor.vector_add(&self.data, &other.data)?;
+
+        println!("     ✅ GPU kernel executed successfully!");
+        GpuTensor::from_cpu(result, self.shape.clone())
     }
 
     /// Get shape
@@ -188,7 +203,7 @@ impl GpuTensor {
     }
 }
 
-/// Linear layer
+/// Linear layer with GPU operations
 pub struct GpuLinear {
     weight: GpuTensor,
     bias: GpuTensor,
@@ -218,14 +233,15 @@ impl GpuLinear {
     }
 
     pub fn forward(&self, input: &GpuTensor) -> Result<GpuTensor> {
-        // Matrix multiply
+        // Matrix multiply on GPU
         let mut output = input.matmul(&self.weight)?;
 
-        // Add bias
-        let bias_data = &self.bias.data;
+        // Add bias on GPU (we should create a kernel for this too)
         let batch_size = output.shape[0];
         let features = output.shape[1];
+        let bias_data = &self.bias.data;
 
+        // TODO: Replace with GPU kernel for bias addition
         for b in 0..batch_size {
             for f in 0..features {
                 output.data[b * features + f] += bias_data[f];
@@ -236,12 +252,12 @@ impl GpuLinear {
     }
 }
 
-/// Replace the old SimpleGpuContext with this GPU-enabled version
+/// Type aliases for compatibility
 pub type SimpleGpuContext = GpuContext;
 pub type SimpleGpuTensor = GpuTensor;
 pub type SimpleGpuLinear = GpuLinear;
 
-// Also provide a SimpleGpuBuffer for compatibility
+/// Buffer for compatibility
 pub struct SimpleGpuBuffer {
     data: Vec<f32>,
 }
@@ -265,16 +281,53 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_gpu_enabled() {
-        let ctx = GpuContext::new().unwrap();
-        println!("GPU enabled: {}", ctx.is_gpu_available());
+    fn test_gpu_kernel_execution() -> Result<()> {
+        // This will FAIL without GPU - NO CPU FALLBACK
+        let ctx = GpuContext::new()?;
+        assert!(ctx.is_gpu_available());
+        println!("✅ GPU kernel execution enabled!");
 
-        // Should report true when CUDA is available
-        #[cfg(feature = "cuda")]
-        {
-            if ctx.is_gpu_available() {
-                println!("✅ GPU is properly enabled!");
-            }
-        }
+        // Test actual kernel execution
+        let a = GpuTensor::from_cpu(vec![1.0, 2.0, 3.0, 4.0], vec![2, 2])?;
+        let b = GpuTensor::from_cpu(vec![5.0, 6.0, 7.0, 8.0], vec![2, 2])?;
+
+        let c = a.matmul(&b)?;
+        let result = c.to_cpu()?;
+
+        // Verify actual computation
+        assert!((result[0] - 19.0).abs() < 1e-6); // 1*5 + 2*7 = 19
+        assert!((result[1] - 22.0).abs() < 1e-6); // 1*6 + 2*8 = 22
+        assert!((result[2] - 43.0).abs() < 1e-6); // 3*5 + 4*7 = 43
+        assert!((result[3] - 50.0).abs() < 1e-6); // 3*6 + 4*8 = 50
+
+        println!("✅ GPU kernels computing correctly!");
+        Ok(())
+    }
+
+    #[test]
+    fn test_gpu_activations() -> Result<()> {
+        // Test ReLU
+        let mut tensor = GpuTensor::from_cpu(
+            vec![-1.0, 0.0, 1.0, -0.5, 2.0],
+            vec![5]
+        )?;
+        tensor.relu()?;
+        let result = tensor.to_cpu()?;
+        assert_eq!(result, vec![0.0, 0.0, 1.0, 0.0, 2.0]);
+
+        // Test Softmax
+        let mut tensor = GpuTensor::from_cpu(
+            vec![1.0, 2.0, 3.0, 4.0],
+            vec![2, 2]
+        )?;
+        tensor.softmax(1)?;
+        let result = tensor.to_cpu()?;
+
+        // Check softmax properties
+        assert!((result[0] + result[1] - 1.0).abs() < 1e-6);
+        assert!((result[2] + result[3] - 1.0).abs() < 1e-6);
+
+        println!("✅ GPU activation kernels working!");
+        Ok(())
     }
 }

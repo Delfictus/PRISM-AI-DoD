@@ -1,7 +1,7 @@
 //! GPU-accelerated Linear Layer (using simple implementation)
 
 use anyhow::Result;
-use crate::gpu::simple_gpu::{SimpleGpuTensor, SimpleGpuLinear};
+use crate::gpu::gpu_enabled::{SimpleGpuTensor, SimpleGpuLinear};
 
 /// GPU Linear layer (wraps SimpleGpuLinear)
 pub struct GpuLinear {
@@ -12,7 +12,7 @@ pub struct GpuLinear {
 
 impl GpuLinear {
     /// Create new GPU Linear layer
-    pub fn new(in_features: usize, out_features: usize, _pool: std::sync::Arc<super::super::simple_gpu::SimpleGpuContext>) -> Result<Self> {
+    pub fn new(in_features: usize, out_features: usize, _pool: std::sync::Arc<super::super::gpu_enabled::SimpleGpuContext>) -> Result<Self> {
         let inner = SimpleGpuLinear::new(in_features, out_features)?;
         Ok(Self {
             inner,
@@ -56,7 +56,7 @@ impl GpuLinearBuilder {
         self
     }
 
-    pub fn pool(self, _pool: std::sync::Arc<super::super::simple_gpu::SimpleGpuContext>) -> Self {
+    pub fn pool(self, _pool: std::sync::Arc<super::super::gpu_enabled::SimpleGpuContext>) -> Self {
         // Pool is ignored in simple implementation
         self
     }

@@ -28,14 +28,6 @@ pub struct QuantumGpuRuntime {
     num_qubits: usize,
 }
 
-/// CPU fallback when CUDA is not available
-#[cfg(not(feature = "cuda"))]
-pub struct QuantumGpuRuntime {
-    /// Number of qubits
-    num_qubits: usize,
-    /// CPU state
-    state: Vec<Complex64>,
-}
 
 #[cfg(feature = "cuda")]
 impl QuantumGpuRuntime {
@@ -208,70 +200,3 @@ impl QuantumGpuRuntime {
     }
 }
 
-/// CPU fallback implementation when CUDA is not available
-#[cfg(not(feature = "cuda"))]
-impl QuantumGpuRuntime {
-    /// Create new runtime (CPU fallback)
-    pub fn new(num_qubits: usize) -> Result<Self> {
-        let dimension = 1 << num_qubits;
-        let mut state = vec![Complex64::new(0.0, 0.0); dimension];
-        state[0] = Complex64::new(1.0, 0.0); // Initialize to |0...0⟩
-
-        Ok(Self {
-            num_qubits,
-            state,
-        })
-    }
-
-    /// Execute a quantum operation (CPU fallback)
-    pub fn execute_op(&self, op: &QuantumOp) -> Result<()> {
-        println!("[CPU Fallback] Executing operation: {:?}", op);
-        // Basic CPU implementation would go here
-        Ok(())
-    }
-
-    /// Upload Hamiltonian (CPU fallback)
-    pub fn upload_hamiltonian(&self, _hamiltonian: &Hamiltonian) -> Result<()> {
-        println!("[CPU Fallback] Hamiltonian upload (no-op)");
-        Ok(())
-    }
-
-    /// Apply QFT (CPU fallback)
-    pub fn apply_qft(&self, inverse: bool) -> Result<()> {
-        println!("[CPU Fallback] Applying {} QFT", if inverse { "inverse" } else { "forward" });
-        Ok(())
-    }
-
-    /// Apply VQE ansatz (CPU fallback)
-    pub fn apply_vqe_ansatz(&self, _parameters: &[f64], num_layers: usize) -> Result<()> {
-        println!("[CPU Fallback] Applying VQE ansatz with {} layers", num_layers);
-        Ok(())
-    }
-
-    /// Measure (CPU fallback)
-    pub fn measure(&self) -> Result<Vec<f64>> {
-        let probs: Vec<f64> = self.state.iter()
-            .map(|c| c.norm_sqr())
-            .collect();
-        Ok(probs)
-    }
-
-    /// Get state (CPU fallback)
-    pub fn get_state(&self) -> Result<QuantumState> {
-        Ok(QuantumState {
-            dimension: self.state.len(),
-            amplitudes: self.state.clone(),
-        })
-    }
-
-    /// Set state (CPU fallback)
-    pub fn set_state(&self, _state: &QuantumState) -> Result<()> {
-        println!("[CPU Fallback] Setting state");
-        Ok(())
-    }
-
-    /// Get memory info (CPU fallback)
-    pub fn get_memory_info(&self) -> Result<String> {
-        Ok("CPU Fallback: No GPU memory available".to_string())
-    }
-}

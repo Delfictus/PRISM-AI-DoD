@@ -8,17 +8,13 @@
 // pub mod tensor_ops;
 // pub mod kernel_launcher;
 
-// This module doesn't import the problematic modules
+// GPU-ONLY modules - NO CPU FALLBACK
 pub mod layers;
-pub mod simple_gpu;
-// pub mod simple_gpu_v2;  // Disabled - using gpu_enabled instead
-// pub mod gpu_real;  // Disabled - API issues
-pub mod gpu_enabled;
-pub mod gpu_executor;
-pub mod kernel_executor;  // New kernel executor with working API
+pub mod gpu_enabled;  // GPU-only implementation with kernel execution
+pub mod kernel_executor;  // GPU kernel executor
 
-// Use simple implementation for now to ensure compilation
-pub use simple_gpu::{
+// Use GPU-enabled implementation - NO CPU FALLBACK
+pub use gpu_enabled::{
     SimpleGpuContext as GpuMemoryPool,
     SimpleGpuTensor as GpuTensor,
     SimpleGpuLinear as GpuLinear,

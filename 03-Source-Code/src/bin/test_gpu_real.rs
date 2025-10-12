@@ -15,9 +15,9 @@ fn main() -> Result<()> {
 
     if ctx.is_gpu_available() {
         println!("✅ GPU is AVAILABLE and INITIALIZED!");
-        println!("   This is using the REAL GPU, not CPU fallback.\n");
+        println!("   This is using the REAL GPU, GPU acceleration.\n");
     } else {
-        println!("❌ GPU not available - using CPU fallback\n");
+        println!("❌ GPU not available - GPU REQUIRED\n");
         println!("   Check CUDA installation and drivers.\n");
     }
 
@@ -122,10 +122,10 @@ fn main() -> Result<()> {
             println!("\n✅ GOOD: GPU providing {:.1}x speedup", speedup);
         } else {
             println!("\n⚠️  LIMITED: GPU speedup only {:.1}x", speedup);
-            println!("   May still be using partial CPU fallback");
+            println!("   May still be using GPU execution");
         }
     } else {
-        println!("❌ GPU NOT ACTIVE - Using CPU fallback");
+        println!("❌ GPU NOT ACTIVE - GPU REQUIRED");
         println!("   Check CUDA installation and GPU drivers");
     }
 

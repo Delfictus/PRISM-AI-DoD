@@ -15,10 +15,6 @@ use crate::statistical_mechanics::{ThermodynamicNetwork, ThermodynamicState};
 use super::ports::{NeuromorphicPort, InformationFlowPort, ThermodynamicPort, QuantumPort, ActiveInferencePort};
 use super::quantum_mlir_integration::{QuantumMlirIntegration, QuantumGate};
 
-#[cfg(feature = "cuda")]
-use crate::information_theory::TransferEntropy;
-
-#[cfg(not(feature = "cuda"))]
 use crate::information_theory::TransferEntropy;
 
 /// GPU-accelerated neuromorphic adapter
@@ -116,31 +112,17 @@ impl NeuromorphicPort for NeuromorphicAdapter {
     }
 }
 
-/// Information flow adapter (GPU-accelerated when CUDA enabled)
+/// Information flow adapter (GPU-ONLY, NO CPU FALLBACK)
 pub struct InformationFlowAdapter {
-    #[cfg(feature = "cuda")]
-    te_calculator: TransferEntropy,
-
-    #[cfg(not(feature = "cuda"))]
     te_calculator: TransferEntropy,
 }
 
 impl InformationFlowAdapter {
-    pub fn new_gpu(context: Arc<CudaContext>, embedding_dim: usize, tau: usize, k: usize) -> Result<Self> {
-        #[cfg(feature = "cuda")]
-        {
-            // GPU implementation (Article VI: data stays on GPU)
-            let te_calculator = TransferEntropy::new(embedding_dim, embedding_dim, tau);
-            Ok(Self { te_calculator })
-        }
-
-        #[cfg(not(feature = "cuda"))]
-        {
-            // Fallback to CPU if CUDA not enabled
-            let _ = context;  // Suppress unused warning
-            let te_calculator = TransferEntropy::new(embedding_dim, tau, k);
-            Ok(Self { te_calculator })
-        }
+    pub fn new_gpu(context: Arc<CudaContext>, embedding_dim: usize, tau: usize, _k: usize) -> Result<Self> {
+        // GPU ONLY - NO CPU FALLBACK
+        let _ = context;  // Will be used for GPU operations
+        let te_calculator = TransferEntropy::new(embedding_dim, embedding_dim, tau);
+        Ok(Self { te_calculator })
     }
 }
 
@@ -150,19 +132,9 @@ impl InformationFlowPort for InformationFlowAdapter {
         let source_f64 = source.mapv(|x| if x { 1.0 } else { 0.0 });
         let target_f64 = target.mapv(|x| if x { 1.0 } else { 0.0 });
 
-        #[cfg(feature = "cuda")]
-        {
-            // GPU path
-            let result = self.te_calculator.calculate(&source_f64, &target_f64);
-            Ok(result.te_value)
-        }
-
-        #[cfg(not(feature = "cuda"))]
-        {
-            // CPU path
-            let result = self.te_calculator.calculate(&source_f64, &target_f64);
-            Ok(result.te_value)
-        }
+        // GPU ONLY - NO CPU FALLBACK
+        let result = self.te_calculator.calculate(&source_f64, &target_f64);
+        Ok(result.te_value)
     }
 
     fn compute_coupling_matrix(&mut self, spike_history: &[Array1<bool>]) -> Result<Array2<f64>> {
@@ -196,14 +168,9 @@ impl InformationFlowPort for InformationFlowAdapter {
     }
 }
 
-/// Thermodynamic adapter (GPU-accelerated when CUDA enabled)
+/// Thermodynamic adapter (GPU-ONLY, NO CPU FALLBACK)
 pub struct ThermodynamicAdapter {
-    #[cfg(feature = "cuda")]
     network: crate::statistical_mechanics::ThermodynamicGpu,
-
-    #[cfg(not(feature = "cuda"))]
-    network: ThermodynamicNetwork,
-
     config: crate::statistical_mechanics::NetworkConfig,
 }
 
@@ -221,91 +188,38 @@ impl ThermodynamicAdapter {
             seed: 42,
         };
 
-        #[cfg(feature = "cuda")]
-        {
-            // GPU implementation (Article VI: evolution on GPU)
-            let config_copy = config.clone();
-            let network = crate::statistical_mechanics::ThermodynamicGpu::new(context, config)?;
-            Ok(Self { network, config: config_copy })
-        }
-
-        #[cfg(not(feature = "cuda"))]
-        {
-            // Fallback to CPU if CUDA not enabled
-            let _ = context;  // Suppress unused warning
-            let network = ThermodynamicNetwork::new(config);
-            Ok(Self { network, config })
-        }
+        // GPU ONLY - NO CPU FALLBACK
+        let config_copy = config.clone();
+        let network = crate::statistical_mechanics::ThermodynamicGpu::new(context, config)?;
+        Ok(Self { network, config: config_copy })
     }
 }
 
 impl ThermodynamicPort for ThermodynamicAdapter {
     fn evolve(&mut self, coupling: &Array2<f64>, dt: f64) -> Result<ThermodynamicState> {
-        #[cfg(feature = "cuda")]
-        {
-            // GPU path: update coupling and evolve
-            self.network.update_coupling(coupling)?;
+        // GPU ONLY - NO CPU FALLBACK
+        self.network.update_coupling(coupling)?;
 
-            // Compute steps from dt
-            let n_steps = ((dt / self.config.dt).max(1.0)) as usize;
+        // Compute steps from dt
+        let n_steps = ((dt / self.config.dt).max(1.0)) as usize;
 
-            // Evolve on GPU
-            let mut state = self.network.get_state()?;
-            for _ in 0..n_steps {
-                state = self.network.evolve_step()?;
-            }
-
-            Ok(state)
+        // Evolve on GPU
+        let mut state = self.network.get_state()?;
+        for _ in 0..n_steps {
+            state = self.network.evolve_step()?;
         }
 
-        #[cfg(not(feature = "cuda"))]
-        {
-            // CPU path: use existing evolution
-            let _ = coupling;  // TODO: Use coupling matrix
-            let n_steps = ((dt / self.config.dt).max(1.0)) as usize;
-            let result = self.network.evolve(n_steps);
-            Ok(result.state.clone())
-        }
+        Ok(state)
     }
 
     fn entropy_production(&self) -> f64 {
-        #[cfg(feature = "cuda")]
-        {
-            self.network.entropy_production()
-        }
-
-        #[cfg(not(feature = "cuda"))]
-        {
-            let history = self.network.entropy_history();
-            if history.len() > 1 {
-                let n = history.len();
-                let delta_s = history[n-1] - history[n-2];
-                delta_s / self.config.dt
-            } else {
-                0.0
-            }
-        }
+        // GPU ONLY - NO CPU FALLBACK
+        self.network.entropy_production()
     }
 
     fn get_kuramoto_state(&self) -> Option<shared_types::KuramotoState> {
-        #[cfg(feature = "cuda")]
-        {
-            self.network.get_kuramoto_state().ok()
-        }
-
-        #[cfg(not(feature = "cuda"))]
-        {
-            // CPU path: extract from network state
-            let state = self.network.state();
-            let n = state.phases.len();
-            Some(shared_types::KuramotoState {
-                phases: state.phases.clone(),
-                natural_frequencies: vec![1.0; n], // Default frequencies
-                coupling_matrix: vec![self.config.coupling_strength; n * n],
-                order_parameter: 0.0, // TODO: Compute from phases
-                mean_phase: state.phases.iter().sum::<f64>() / n as f64,
-            })
-        }
+        // GPU ONLY - NO CPU FALLBACK
+        self.network.get_kuramoto_state().ok()
     }
 }
 
@@ -385,16 +299,10 @@ impl QuantumPort for QuantumAdapter {
     }
 }
 
-/// Active inference adapter (GPU-accelerated when CUDA enabled)
+/// Active inference adapter (GPU-ONLY, NO CPU FALLBACK)
 pub struct ActiveInferenceAdapter {
     hierarchical_model: crate::active_inference::HierarchicalModel,
-
-    #[cfg(feature = "cuda")]
     inference_engine: crate::active_inference::ActiveInferenceGpu,
-
-    #[cfg(not(feature = "cuda"))]
-    inference_engine: crate::active_inference::VariationalInference,
-
     controller: crate::active_inference::ActiveInferenceController,
 }
 
@@ -419,51 +327,29 @@ impl ActiveInferenceAdapter {
         let preferred_obs = Array1::zeros(100);
         let mut selector = PolicySelector::new(3, 5, preferred_obs, cpu_inference.clone(), trans_model);
 
-        #[cfg(feature = "cuda")]
-        {
-            // Create GPU policy evaluator
-            println!("[ADAPTER] Creating GPU policy evaluator...");
-            match crate::active_inference::GpuPolicyEvaluator::new(
-                context.clone(),
-                5,   // n_policies
-                3,   // horizon
-                10,  // substeps for window evolution
-            ) {
-                Ok(gpu_policy_eval) => {
-                    let gpu_eval_arc = std::sync::Arc::new(std::sync::Mutex::new(gpu_policy_eval));
-                    selector.set_gpu_evaluator(gpu_eval_arc);
-                    println!("[ADAPTER] GPU policy evaluator created and wired successfully");
-                }
-                Err(e) => {
-                    eprintln!("[ADAPTER] Failed to create GPU policy evaluator: {}", e);
-                    eprintln!("[ADAPTER] Will use CPU policy evaluation");
-                }
-            }
-        }
+        // GPU ONLY - NO CPU FALLBACK
+        // Create GPU policy evaluator
+        println!("[ADAPTER] Creating GPU policy evaluator...");
+        let gpu_policy_eval = crate::active_inference::GpuPolicyEvaluator::new(
+            context.clone(),
+            5,   // n_policies
+            3,   // horizon
+            10,  // substeps for window evolution
+        ).expect("GPU policy evaluator REQUIRED - NO CPU FALLBACK");
+
+        let gpu_eval_arc = std::sync::Arc::new(std::sync::Mutex::new(gpu_policy_eval));
+        selector.set_gpu_evaluator(gpu_eval_arc);
+        println!("[ADAPTER] GPU policy evaluator created successfully");
 
         let controller = ActiveInferenceController::new(selector, SensingStrategy::Adaptive);
 
-        #[cfg(feature = "cuda")]
-        {
-            // GPU implementation (Article VI: variational inference on GPU)
-            let inference_engine = crate::active_inference::ActiveInferenceGpu::new(context, cpu_inference)?;
-            Ok(Self {
-                hierarchical_model,
-                inference_engine,
-                controller,
-            })
-        }
-
-        #[cfg(not(feature = "cuda"))]
-        {
-            // Fallback to CPU if CUDA not enabled
-            let _ = context;
-            Ok(Self {
-                hierarchical_model,
-                inference_engine: cpu_inference,
-                controller,
-            })
-        }
+        // GPU ONLY - NO CPU FALLBACK
+        let inference_engine = crate::active_inference::ActiveInferenceGpu::new(context, cpu_inference)?;
+        Ok(Self {
+            hierarchical_model,
+            inference_engine,
+            controller,
+        })
     }
 }
 
@@ -488,33 +374,17 @@ impl ActiveInferencePort for ActiveInferenceAdapter {
         let resize_elapsed = resize_start.elapsed();
         println!("[ADAPTER] Resize/clone took {:?}", resize_elapsed);
 
-        #[cfg(feature = "cuda")]
-        {
-            println!("[ADAPTER] CUDA feature ENABLED - Using GPU path");
-            let gpu_start = std::time::Instant::now();
-            // GPU path: accelerated variational inference
-            let result = self.inference_engine.infer_gpu(&mut self.hierarchical_model, &obs_resized);
-            let gpu_elapsed = gpu_start.elapsed();
-            println!("[ADAPTER] inference_engine.infer_gpu() returned in {:?}", gpu_elapsed);
+        // GPU ONLY - NO CPU FALLBACK
+        println!("[ADAPTER] Using GPU path (MANDATORY)");
+        let gpu_start = std::time::Instant::now();
+        let result = self.inference_engine.infer_gpu(&mut self.hierarchical_model, &obs_resized);
+        let gpu_elapsed = gpu_start.elapsed();
+        println!("[ADAPTER] inference_engine.infer_gpu() returned in {:?}", gpu_elapsed);
 
-            let total_elapsed = start_total.elapsed();
-            println!("[ADAPTER] TOTAL infer() time: {:?}", total_elapsed);
-            println!("[ADAPTER] ========================================");
-            result
-        }
-
-        #[cfg(not(feature = "cuda"))]
-        {
-            println!("[ADAPTER] CUDA feature DISABLED - Using CPU path");
-            // CPU path: standard variational inference
-            let _components = self.inference_engine.infer(&mut self.hierarchical_model, &obs_resized);
-            let free_energy = self.hierarchical_model.compute_free_energy(&obs_resized);
-
-            let total_elapsed = start_total.elapsed();
-            println!("[ADAPTER] TOTAL infer() time: {:?}", total_elapsed);
-            println!("[ADAPTER] ========================================");
-            Ok(free_energy)
-        }
+        let total_elapsed = start_total.elapsed();
+        println!("[ADAPTER] TOTAL infer() time: {:?}", total_elapsed);
+        println!("[ADAPTER] ========================================");
+        result
     }
 
     fn select_action(&mut self, _targets: &Array1<f64>) -> Result<Array1<f64>> {

@@ -81,11 +81,7 @@ impl TransferEntropyGpuExt for TransferEntropy {
             // Check for compiled PTX kernel
             std::path::Path::new("src/kernels/ptx/transfer_entropy.ptx").exists()
         }
-        #[cfg(not(feature = "cuda"))]
-        {
-            false
-        }
-    }
+            }
 }
 
 #[cfg(test)]

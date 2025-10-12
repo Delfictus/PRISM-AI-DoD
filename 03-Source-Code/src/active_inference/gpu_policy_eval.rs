@@ -56,9 +56,6 @@ struct GpuTrajectoryBuffers {
     obs_variances: CudaSlice<f64>,       // [n_policies × horizon × 100]
 }
 
-#[cfg(not(feature = "cuda"))]
-#[derive(Debug)]
-struct GpuTrajectoryBuffers {}
 
 /// GPU buffers for EFE computation
 #[cfg(feature = "cuda")]
@@ -69,9 +66,6 @@ struct GpuEfeBuffers {
     novelty: CudaSlice<f64>,             // [n_policies]
 }
 
-#[cfg(not(feature = "cuda"))]
-#[derive(Debug)]
-struct GpuEfeBuffers {}
 
 /// GPU buffers for model state and parameters
 #[cfg(feature = "cuda")]
@@ -95,9 +89,6 @@ struct GpuModelBuffers {
     prior_variance: CudaSlice<f64>,        // [900]
 }
 
-#[cfg(not(feature = "cuda"))]
-#[derive(Debug)]
-struct GpuModelBuffers {}
 
 /// GPU-accelerated policy evaluator
 #[cfg(feature = "cuda")]
@@ -135,19 +126,6 @@ pub struct GpuPolicyEvaluator {
     c_n_squared: f64,
 }
 
-/// CPU fallback when CUDA is not available
-#[cfg(not(feature = "cuda"))]
-#[derive(Debug)]
-pub struct GpuPolicyEvaluator {
-    n_policies: usize,
-    horizon: usize,
-    substeps: usize,
-    dims: StateDimensions,
-    damping: f64,
-    diffusion: f64,
-    decorrelation_rate: f64,
-    c_n_squared: f64,
-}
 
 #[cfg(feature = "cuda")]
 impl GpuPolicyEvaluator {
@@ -747,44 +725,6 @@ impl GpuPolicyEvaluator {
     }
 }
 
-/// CPU fallback implementation when CUDA is not available
-#[cfg(not(feature = "cuda"))]
-impl GpuPolicyEvaluator {
-    /// Create new policy evaluator (CPU fallback)
-    pub fn new(
-        _context: std::sync::Arc<()>,
-        n_policies: usize,
-        horizon: usize,
-        substeps: usize,
-    ) -> Result<Self> {
-        let dims = StateDimensions::default();
-
-        Ok(Self {
-            n_policies,
-            horizon,
-            substeps,
-            dims,
-            damping: 10.0,
-            diffusion: 0.1,
-            decorrelation_rate: 0.1,
-            c_n_squared: 1e-13,
-        })
-    }
-
-    /// Evaluate policies (CPU fallback)
-    pub fn evaluate_policies_gpu(
-        &mut self,
-        _model: &HierarchicalModel,
-        policies: &[Policy],
-        _observation_matrix: &Array2<f64>,
-        _preferred_obs: &Array1<f64>,
-    ) -> Result<Vec<f64>> {
-        // Simple CPU fallback - return placeholder EFE values
-        println!("[CPU-POLICY] Running CPU fallback policy evaluation");
-        let efe_values = vec![0.1; policies.len()];
-        Ok(efe_values)
-    }
-}
 
 #[cfg(test)]
 mod tests {
@@ -815,17 +755,7 @@ mod tests {
             }
         }
 
-        #[cfg(not(feature = "cuda"))]
-        {
-            let evaluator = GpuPolicyEvaluator::new(
-                Arc::new(()),
-                5,   // n_policies
-                3,   // horizon
-                10,  // substeps
-            );
-            assert!(evaluator.is_ok(), "CPU fallback should initialize");
-        }
-    }
+            }
 
     #[test]
     fn test_dimensions() {

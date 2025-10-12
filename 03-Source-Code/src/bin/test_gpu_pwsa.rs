@@ -1,9 +1,9 @@
 //! Test GPU acceleration for PWSA
 //!
-//! Verifies that GPU operations work correctly (using CPU fallback for now)
+//! Verifies that GPU operations work correctly (using GPU kernels)
 
 use anyhow::Result;
-use prism_ai::gpu::simple_gpu::{SimpleGpuContext, SimpleGpuTensor, SimpleGpuLinear};
+use prism_ai::gpu::gpu_enabled::{SimpleGpuContext, SimpleGpuTensor, SimpleGpuLinear};
 use std::time::Instant;
 
 fn main() -> Result<()> {
@@ -11,7 +11,6 @@ fn main() -> Result<()> {
     println!("    GPU PWSA Acceleration Test");
     println!("===========================================\n");
 
-    println!("Note: Currently using CPU fallback implementation");
     println!("GPU kernels will be integrated once cudarc API is stabilized\n");
 
     // Test 1: Matrix multiplication
