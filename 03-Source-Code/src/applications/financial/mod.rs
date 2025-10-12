@@ -20,8 +20,10 @@ use serde::{Deserialize, Serialize};
 use crate::information_theory::TransferEntropy;
 
 pub mod market_regime;
+pub mod forecasting;
 
 pub use market_regime::{MarketRegime, MarketRegimeDetector};
+pub use forecasting::{PortfolioForecaster, ForecastOptimizationConfig};
 
 /// Represents a financial asset
 #[derive(Debug, Clone, Serialize, Deserialize)]

@@ -87,10 +87,12 @@ impl ProblemType {
 pub mod problem;
 pub mod solution;
 pub mod cma_integration;
+pub mod timeseries_integration;
 
 pub use problem::{Problem, ProblemData, AssetSpec};
 pub use solution::{Solution, SolutionMetrics};
 pub use cma_integration::CmaAdapter;
+pub use timeseries_integration::{TimeSeriesForecaster, Forecast, ForecastWithUncertainty, ModelType};
 
 /// Universal solver configuration
 #[derive(Debug, Clone)]
