@@ -1,0 +1,181 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prism-api-server
+  namespace: prism-ai
+  labels:
+    app: prism-api-server
+    version: v1.0.0
+    component: api-server
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: prism-api-server
+  template:
+    metadata:
+      labels:
+        app: prism-api-server
+        version: v1.0.0
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: prism-api-sa
+
+      # Security context
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+
+      # Init container for migrations or setup (optional)
+      initContainers:
+      - name: wait-for-redis
+        image: busybox:latest
+        command: ['sh', '-c', 'until nc -z redis-service 6379; do echo waiting for redis; sleep 2; done;']
+
+      containers:
+      - name: api-server
+        image: prism-ai/api-server:latest
+        imagePullPolicy: Always
+
+        ports:
+        - name: http
+          containerPort: 8080
+          protocol: TCP
+        - name: websocket
+          containerPort: 8080
+          protocol: TCP
+
+        # Environment from ConfigMap
+        envFrom:
+        - configMapRef:
+            name: prism-api-config
+
+        # Environment from Secrets
+        env:
+        - name: API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: prism-api-secrets
+              key: API_KEY
+        - name: OPENAI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: prism-api-secrets
+              key: OPENAI_API_KEY
+        - name: ANTHROPIC_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: prism-api-secrets
+              key: ANTHROPIC_API_KEY
+        - name: GEMINI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: prism-api-secrets
+              key: GEMINI_API_KEY
+              optional: true
+        - name: XAI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: prism-api-secrets
+              key: XAI_API_KEY
+              optional: true
+
+        # Resource limits
+        resources:
+          requests:
+            memory: "2Gi"
+            cpu: "1000m"
+            nvidia.com/gpu: 1
+          limits:
+            memory: "4Gi"
+            cpu: "2000m"
+            nvidia.com/gpu: 1
+
+        # Liveness probe
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: http
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 3
+
+        # Readiness probe
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: http
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          successThreshold: 1
+          failureThreshold: 3
+
+        # Startup probe (for slow startup)
+        startupProbe:
+          httpGet:
+            path: /health
+            port: http
+          initialDelaySeconds: 0
+          periodSeconds: 10
+          timeoutSeconds: 3
+          successThreshold: 1
+          failureThreshold: 30
+
+        # Volume mounts
+        volumeMounts:
+        - name: logs
+          mountPath: /app/logs
+        - name: tmp
+          mountPath: /tmp
+
+      # Volumes
+      volumes:
+      - name: logs
+        emptyDir: {}
+      - name: tmp
+        emptyDir: {}
+
+      # Node affinity for GPU nodes
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: nvidia.com/gpu
+                operator: Exists
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - prism-api-server
+              topologyKey: kubernetes.io/hostname
+
+      # Tolerations for GPU nodes
+      tolerations:
+      - key: nvidia.com/gpu
+        operator: Exists
+        effect: NoSchedule
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: prism-api-sa
+  namespace: prism-ai
