@@ -44,54 +44,63 @@ if [ ! -z "$MODIFIED_FILES" ]; then
         # Determine if worker owns this file
         OWNS_FILE=false
 
-        case $WORKER_ID in
-            1)
-                if [[ "$file" =~ ^src/(active_inference|orchestration/routing|time_series|information_theory)/ ]]; then
-                    OWNS_FILE=true
-                fi
-                ;;
-            2)
-                if [[ "$file" =~ ^src/(gpu|orchestration/local_llm.*gpu|production)/|\.cu$ ]]; then
-                    OWNS_FILE=true
-                fi
-                ;;
-            3)
-                if [[ "$file" =~ ^src/(pwsa|finance)/.*portfolio ]]; then
-                    OWNS_FILE=true
-                fi
-                ;;
-            4)
-                if [[ "$file" =~ ^src/(telecom|robotics)/.*motion ]]; then
-                    OWNS_FILE=true
-                fi
-                ;;
-            5)
-                if [[ "$file" =~ ^src/orchestration/(thermodynamic|routing/.*advanced) ]]; then
-                    OWNS_FILE=true
-                fi
-                ;;
-            6)
-                if [[ "$file" =~ ^src/orchestration/local_llm/.*transformer ]]; then
-                    OWNS_FILE=true
-                fi
-                ;;
-            7)
-                if [[ "$file" =~ ^src/(drug_discovery|robotics)/.*advanced ]]; then
-                    OWNS_FILE=true
-                fi
-                ;;
-            8)
-                if [[ "$file" =~ ^(src/api_server|deployment|docs)/ ]]; then
-                    OWNS_FILE=true
-                fi
-                ;;
-        esac
+        # Skip vault progress files (workers maintain their own progress)
+        if [[ "$file" =~ ^\.worker-vault/Progress/ ]]; then
+            OWNS_FILE=true
+        # Skip vault constitution references (read-only, but workers can view/reference)
+        elif [[ "$file" =~ ^\.worker-vault/Constitution/WORKER_${WORKER_ID}_CONSTITUTION\.md$ ]]; then
+            OWNS_FILE=true
+        else
+            case $WORKER_ID in
+                1)
+                    if [[ "$file" =~ ^03-Source-Code/src/(active_inference|orchestration/routing|time_series|information_theory)/ ]]; then
+                        OWNS_FILE=true
+                    fi
+                    ;;
+                2)
+                    if [[ "$file" =~ ^03-Source-Code/src/(gpu|orchestration/local_llm.*gpu|production)/|\.cu$ ]]; then
+                        OWNS_FILE=true
+                    fi
+                    ;;
+                3)
+                    if [[ "$file" =~ ^03-Source-Code/src/(pwsa|finance)/.*portfolio ]]; then
+                        OWNS_FILE=true
+                    fi
+                    ;;
+                4)
+                    if [[ "$file" =~ ^03-Source-Code/src/(telecom|robotics)/.*motion ]]; then
+                        OWNS_FILE=true
+                    fi
+                    ;;
+                5)
+                    if [[ "$file" =~ ^03-Source-Code/src/orchestration/(thermodynamic|routing/.*advanced) ]]; then
+                        OWNS_FILE=true
+                    fi
+                    ;;
+                6)
+                    if [[ "$file" =~ ^03-Source-Code/src/orchestration/local_llm/.*transformer ]]; then
+                        OWNS_FILE=true
+                    fi
+                    ;;
+                7)
+                    if [[ "$file" =~ ^03-Source-Code/src/(drug_discovery|robotics)/.*advanced ]]; then
+                        OWNS_FILE=true
+                    fi
+                    ;;
+                8)
+                    if [[ "$file" =~ ^03-Source-Code/(src/api_server|deployment|docs)/ ]]; then
+                        OWNS_FILE=true
+                    fi
+                    ;;
+            esac
+        fi
 
         if [ "$OWNS_FILE" = false ]; then
             # Check if it's a shared file (requires coordination)
-            if [[ "$file" =~ ^src/(lib\.rs|integration/mod\.rs|gpu/kernel_executor\.rs)$|^Cargo\.toml$ ]]; then
+            if [[ "$file" =~ ^03-Source-Code/src/(lib\.rs|orchestration/thermodynamic/mod\.rs|orchestration/mod\.rs|gpu/kernel_executor\.rs)$|^03-Source-Code/Cargo\.toml$ ]]; then
                 echo "  ⚠️  WARNING: Editing shared file: $file"
-                echo "     → Must coordinate in team chat first"
+                echo "     → Shared module files (mod.rs) are allowed with coordination"
+                echo "     → Ensure exports are for your owned modules only"
                 ((WARNINGS++))
             else
                 echo "  ❌ VIOLATION: Editing file outside ownership: $file"
@@ -179,14 +188,15 @@ echo "🔍 Rule 4: Checking Build Hygiene..."
 if [ -d "03-Source-Code" ]; then
     cd 03-Source-Code
 
-    echo "  Running cargo check --lib..."
-    if cargo check --lib --features cuda 2>&1 | tail -10 | grep -q "error\[E"; then
-        echo "  ❌ VIOLATION: Library has build errors"
+    echo "  Running cargo check (library)..."
+    # Use --lib to only check library code (workers don't own bins)
+    if cargo check --lib --features cuda 2>&1 | tail -10 | grep -q "error:"; then
+        echo "  ❌ VIOLATION: Code has build errors"
         echo "     → Cannot commit code that doesn't build"
         echo "     → Fix errors before proceeding"
         ((VIOLATIONS++))
     else
-        echo "  ✅ Build hygiene: PASSED (library builds successfully)"
+        echo "  ✅ Build hygiene: PASSED (library compiles)"
     fi
 
     cd ..

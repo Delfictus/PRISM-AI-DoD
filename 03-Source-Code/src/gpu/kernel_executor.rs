@@ -1027,6 +1027,189 @@ pub mod kernels {
     }
     "#;
 
+    // ADVANCED FUSED KERNELS - Combine multiple operations for efficiency
+    pub const FUSED_CONV_RELU: &str = r#"
+    extern "C" __global__ void fused_conv_relu(
+        float* input, float* kernel, float* output,
+        int height, int width, int kernel_size,
+        int stride, int padding
+    ) {
+        // Combined 2D convolution + ReLU activation
+        // Eliminates intermediate memory access
+        int out_y = blockIdx.y * blockDim.y + threadIdx.y;
+        int out_x = blockIdx.x * blockDim.x + threadIdx.x;
+
+        int out_height = (height + 2 * padding - kernel_size) / stride + 1;
+        int out_width = (width + 2 * padding - kernel_size) / stride + 1;
+
+        if (out_y >= out_height || out_x >= out_width) return;
+
+        int in_y_start = out_y * stride - padding;
+        int in_x_start = out_x * stride - padding;
+
+        float sum = 0.0f;
+
+        for (int ky = 0; ky < kernel_size; ky++) {
+            for (int kx = 0; kx < kernel_size; kx++) {
+                int in_y = in_y_start + ky;
+                int in_x = in_x_start + kx;
+
+                if (in_y >= 0 && in_y < height && in_x >= 0 && in_x < width) {
+                    int in_idx = in_y * width + in_x;
+                    int k_idx = ky * kernel_size + kx;
+                    sum += input[in_idx] * kernel[k_idx];
+                }
+            }
+        }
+
+        // FUSED: Apply ReLU immediately
+        output[out_y * out_width + out_x] = fmaxf(0.0f, sum);
+    }
+    "#;
+
+    pub const FUSED_BATCHNORM_RELU: &str = r#"
+    extern "C" __global__ void fused_batchnorm_relu(
+        float* data, float* gamma, float* beta,
+        float* mean, float* var,
+        int batch_size, int features, float epsilon
+    ) {
+        // Combined batch normalization + ReLU
+        // Common pattern in neural networks
+        int batch_idx = blockIdx.x;
+        int feat_idx = threadIdx.x;
+
+        if (batch_idx >= batch_size || feat_idx >= features) return;
+
+        int idx = batch_idx * features + feat_idx;
+
+        // Normalize
+        float normalized = (data[idx] - mean[feat_idx]) / sqrtf(var[feat_idx] + epsilon);
+
+        // Scale and shift
+        float transformed = gamma[feat_idx] * normalized + beta[feat_idx];
+
+        // FUSED: Apply ReLU
+        data[idx] = fmaxf(0.0f, transformed);
+    }
+    "#;
+
+    pub const FUSED_ATTENTION_SOFTMAX: &str = r#"
+    extern "C" __global__ void fused_attention_softmax(
+        float* query, float* key, float* value,
+        float* output, int seq_len, int d_k
+    ) {
+        // Fused attention score computation + softmax + weighted sum
+        // Eliminates 2 intermediate memory accesses
+        int q_idx = blockIdx.x;
+        int tid = threadIdx.x;
+
+        if (q_idx >= seq_len) return;
+
+        // Shared memory for attention scores
+        __shared__ float scores[256];
+        __shared__ float max_score;
+        __shared__ float sum_exp;
+
+        // 1. Compute attention scores: Q * K^T / sqrt(d_k)
+        float score = 0.0f;
+        if (tid < seq_len) {
+            for (int d = 0; d < d_k; d++) {
+                score += query[q_idx * d_k + d] * key[tid * d_k + d];
+            }
+            score /= sqrtf((float)d_k);
+            scores[tid] = score;
+        } else {
+            scores[tid] = -1e9f;
+        }
+        __syncthreads();
+
+        // 2. Find max for numerical stability
+        if (tid == 0) {
+            float max_val = scores[0];
+            for (int i = 1; i < seq_len; i++) {
+                max_val = fmaxf(max_val, scores[i]);
+            }
+            max_score = max_val;
+        }
+        __syncthreads();
+
+        // 3. Compute exp and sum
+        if (tid < seq_len) {
+            scores[tid] = expf(scores[tid] - max_score);
+        }
+        __syncthreads();
+
+        if (tid == 0) {
+            float sum = 0.0f;
+            for (int i = 0; i < seq_len; i++) {
+                sum += scores[i];
+            }
+            sum_exp = sum;
+        }
+        __syncthreads();
+
+        // 4. Normalize (softmax)
+        if (tid < seq_len) {
+            scores[tid] /= sum_exp;
+        }
+        __syncthreads();
+
+        // 5. FUSED: Weighted sum of values
+        if (tid < d_k) {
+            float weighted_sum = 0.0f;
+            for (int i = 0; i < seq_len; i++) {
+                weighted_sum += scores[i] * value[i * d_k + tid];
+            }
+            output[q_idx * d_k + tid] = weighted_sum;
+        }
+    }
+    "#;
+
+    pub const FUSED_LAYERNORM_GELU: &str = r#"
+    extern "C" __global__ void fused_layernorm_gelu(
+        float* input, float* gamma, float* beta,
+        float* output, int batch_size, int features, float epsilon
+    ) {
+        // Layer normalization + GELU activation
+        // Common in transformer models
+        int batch_idx = blockIdx.x;
+        int feat_idx = threadIdx.x;
+
+        if (batch_idx >= batch_size || feat_idx >= features) return;
+
+        // Compute mean and variance using shared memory
+        __shared__ float mean_val;
+        __shared__ float var_val;
+
+        if (feat_idx == 0) {
+            float sum = 0.0f;
+            float sq_sum = 0.0f;
+            for (int i = 0; i < features; i++) {
+                float val = input[batch_idx * features + i];
+                sum += val;
+                sq_sum += val * val;
+            }
+            mean_val = sum / features;
+            var_val = (sq_sum / features) - (mean_val * mean_val);
+        }
+        __syncthreads();
+
+        int idx = batch_idx * features + feat_idx;
+
+        // Normalize
+        float normalized = (input[idx] - mean_val) / sqrtf(var_val + epsilon);
+
+        // Scale and shift
+        float transformed = gamma[feat_idx] * normalized + beta[feat_idx];
+
+        // FUSED: Apply GELU
+        float x = transformed;
+        float x3 = x * x * x;
+        float inner = 0.79788456f * (x + 0.044715f * x3);
+        output[idx] = 0.5f * x * (1.0f + tanhf(inner));
+    }
+    "#;
+
     pub const FREE_ENERGY: &str = r#"
     extern "C" __global__ void free_energy_kernel(
         float* posterior, float* prior,
@@ -1650,6 +1833,86 @@ pub mod kernels {
         }
     }
     "#;
+
+    // DENDRITIC NEURON COMPUTATION KERNEL
+    pub const DENDRITIC_INTEGRATION: &str = r#"
+    extern "C" __global__ void dendritic_integration(
+        float* branch_inputs,       // [n_neurons * dendrites_per_neuron * input_size]
+        float* dendritic_weights,   // [n_neurons * dendrites_per_neuron * input_size]
+        float* state,               // [n_neurons] - current neuron state
+        float* soma_output,         // [n_neurons] - output activation
+        int n_neurons,
+        int dendrites_per_neuron,
+        int input_size,
+        int nonlinearity_type       // 0=Sigmoid, 1=NMDA, 2=ActiveBP, 3=Multiplicative
+    ) {
+        int neuron = blockIdx.x * blockDim.x + threadIdx.x;
+
+        if (neuron >= n_neurons) return;
+
+        float total_activation = 0.0f;
+
+        // Process each dendrite for this neuron
+        for (int dendrite = 0; dendrite < dendrites_per_neuron; dendrite++) {
+            float dendrite_sum = 0.0f;
+
+            // Compute weighted sum of inputs for this dendrite
+            int base_idx = (neuron * dendrites_per_neuron + dendrite) * input_size;
+
+            for (int i = 0; i < input_size; i++) {
+                int idx = base_idx + i;
+                dendrite_sum += branch_inputs[idx] * dendritic_weights[idx];
+            }
+
+            // Add state modulation (self-feedback)
+            dendrite_sum += state[neuron] * 0.5f;
+
+            // Apply dendritic nonlinearity
+            float dendrite_output = 0.0f;
+
+            switch (nonlinearity_type) {
+                case 0: { // Sigmoid
+                    float threshold = 0.5f;
+                    float steepness = 10.0f;
+                    dendrite_output = 1.0f / (1.0f + expf(-steepness * (dendrite_sum - threshold)));
+                    break;
+                }
+                case 1: { // NMDA (voltage-dependent)
+                    float mg_concentration = 1.0f;
+                    float reversal_potential = 0.0f;
+                    float voltage = dendrite_sum;
+                    float mg_block = 1.0f / (1.0f + mg_concentration * expf(-0.062f * voltage));
+                    dendrite_output = mg_block * (reversal_potential - voltage);
+                    break;
+                }
+                case 2: { // Active Backpropagation
+                    float threshold = 0.3f;
+                    float gain = 2.0f;
+                    float decay = 0.5f;
+                    if (dendrite_sum > threshold) {
+                        dendrite_output = gain * (dendrite_sum - threshold) * expf(-decay * fabsf(dendrite_sum));
+                    } else {
+                        dendrite_output = dendrite_sum * 0.1f;
+                    }
+                    break;
+                }
+                case 3: { // Multiplicative
+                    float saturation = 1.0f;
+                    dendrite_output = tanhf(dendrite_sum) * saturation;
+                    break;
+                }
+                default:
+                    dendrite_output = tanhf(dendrite_sum);
+                    break;
+            }
+
+            total_activation += dendrite_output;
+        }
+
+        // Average over dendrites and write output
+        soma_output[neuron] = total_activation / (float)dendrites_per_neuron;
+    }
+    "#;
 }
 
 /// GPU Kernel Executor that manages kernel compilation and execution
@@ -1798,6 +2061,12 @@ impl GpuKernelExecutor {
         self.register_kernel("fused_linear_gelu", kernels::FUSED_LINEAR_GELU)?;
         self.register_kernel("fused_exp_normalize", kernels::FUSED_EXP_NORMALIZE)?;
 
+        // ADVANCED FUSED KERNELS
+        self.register_kernel("fused_conv_relu", kernels::FUSED_CONV_RELU)?;
+        self.register_kernel("fused_batchnorm_relu", kernels::FUSED_BATCHNORM_RELU)?;
+        self.register_kernel("fused_attention_softmax", kernels::FUSED_ATTENTION_SOFTMAX)?;
+        self.register_kernel("fused_layernorm_gelu", kernels::FUSED_LAYERNORM_GELU)?;
+
         // TIME SERIES FORECASTING KERNELS
         self.register_kernel("ar_forecast", kernels::AR_FORECAST)?;
         self.register_kernel("lstm_cell", kernels::LSTM_CELL)?;
@@ -1826,7 +2095,10 @@ impl GpuKernelExecutor {
         // Keep the FP16-optimized version as fallback
         self.register_kernel("tensor_core_matmul", kernels::TENSOR_CORE_MATMUL)?;
 
-        println!("✅ All kernels registered: 56 total (4 FUSED + 5 TIME SERIES + 4 PIXEL + 4 TENSOR CORE)");
+        // DENDRITIC NEURON KERNEL
+        self.register_kernel("dendritic_integration", kernels::DENDRITIC_INTEGRATION)?;
+
+        println!("✅ All kernels registered: 61 total (8 FUSED + 5 TIME SERIES + 4 PIXEL + 4 TENSOR CORE + 1 DENDRITIC)");
         Ok(())
     }
 
@@ -3006,6 +3278,64 @@ impl GpuKernelExecutor {
 
         // Download FP32 result
         let result = stream.memcpy_dtov(&c_dev)?;
+        Ok(result)
+    }
+
+    /// Dendritic integration with GPU-accelerated nonlinear processing
+    /// Supports 4 types of dendritic nonlinearity:
+    /// 0 = Sigmoid, 1 = NMDA, 2 = Active Backpropagation, 3 = Multiplicative
+    /// GPU ONLY - NO CPU LOOPS
+    pub fn dendritic_integration(
+        &self,
+        branch_inputs: &[f32],
+        dendritic_weights: &[f32],
+        state: &[f32],
+        n_neurons: usize,
+        dendrites_per_neuron: usize,
+        input_size: usize,
+        nonlinearity_type: i32,
+    ) -> Result<Vec<f32>> {
+        // Validate inputs
+        let expected_size = n_neurons * dendrites_per_neuron * input_size;
+        anyhow::ensure!(branch_inputs.len() == expected_size, "Branch inputs size mismatch");
+        anyhow::ensure!(dendritic_weights.len() == expected_size, "Dendritic weights size mismatch");
+        anyhow::ensure!(state.len() == n_neurons, "State size mismatch");
+        anyhow::ensure!(nonlinearity_type >= 0 && nonlinearity_type <= 3, "Invalid nonlinearity type");
+
+        let stream = self.context.default_stream();
+
+        // Upload data to GPU
+        let branch_inputs_dev = stream.memcpy_stod(branch_inputs)?;
+        let weights_dev = stream.memcpy_stod(dendritic_weights)?;
+        let state_dev = stream.memcpy_stod(state)?;
+        let mut output_dev = stream.alloc_zeros::<f32>(n_neurons)?;
+
+        // Launch kernel with one thread per neuron
+        let block_dim = 256u32;
+        let grid_dim = (n_neurons as u32 + block_dim - 1) / block_dim;
+
+        let cfg = LaunchConfig {
+            grid_dim: (grid_dim, 1, 1),
+            block_dim: (block_dim, 1, 1),
+            shared_mem_bytes: 0,
+        };
+
+        let kernel = self.get_kernel("dendritic_integration")?;
+        unsafe {
+            stream.launch_builder(kernel)
+                .arg(&branch_inputs_dev)
+                .arg(&weights_dev)
+                .arg(&state_dev)
+                .arg(&mut output_dev)
+                .arg(&(n_neurons as i32))
+                .arg(&(dendrites_per_neuron as i32))
+                .arg(&(input_size as i32))
+                .arg(&nonlinearity_type)
+                .launch(cfg)?;
+        }
+
+        // Download result
+        let result = stream.memcpy_dtov(&output_dev)?;
         Ok(result)
     }
 }
