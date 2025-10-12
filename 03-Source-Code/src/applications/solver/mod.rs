@@ -86,9 +86,11 @@ impl ProblemType {
 
 pub mod problem;
 pub mod solution;
+pub mod cma_integration;
 
 pub use problem::{Problem, ProblemData, AssetSpec};
 pub use solution::{Solution, SolutionMetrics};
+pub use cma_integration::CmaAdapter;
 
 /// Universal solver configuration
 #[derive(Debug, Clone)]
@@ -139,6 +141,9 @@ impl UniversalSolver {
             }
             ProblemData::Portfolio { assets, target_return, max_risk } => {
                 self.solve_portfolio_problem(assets, *target_return, *max_risk)?
+            }
+            ProblemData::Continuous { .. } => {
+                self.solve_continuous(&problem.data).await?
             }
             _ => {
                 // Generic solver (placeholder for future expansion)
@@ -250,6 +255,17 @@ impl UniversalSolver {
         )
         .with_explanation(explanation)
         .with_confidence(0.85))
+    }
+
+    /// Solve continuous optimization using CMA
+    async fn solve_continuous(&mut self, data: &ProblemData) -> Result<Solution> {
+        let adapter = CmaAdapter::from_problem_data(data)?;
+
+        // Create GPU solver (simplified - would use actual GPU solver in production)
+        use crate::gpu::SimpleGpuSolver;
+        let gpu_solver = std::sync::Arc::new(SimpleGpuSolver::new()?);
+
+        adapter.solve(gpu_solver).await
     }
 
     /// Generic solver (placeholder for future expansion)
