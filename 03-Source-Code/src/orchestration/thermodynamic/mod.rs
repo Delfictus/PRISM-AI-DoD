@@ -14,6 +14,7 @@ pub mod advanced_bayesian_optimization;
 pub mod advanced_multi_objective;
 pub mod advanced_replica_exchange;
 pub mod gpu_schedule_kernels;
+pub mod adaptive_temperature_control;
 
 pub use hamiltonian::InformationHamiltonian;
 pub use quantum_consensus::{QuantumConsensusOptimizer, ConsensusState};
@@ -80,4 +81,13 @@ pub use gpu_schedule_kernels::{
     BatchTemperatureKernel,
     GPKernelType,
     CoolingStrategy,
+};
+
+pub use adaptive_temperature_control::{
+    AdaptiveTemperatureController,
+    AdaptiveCoolingSchedule,
+    AcceptanceMonitor,
+    PIDController,
+    AdaptiveControllerStats,
+    OPTIMAL_ACCEPTANCE_RATE,
 };
