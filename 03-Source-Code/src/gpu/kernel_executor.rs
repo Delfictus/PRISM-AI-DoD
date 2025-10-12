@@ -938,6 +938,95 @@ pub mod kernels {
     }
     "#;
 
+    // FUSED KERNELS - Multiple operations in ONE kernel call
+    pub const FUSED_MATMUL_RELU: &str = r#"
+    extern "C" __global__ void fused_matmul_relu(
+        float* a, float* b, float* c, int m, int k, int n
+    ) {
+        int row = blockIdx.y * blockDim.y + threadIdx.y;
+        int col = blockIdx.x * blockDim.x + threadIdx.x;
+
+        if (row < m && col < n) {
+            float sum = 0.0f;
+            for (int i = 0; i < k; i++) {
+                sum += a[row * k + i] * b[i * n + col];
+            }
+            // FUSED: Apply ReLU immediately
+            c[row * n + col] = fmaxf(0.0f, sum);
+        }
+    }
+    "#;
+
+    pub const FUSED_LINEAR_RELU: &str = r#"
+    extern "C" __global__ void fused_linear_relu(
+        float* input, float* weights, float* bias, float* output,
+        int batch_size, int in_features, int out_features
+    ) {
+        int batch_idx = blockIdx.y;
+        int out_idx = blockIdx.x * blockDim.x + threadIdx.x;
+
+        if (batch_idx < batch_size && out_idx < out_features) {
+            float sum = bias[out_idx];
+            for (int i = 0; i < in_features; i++) {
+                sum += input[batch_idx * in_features + i] * weights[i * out_features + out_idx];
+            }
+            // FUSED: Apply ReLU immediately
+            output[batch_idx * out_features + out_idx] = fmaxf(0.0f, sum);
+        }
+    }
+    "#;
+
+    pub const FUSED_LINEAR_GELU: &str = r#"
+    extern "C" __global__ void fused_linear_gelu(
+        float* input, float* weights, float* bias, float* output,
+        int batch_size, int in_features, int out_features
+    ) {
+        int batch_idx = blockIdx.y;
+        int out_idx = blockIdx.x * blockDim.x + threadIdx.x;
+
+        if (batch_idx < batch_size && out_idx < out_features) {
+            float sum = bias[out_idx];
+            for (int i = 0; i < in_features; i++) {
+                sum += input[batch_idx * in_features + i] * weights[i * out_features + out_idx];
+            }
+            // FUSED: Apply GELU immediately
+            float x = sum;
+            float x3 = x * x * x;
+            float inner = 0.79788456f * (x + 0.044715f * x3);
+            output[batch_idx * out_features + out_idx] = 0.5f * x * (1.0f + tanhf(inner));
+        }
+    }
+    "#;
+
+    pub const FUSED_EXP_NORMALIZE: &str = r#"
+    extern "C" __global__ void fused_exp_normalize(
+        float* input, float* output, int n
+    ) {
+        int idx = threadIdx.x;
+
+        // Compute exp
+        __shared__ float exp_vals[256];
+        exp_vals[idx] = (idx < n) ? expf(input[idx]) : 0.0f;
+        __syncthreads();
+
+        // Reduction for sum
+        __shared__ float sum_shared;
+        if (idx == 0) {
+            float sum = 0.0f;
+            for (int i = 0; i < n; i++) {
+                sum += exp_vals[i];
+            }
+            sum_shared = sum;
+        }
+        __syncthreads();
+
+        // Normalize
+        if (idx < n) {
+            output[idx] = exp_vals[idx] / sum_shared;
+        }
+    }
+    "#;
+
     pub const FREE_ENERGY: &str = r#"
     extern "C" __global__ void free_energy_kernel(
         float* posterior, float* prior,
@@ -1084,7 +1173,13 @@ impl GpuKernelExecutor {
         self.register_kernel("gelu_activation", kernels::GELU_ACTIVATION)?;
         self.register_kernel("embedding_lookup", kernels::EMBEDDING_LOOKUP)?;
 
-        println!("✅ All standard kernels registered (39 total)");
+        // FUSED KERNELS - Multiple ops in ONE call
+        self.register_kernel("fused_matmul_relu", kernels::FUSED_MATMUL_RELU)?;
+        self.register_kernel("fused_linear_relu", kernels::FUSED_LINEAR_RELU)?;
+        self.register_kernel("fused_linear_gelu", kernels::FUSED_LINEAR_GELU)?;
+        self.register_kernel("fused_exp_normalize", kernels::FUSED_EXP_NORMALIZE)?;
+
+        println!("✅ All kernels registered: 43 total (4 FUSED for max performance)");
         Ok(())
     }
 

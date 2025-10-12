@@ -161,30 +161,58 @@ impl GpuThermodynamicConsensus {
     /// Compute Boltzmann probabilities on GPU
     ///
     /// P_i = exp(-E_i/kT) / Z
-    /// 100% GPU KERNELS - ZERO CPU COMPUTATION
+    /// FUSED KERNEL - exp + normalize in ONE call
     fn compute_boltzmann_probabilities_gpu(&self, energies: &[f32]) -> Result<Vec<f64>> {
         let temp = self.state.temperature as f32;
 
-        // Divide by temperature: -E/kT (small enough for CPU prep)
+        // Divide by temperature: -E/kT
         let neg_e_over_kt: Vec<f32> = energies.iter()
             .map(|&e| -e / temp)
             .collect();
 
-        // Compute exp() on GPU - ACTUAL GPU KERNEL
+        // FUSED GPU KERNEL: exp + normalize in SINGLE call
         let executor = self.gpu_executor.lock().unwrap();
-        let mut boltzmann_factors = executor.elementwise_exp(&neg_e_over_kt)
-            .expect("GPU exp failed - NO CPU FALLBACK");
+        let probabilities_f32 = self.fused_exp_normalize_gpu(&executor, &neg_e_over_kt)?;
 
-        // Normalize on GPU - ACTUAL GPU KERNEL
-        executor.normalize_inplace(&mut boltzmann_factors)
-            .expect("GPU normalize failed - NO CPU FALLBACK");
-
-        // Convert to f64 (simple type conversion, not computation)
-        let probabilities: Vec<f64> = boltzmann_factors.iter()
+        // Convert to f64
+        let probabilities: Vec<f64> = probabilities_f32.iter()
             .map(|&p| p as f64)
             .collect();
 
         Ok(probabilities)
+    }
+
+    /// Fused exp + normalize using optimized GPU kernel
+    /// ONE kernel call instead of TWO - eliminates transfer overhead
+    fn fused_exp_normalize_gpu(&self, executor: &GpuKernelExecutor, input: &[f32]) -> Result<Vec<f32>> {
+        use cudarc::driver::{LaunchConfig, PushKernelArg};
+
+        let n = input.len();
+        let stream = executor.context().default_stream();
+        let kernel = executor.get_kernel("fused_exp_normalize")?;
+
+        // Upload input
+        let input_dev = stream.memcpy_stod(input)?;
+        let mut output_dev = stream.alloc_zeros::<f32>(n)?;
+
+        // FUSED kernel - exp + normalize in ONE GPU call
+        let cfg = LaunchConfig {
+            grid_dim: (1, 1, 1),
+            block_dim: (256, 1, 1),
+            shared_mem_bytes: 0,
+        };
+
+        unsafe {
+            stream.launch_builder(kernel)
+                .arg(&input_dev)
+                .arg(&mut output_dev)
+                .arg(&(n as i32))
+                .launch(cfg)?;
+        }
+
+        // Download result
+        let result = stream.memcpy_dtov(&output_dev)?;
+        Ok(result)
     }
 
     /// Compute thermodynamic free energy: F = E - TS
