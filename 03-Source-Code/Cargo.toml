@@ -6,6 +6,7 @@ authors = ["Prism-AI Research Team"]
 description = "PRISM: Predictive Reasoning via Information-theoristic Statistical Manifolds - GPU-accelerated neuromorphic and quantum computing analogues"
 license = "MIT"
 build = "build.rs"
+autobins = false  # Disable autodiscovery - explicitly list binaries below
 
 [workspace]
 members = [
@@ -205,13 +206,15 @@ path = "src/bin/prism.rs"
 name = "test_llm"
 path = "src/bin/test_llm.rs"
 
-[[bin]]
-name = "test_gpu"
-path = "src/bin/test_gpu.rs"
+# TEMPORARILY DISABLED: File missing (test_gpu.rs doesn't exist)
+# [[bin]]
+# name = "test_gpu"
+# path = "src/bin/test_gpu.rs"
 
-[[bin]]
-name = "benchmark_pwsa_gpu"
-path = "src/bin/benchmark_pwsa_gpu.rs"
+# TEMPORARILY DISABLED: Requires mission_charlie feature for orchestration module
+# [[bin]]
+# name = "benchmark_pwsa_gpu"
+# path = "src/bin/benchmark_pwsa_gpu.rs"
 
 [[bin]]
 name = "test_gpu_real"
