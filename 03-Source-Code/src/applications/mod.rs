@@ -3,16 +3,19 @@
 //! Domain-specific applications built on PRISM-AI foundation:
 //! - Robotics: Motion planning and control
 //! - Scientific Discovery: Experiment design and optimization
+//! - Drug Discovery: Molecular optimization with Active Inference
 //!
 //! Constitution: Worker 7 Development
 //! Time: 268 hours (228h base + 40h time series enhancements)
-//! Focus: Motion planning, Environment prediction, Scientific tools
+//! Focus: Motion planning, Environment prediction, Scientific tools, Drug discovery
 
 pub mod robotics;
 pub mod scientific;
+pub mod drug_discovery;
 
 pub use robotics::{RoboticsController, RoboticsConfig, MotionPlanner, MotionPlan};
 pub use scientific::{ScientificDiscovery, ScientificConfig};
+pub use drug_discovery::{DrugDiscoveryController, DrugDiscoveryConfig};
 
 /// Applications module version
 pub const VERSION: &str = "0.1.0";
@@ -28,6 +31,7 @@ pub const RESPONSIBILITIES: &[&str] = &[
     "ROS integration",
     "Scientific discovery tools",
     "Experimental design optimization",
+    "Drug discovery and molecular optimization",
 ];
 
 #[cfg(test)]
