@@ -108,6 +108,115 @@ pub mod kernels {
         }
     }
     "#;
+
+    // Active Inference Kernels
+    pub const KL_DIVERGENCE: &str = r#"
+    extern "C" __global__ void kl_divergence(
+        float* q, float* p, float* kl_out, int n
+    ) {
+        int idx = threadIdx.x;
+
+        float local_kl = 0.0f;
+        if (idx < n) {
+            float q_val = q[idx];
+            float p_val = p[idx];
+            if (q_val > 1e-10f && p_val > 1e-10f) {
+                local_kl = q_val * logf(q_val / p_val);
+            }
+        }
+
+        // Simple reduction for small arrays (< 256 elements)
+        __shared__ float sdata[256];
+        sdata[idx] = local_kl;
+        __syncthreads();
+
+        // Reduction
+        for (unsigned int s = 128; s > 0; s >>= 1) {
+            if (idx < s && (idx + s) < n) {
+                sdata[idx] += sdata[idx + s];
+            }
+            __syncthreads();
+        }
+
+        // Write result
+        if (idx == 0) {
+            kl_out[0] = sdata[0];
+        }
+    }
+    "#;
+
+    pub const ELEMENTWISE_MULTIPLY: &str = r#"
+    extern "C" __global__ void elementwise_multiply(
+        float* a, float* b, float* c, int n
+    ) {
+        int idx = blockIdx.x * blockDim.x + threadIdx.x;
+        if (idx < n) {
+            c[idx] = a[idx] * b[idx];
+        }
+    }
+    "#;
+
+    pub const NORMALIZE: &str = r#"
+    extern "C" __global__ void normalize(float* data, int n) {
+        int idx = threadIdx.x;
+
+        // Compute sum using shared memory reduction
+        __shared__ float sdata[256];
+        sdata[idx] = (idx < n) ? data[idx] : 0.0f;
+        __syncthreads();
+
+        // Reduction
+        for (unsigned int s = 128; s > 0; s >>= 1) {
+            if (idx < s && (idx + s) < 256) {
+                sdata[idx] += sdata[idx + s];
+            }
+            __syncthreads();
+        }
+
+        float sum = sdata[0];
+        __syncthreads();
+
+        // Normalize
+        if (idx < n && sum > 0.0f) {
+            data[idx] /= sum;
+        }
+    }
+    "#;
+
+    pub const FREE_ENERGY: &str = r#"
+    extern "C" __global__ void free_energy_kernel(
+        float* posterior, float* prior,
+        float log_likelihood, float* fe_out, int n
+    ) {
+        int idx = threadIdx.x;
+
+        float local_kl = 0.0f;
+        if (idx < n) {
+            float q = posterior[idx];
+            float p = prior[idx];
+            if (q > 1e-10f && p > 1e-10f) {
+                local_kl = q * logf(q / p);
+            }
+        }
+
+        // Simple reduction for small arrays
+        __shared__ float sdata[256];
+        sdata[idx] = local_kl;
+        __syncthreads();
+
+        for (unsigned int s = 128; s > 0; s >>= 1) {
+            if (idx < s && (idx + s) < 256) {
+                sdata[idx] += sdata[idx + s];
+            }
+            __syncthreads();
+        }
+
+        // Compute free energy = KL - log_likelihood
+        if (idx == 0) {
+            fe_out[0] = sdata[0] - log_likelihood;
+        }
+    }
+    "#;
 }
 
 /// GPU Kernel Executor that manages kernel compilation and execution
@@ -172,6 +281,12 @@ impl GpuKernelExecutor {
         self.register_kernel("sigmoid", kernels::SIGMOID)?;
         self.register_kernel("tanh_activation", kernels::TANH)?;
         self.register_kernel("batch_norm", kernels::BATCH_NORM)?;
+
+        // Active Inference kernels
+        self.register_kernel("kl_divergence", kernels::KL_DIVERGENCE)?;
+        self.register_kernel("elementwise_multiply", kernels::ELEMENTWISE_MULTIPLY)?;
+        self.register_kernel("normalize", kernels::NORMALIZE)?;
+        self.register_kernel("free_energy_kernel", kernels::FREE_ENERGY)?;
 
         println!("✅ All standard kernels registered");
         Ok(())
@@ -361,6 +476,135 @@ impl GpuKernelExecutor {
         let result = stream.memcpy_dtov(&data_dev)?;
         data.copy_from_slice(&result);
         Ok(())
+    }
+
+    /// Compute KL divergence on GPU
+    pub fn kl_divergence(&self, q: &[f32], p: &[f32]) -> Result<f32> {
+        let n = q.len();
+        anyhow::ensure!(p.len() == n, "Q and P must have same length");
+        anyhow::ensure!(n <= 256, "KL divergence kernel supports max 256 elements");
+
+        let stream = self.context.default_stream();
+        let kernel = self.get_kernel("kl_divergence")?;
+
+        // Upload data
+        let q_dev = stream.memcpy_stod(q)?;
+        let p_dev = stream.memcpy_stod(p)?;
+        let mut kl_dev = stream.alloc_zeros::<f32>(1)?;
+
+        // Launch with single block for reduction
+        let cfg = LaunchConfig {
+            grid_dim: (1, 1, 1),
+            block_dim: (256, 1, 1),
+            shared_mem_bytes: 0,
+        };
+
+        unsafe {
+            stream.launch_builder(kernel)
+                .arg(&q_dev)
+                .arg(&p_dev)
+                .arg(&mut kl_dev)
+                .arg(&(n as i32))
+                .launch(cfg)?;
+        }
+
+        // Download result
+        let result = stream.memcpy_dtov(&kl_dev)?;
+        Ok(result[0])
+    }
+
+    /// Element-wise multiplication on GPU
+    pub fn elementwise_multiply(&self, a: &[f32], b: &[f32]) -> Result<Vec<f32>> {
+        let n = a.len();
+        anyhow::ensure!(b.len() == n, "Vectors must have same length");
+
+        let stream = self.context.default_stream();
+        let kernel = self.get_kernel("elementwise_multiply")?;
+
+        // Upload data
+        let a_dev = stream.memcpy_stod(a)?;
+        let b_dev = stream.memcpy_stod(b)?;
+        let mut c_dev = stream.alloc_zeros::<f32>(n)?;
+
+        // Launch kernel
+        let cfg = LaunchConfig::for_num_elems(n as u32);
+        unsafe {
+            stream.launch_builder(kernel)
+                .arg(&a_dev)
+                .arg(&b_dev)
+                .arg(&mut c_dev)
+                .arg(&(n as i32))
+                .launch(cfg)?;
+        }
+
+        // Download result
+        let result = stream.memcpy_dtov(&c_dev)?;
+        Ok(result)
+    }
+
+    /// Normalize vector to sum to 1.0 on GPU
+    pub fn normalize_inplace(&self, data: &mut [f32]) -> Result<()> {
+        let n = data.len();
+        let stream = self.context.default_stream();
+        let kernel = self.get_kernel("normalize")?;
+
+        // Upload data
+        let mut data_dev = stream.memcpy_stod(data)?;
+
+        // Launch kernel
+        let cfg = LaunchConfig {
+            grid_dim: (1, 1, 1),
+            block_dim: (256, 1, 1),
+            shared_mem_bytes: 0,
+        };
+
+        unsafe {
+            stream.launch_builder(kernel)
+                .arg(&mut data_dev)
+                .arg(&(n as i32))
+                .launch(cfg)?;
+        }
+
+        // Download result
+        let result = stream.memcpy_dtov(&data_dev)?;
+        data.copy_from_slice(&result);
+        Ok(())
+    }
+
+    /// Compute free energy on GPU
+    pub fn compute_free_energy(&self, posterior: &[f32], prior: &[f32], log_likelihood: f32) -> Result<f32> {
+        let n = posterior.len();
+        anyhow::ensure!(prior.len() == n, "Posterior and prior must have same length");
+        anyhow::ensure!(n <= 256, "Free energy kernel supports max 256 elements");
+
+        let stream = self.context.default_stream();
+        let kernel = self.get_kernel("free_energy_kernel")?;
+
+        // Upload data
+        let posterior_dev = stream.memcpy_stod(posterior)?;
+        let prior_dev = stream.memcpy_stod(prior)?;
+        let mut fe_dev = stream.alloc_zeros::<f32>(1)?;
+
+        // Launch with single block for reduction
+        let cfg = LaunchConfig {
+            grid_dim: (1, 1, 1),
+            block_dim: (256, 1, 1),
+            shared_mem_bytes: 0,
+        };
+
+        unsafe {
+            stream.launch_builder(kernel)
+                .arg(&posterior_dev)
+                .arg(&prior_dev)
+                .arg(&log_likelihood)
+                .arg(&mut fe_dev)
+                .arg(&(n as i32))
+                .launch(cfg)?;
+        }
+
+        // Download result
+        let result = stream.memcpy_dtov(&fe_dev)?;
+        Ok(result[0])
     }
 }
 

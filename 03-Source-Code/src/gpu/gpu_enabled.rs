@@ -201,6 +201,47 @@ impl GpuTensor {
     pub fn shape(&self) -> &[usize] {
         &self.shape
     }
+
+    /// Compute KL divergence on GPU
+    pub fn kl_divergence(&self, other: &GpuTensor) -> Result<f32> {
+        if self.shape != other.shape {
+            anyhow::bail!("Tensors must have same shape for KL divergence");
+        }
+
+        println!("  🚀 KL Divergence (GPU KERNEL EXECUTION)");
+
+        let executor = self.gpu_state.kernel_executor.lock().unwrap();
+        let kl = executor.kl_divergence(&self.data, &other.data)?;
+
+        println!("     ✅ GPU kernel executed successfully!");
+        Ok(kl)
+    }
+
+    /// Element-wise multiply on GPU
+    pub fn multiply(&self, other: &GpuTensor) -> Result<GpuTensor> {
+        if self.shape != other.shape {
+            anyhow::bail!("Shape mismatch for multiplication");
+        }
+
+        println!("  🚀 Element-wise multiply (GPU KERNEL EXECUTION)");
+
+        let executor = self.gpu_state.kernel_executor.lock().unwrap();
+        let result = executor.elementwise_multiply(&self.data, &other.data)?;
+
+        println!("     ✅ GPU kernel executed successfully!");
+        GpuTensor::from_cpu(result, self.shape.clone())
+    }
+
+    /// Normalize to sum to 1.0 on GPU
+    pub fn normalize(&mut self) -> Result<()> {
+        println!("  🚀 Normalize (GPU KERNEL EXECUTION)");
+
+        let executor = self.gpu_state.kernel_executor.lock().unwrap();
+        executor.normalize_inplace(&mut self.data)?;
+
+        println!("     ✅ GPU kernel executed successfully!");
+        Ok(())
+    }
 }
 
 /// Linear layer with GPU operations
