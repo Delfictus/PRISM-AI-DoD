@@ -480,6 +480,114 @@ pub mod kernels {
     }
     "#;
 
+    // Quantum Simulation Kernels (Complex arithmetic)
+    pub const HADAMARD_GATE: &str = r#"
+    extern "C" __global__ void hadamard_gate(
+        float* state_real, float* state_imag,
+        int qubit_idx, int state_dim
+    ) {
+        int idx = blockIdx.x * blockDim.x + threadIdx.x;
+        if (idx >= state_dim) return;
+
+        int bit = (idx >> qubit_idx) & 1;
+        int pair_idx = idx ^ (1 << qubit_idx);
+
+        if (idx < pair_idx) {  // Process each pair once
+            float r0 = state_real[idx];
+            float i0 = state_imag[idx];
+            float r1 = state_real[pair_idx];
+            float i1 = state_imag[pair_idx];
+
+            float sqrt2_inv = 0.70710678f;  // 1/sqrt(2)
+
+            state_real[idx] = sqrt2_inv * (r0 + r1);
+            state_imag[idx] = sqrt2_inv * (i0 + i1);
+            state_real[pair_idx] = sqrt2_inv * (r0 - r1);
+            state_imag[pair_idx] = sqrt2_inv * (i0 - i1);
+        }
+    }
+    "#;
+
+    pub const PAULI_X_GATE: &str = r#"
+    extern "C" __global__ void pauli_x_gate(
+        float* state_real, float* state_imag,
+        int qubit_idx, int state_dim
+    ) {
+        int idx = blockIdx.x * blockDim.x + threadIdx.x;
+        if (idx >= state_dim) return;
+
+        int pair_idx = idx ^ (1 << qubit_idx);
+        if (idx < pair_idx) {  // Swap pairs
+            float temp_r = state_real[idx];
+            float temp_i = state_imag[idx];
+            state_real[idx] = state_real[pair_idx];
+            state_imag[idx] = state_imag[pair_idx];
+            state_real[pair_idx] = temp_r;
+            state_imag[pair_idx] = temp_i;
+        }
+    }
+    "#;
+
+    pub const PHASE_GATE: &str = r#"
+    extern "C" __global__ void phase_gate(
+        float* state_real, float* state_imag,
+        int qubit_idx, float theta, int state_dim
+    ) {
+        int idx = blockIdx.x * blockDim.x + threadIdx.x;
+        if (idx >= state_dim) return;
+
+        int bit = (idx >> qubit_idx) & 1;
+        if (bit == 1) {
+            // Apply phase: |1⟩ -> e^(iθ)|1⟩
+            float r = state_real[idx];
+            float i = state_imag[idx];
+            float cos_theta = cosf(theta);
+            float sin_theta = sinf(theta);
+
+            state_real[idx] = r * cos_theta - i * sin_theta;
+            state_imag[idx] = r * sin_theta + i * cos_theta;
+        }
+    }
+    "#;
+
+    pub const CNOT_GATE: &str = r#"
+    extern "C" __global__ void cnot_gate(
+        float* state_real, float* state_imag,
+        int control_idx, int target_idx, int state_dim
+    ) {
+        int idx = blockIdx.x * blockDim.x + threadIdx.x;
+        if (idx >= state_dim) return;
+
+        int control_bit = (idx >> control_idx) & 1;
+        if (control_bit == 1) {
+            // Flip target bit
+            int pair_idx = idx ^ (1 << target_idx);
+            if (idx < pair_idx) {
+                float temp_r = state_real[idx];
+                float temp_i = state_imag[idx];
+                state_real[idx] = state_real[pair_idx];
+                state_imag[idx] = state_imag[pair_idx];
+                state_real[pair_idx] = temp_r;
+                state_imag[pair_idx] = temp_i;
+            }
+        }
+    }
+    "#;
+
+    pub const QUANTUM_MEASUREMENT: &str = r#"
+    extern "C" __global__ void quantum_measurement(
+        float* state_real, float* state_imag,
+        float* probabilities, int state_dim
+    ) {
+        int idx = blockIdx.x * blockDim.x + threadIdx.x;
+        if (idx < state_dim) {
+            float r = state_real[idx];
+            float i = state_imag[idx];
+            probabilities[idx] = r * r + i * i;  // |ψ|²
+        }
+    }
+    "#;
+
     pub const FREE_ENERGY: &str = r#"
     extern "C" __global__ void free_energy_kernel(
         float* posterior, float* prior,
@@ -601,7 +709,14 @@ impl GpuKernelExecutor {
         self.register_kernel("time_delayed_embedding", kernels::TIME_DELAYED_EMBEDDING)?;
         self.register_kernel("conditional_entropy", kernels::CONDITIONAL_ENTROPY)?;
 
-        println!("✅ All standard kernels registered (24 total)");
+        // Quantum Simulation kernels
+        self.register_kernel("hadamard_gate", kernels::HADAMARD_GATE)?;
+        self.register_kernel("pauli_x_gate", kernels::PAULI_X_GATE)?;
+        self.register_kernel("phase_gate", kernels::PHASE_GATE)?;
+        self.register_kernel("cnot_gate", kernels::CNOT_GATE)?;
+        self.register_kernel("quantum_measurement", kernels::QUANTUM_MEASUREMENT)?;
+
+        println!("✅ All standard kernels registered (29 total)");
         Ok(())
     }
 
