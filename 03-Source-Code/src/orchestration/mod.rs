@@ -28,6 +28,7 @@ pub mod neuromorphic;
 pub mod manifold;
 pub mod multimodal;
 pub mod production;
+pub mod local_llm;
 
 // New algorithm modules
 pub mod cache;
