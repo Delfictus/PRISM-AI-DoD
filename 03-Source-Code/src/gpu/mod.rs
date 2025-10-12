@@ -15,6 +15,7 @@ pub mod simple_gpu;
 // pub mod gpu_real;  // Disabled - API issues
 pub mod gpu_enabled;
 pub mod gpu_executor;
+pub mod kernel_executor;  // New kernel executor with working API
 
 // Use simple implementation for now to ensure compilation
 pub use simple_gpu::{
@@ -26,3 +27,6 @@ pub use simple_gpu::{
 
 // Also export the layers
 pub use layers::GpuLinear as GpuLinearLayer;
+
+// Export kernel executor
+pub use kernel_executor::{GpuKernelExecutor, get_global_executor};
