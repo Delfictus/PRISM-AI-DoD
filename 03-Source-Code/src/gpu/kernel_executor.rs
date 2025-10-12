@@ -358,6 +358,128 @@ pub mod kernels {
     }
     "#;
 
+    // Transfer Entropy / Information Theory Kernels
+    pub const MUTUAL_INFORMATION: &str = r#"
+    extern "C" __global__ void mutual_information(
+        float* joint_hist, float* marginal_x, float* marginal_y,
+        float* mi_out, int n_bins
+    ) {
+        int idx = threadIdx.x;
+
+        float local_mi = 0.0f;
+        if (idx < n_bins * n_bins) {
+            int i = idx / n_bins;
+            int j = idx % n_bins;
+
+            float p_xy = joint_hist[idx];
+            float p_x = marginal_x[i];
+            float p_y = marginal_y[j];
+
+            if (p_xy > 1e-10f && p_x > 1e-10f && p_y > 1e-10f) {
+                local_mi = p_xy * logf(p_xy / (p_x * p_y));
+            }
+        }
+
+        // Reduction
+        __shared__ float sdata[256];
+        sdata[idx] = local_mi;
+        __syncthreads();
+
+        for (unsigned int s = 128; s > 0; s >>= 1) {
+            if (idx < s && (idx + s) < 256) {
+                sdata[idx] += sdata[idx + s];
+            }
+            __syncthreads();
+        }
+
+        if (idx == 0) {
+            mi_out[0] = sdata[0];
+        }
+    }
+    "#;
+
+    pub const HISTOGRAM_2D: &str = r#"
+    extern "C" __global__ void histogram_2d(
+        float* x, float* y, int* hist,
+        float min_val, float max_val,
+        int n_samples, int n_bins
+    ) {
+        int idx = blockIdx.x * blockDim.x + threadIdx.x;
+
+        if (idx < n_samples) {
+            float x_val = x[idx];
+            float y_val = y[idx];
+
+            // Bin calculation
+            int bin_x = (int)((x_val - min_val) / (max_val - min_val) * (float)n_bins);
+            int bin_y = (int)((y_val - min_val) / (max_val - min_val) * (float)n_bins);
+
+            // Clamp to valid range
+            bin_x = max(0, min(n_bins - 1, bin_x));
+            bin_y = max(0, min(n_bins - 1, bin_y));
+
+            // Atomic increment
+            int hist_idx = bin_y * n_bins + bin_x;
+            atomicAdd(&hist[hist_idx], 1);
+        }
+    }
+    "#;
+
+    pub const TIME_DELAYED_EMBEDDING: &str = r#"
+    extern "C" __global__ void time_delayed_embedding(
+        float* time_series, float* embedded,
+        int n_samples, int embedding_dim, int tau
+    ) {
+        int idx = blockIdx.x * blockDim.x + threadIdx.x;
+        int n_embedded = n_samples - (embedding_dim - 1) * tau;
+
+        if (idx < n_embedded) {
+            for (int d = 0; d < embedding_dim; d++) {
+                int ts_idx = idx + d * tau;
+                int emb_idx = idx * embedding_dim + d;
+                embedded[emb_idx] = time_series[ts_idx];
+            }
+        }
+    }
+    "#;
+
+    pub const CONDITIONAL_ENTROPY: &str = r#"
+    extern "C" __global__ void conditional_entropy(
+        float* joint_xyz, float* joint_xz,
+        float* ce_out, int n_bins_xyz, int n_bins_xz
+    ) {
+        int idx = threadIdx.x;
+
+        float local_ce = 0.0f;
+        if (idx < n_bins_xyz) {
+            float p_xyz = joint_xyz[idx];
+            // Map to corresponding xz index (marginalize over y)
+            int xz_idx = idx % n_bins_xz;
+            float p_xz = joint_xz[xz_idx];
+
+            if (p_xyz > 1e-10f && p_xz > 1e-10f) {
+                local_ce = p_xyz * logf(p_xyz / p_xz);
+            }
+        }
+
+        // Reduction
+        __shared__ float sdata[256];
+        sdata[idx] = local_ce;
+        __syncthreads();
+
+        for (unsigned int s = 128; s > 0; s >>= 1) {
+            if (idx < s && (idx + s) < 256) {
+                sdata[idx] += sdata[idx + s];
+            }
+            __syncthreads();
+        }
+
+        if (idx == 0) {
+            ce_out[0] = -sdata[0];
+        }
+    }
+    "#;
+
     pub const FREE_ENERGY: &str = r#"
     extern "C" __global__ void free_energy_kernel(
         float* posterior, float* prior,
@@ -473,7 +595,13 @@ impl GpuKernelExecutor {
         self.register_kernel("entropy_production", kernels::ENTROPY_PRODUCTION)?;
         self.register_kernel("order_parameter", kernels::ORDER_PARAMETER)?;
 
-        println!("✅ All standard kernels registered");
+        // Transfer Entropy / Information Theory kernels
+        self.register_kernel("mutual_information", kernels::MUTUAL_INFORMATION)?;
+        self.register_kernel("histogram_2d", kernels::HISTOGRAM_2D)?;
+        self.register_kernel("time_delayed_embedding", kernels::TIME_DELAYED_EMBEDDING)?;
+        self.register_kernel("conditional_entropy", kernels::CONDITIONAL_ENTROPY)?;
+
+        println!("✅ All standard kernels registered (24 total)");
         Ok(())
     }
 

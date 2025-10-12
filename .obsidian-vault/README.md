@@ -17,6 +17,8 @@
 │   └── CURRENT_STATUS.md
 ├── Tasks/                # Task templates
 │   └── *.md
+├── PRISM_AI_VALUE_ANALYSIS.md  # Commercial value assessment
+├── IMPLEMENTATION_SUMMARY.md   # Governance system docs
 └── README.md             # This file
 ```
 
