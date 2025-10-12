@@ -260,12 +260,7 @@ impl UniversalSolver {
     /// Solve continuous optimization using CMA
     async fn solve_continuous(&mut self, data: &ProblemData) -> Result<Solution> {
         let adapter = CmaAdapter::from_problem_data(data)?;
-
-        // Create GPU solver (simplified - would use actual GPU solver in production)
-        use crate::gpu::SimpleGpuSolver;
-        let gpu_solver = std::sync::Arc::new(SimpleGpuSolver::new()?);
-
-        adapter.solve(gpu_solver).await
+        adapter.solve().await
     }
 
     /// Generic solver (placeholder for future expansion)
