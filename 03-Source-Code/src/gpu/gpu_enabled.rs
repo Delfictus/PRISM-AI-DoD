@@ -277,16 +277,14 @@ impl GpuLinear {
         // Matrix multiply on GPU
         let mut output = input.matmul(&self.weight)?;
 
-        // Add bias on GPU (we should create a kernel for this too)
+        // Add bias on GPU - BROADCAST KERNEL, NO CPU LOOPS
         let batch_size = output.shape[0];
         let features = output.shape[1];
-        let bias_data = &self.bias.data;
 
-        // TODO: Replace with GPU kernel for bias addition
-        for b in 0..batch_size {
-            for f in 0..features {
-                output.data[b * features + f] += bias_data[f];
-            }
+        // GPU BROADCAST ADD KERNEL
+        {
+            let executor = output.gpu_state.kernel_executor.lock().unwrap();
+            executor.broadcast_add_inplace(&mut output.data, &self.bias.data, batch_size, features)?;
         }
 
         Ok(output)

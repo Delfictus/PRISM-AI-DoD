@@ -589,6 +589,20 @@ pub mod kernels {
     }
     "#;
 
+    pub const BROADCAST_ADD: &str = r#"
+    extern "C" __global__ void broadcast_add(
+        float* data, float* bias, int batch_size, int features
+    ) {
+        int idx = blockIdx.x * blockDim.x + threadIdx.x;
+        int total = batch_size * features;
+
+        if (idx < total) {
+            int feature_idx = idx % features;
+            data[idx] += bias[feature_idx];
+        }
+    }
+    "#;
+
     pub const ELEMENTWISE_EXP: &str = r#"
     extern "C" __global__ void elementwise_exp(
         float* input, float* output, int n
@@ -965,7 +979,8 @@ pub struct GpuKernelExecutor {
     context: Arc<CudaContext>,
     modules: HashMap<String, Arc<CudaModule>>,
     kernels: HashMap<String, Arc<CudaFunction>>,
-    rng: Option<std::sync::Mutex<CudaRng>>,  // GPU random number generator (optional for thread safety)
+    // Note: cuRAND removed from struct due to Send/Sync issues in static context
+    // Random generation uses per-call CudaRng creation instead
 }
 
 impl GpuKernelExecutor {
@@ -974,27 +989,13 @@ impl GpuKernelExecutor {
         let context = CudaContext::new(device_id)
             .context("Failed to create CUDA context")?;
 
-        // Initialize cuRAND for GPU random number generation
-        let stream = context.default_stream();
-        let rng = match CudaRng::new(42, stream.clone()) {
-            Ok(r) => {
-                println!("✅ cuRAND initialized for GPU random generation");
-                Some(std::sync::Mutex::new(r))
-            }
-            Err(e) => {
-                println!("⚠️  cuRAND initialization failed: {:?}", e);
-                println!("   Random operations will use CPU fallback");
-                None
-            }
-        };
-
         println!("✅ GPU Kernel Executor initialized on device {}", device_id);
+        println!("✅ cuRAND will be created on-demand for random operations");
 
         Ok(Self {
             context, // Already Arc<CudaContext>
             modules: HashMap::new(),
             kernels: HashMap::new(),
-            rng,
         })
     }
 
@@ -1069,6 +1070,7 @@ impl GpuKernelExecutor {
         self.register_kernel("quantum_measurement", kernels::QUANTUM_MEASUREMENT)?;
 
         // Additional utility kernels
+        self.register_kernel("broadcast_add", kernels::BROADCAST_ADD)?;
         self.register_kernel("elementwise_exp", kernels::ELEMENTWISE_EXP)?;
         self.register_kernel("dot_product", kernels::DOT_PRODUCT)?;
         self.register_kernel("reduce_sum", kernels::REDUCE_SUM)?;
@@ -1561,20 +1563,52 @@ impl GpuKernelExecutor {
         Ok(result[0])
     }
 
+    /// Broadcast add bias to batched data on GPU
+    /// data[batch, features] += bias[features]
+    /// GPU KERNEL - NO CPU LOOPS
+    pub fn broadcast_add_inplace(&self, data: &mut [f32], bias: &[f32], batch_size: usize, features: usize) -> Result<()> {
+        anyhow::ensure!(data.len() == batch_size * features, "Data size mismatch");
+        anyhow::ensure!(bias.len() == features, "Bias size mismatch");
+
+        let stream = self.context.default_stream();
+        let kernel = self.get_kernel("broadcast_add")?;
+
+        // Upload data
+        let mut data_dev = stream.memcpy_stod(data)?;
+        let bias_dev = stream.memcpy_stod(bias)?;
+
+        // Launch kernel
+        let total = batch_size * features;
+        let cfg = LaunchConfig::for_num_elems(total as u32);
+
+        unsafe {
+            stream.launch_builder(kernel)
+                .arg(&mut data_dev)
+                .arg(&bias_dev)
+                .arg(&(batch_size as i32))
+                .arg(&(features as i32))
+                .launch(cfg)?;
+        }
+
+        // Download result
+        let result = stream.memcpy_dtov(&data_dev)?;
+        data.copy_from_slice(&result);
+        Ok(())
+    }
+
     /// Generate uniform random numbers on GPU using cuRAND
     /// GPU ONLY - NO CPU rand
     pub fn generate_uniform_gpu(&self, n: usize) -> Result<Vec<f32>> {
         let stream = self.context.default_stream();
         let mut random_data = stream.alloc_zeros::<f32>(n)?;
 
+        // Create cuRAND on-demand (avoids Send/Sync issues in static context)
+        let rng = CudaRng::new(42, stream.clone())
+            .map_err(|e| anyhow::anyhow!("cuRAND creation failed: {:?}", e))?;
+
         // Generate on GPU using cuRAND
-        if let Some(ref rng_mutex) = self.rng {
-            let rng = rng_mutex.lock().unwrap();
-            rng.fill_with_uniform(&mut random_data)
-                .map_err(|e| anyhow::anyhow!("cuRAND uniform generation failed: {:?}", e))?;
-        } else {
-            anyhow::bail!("cuRAND not available - GPU random generation required");
-        }
+        rng.fill_with_uniform(&mut random_data)
+            .map_err(|e| anyhow::anyhow!("cuRAND uniform generation failed: {:?}", e))?;
 
         // Download result
         let result = stream.memcpy_dtov(&random_data)?;
@@ -1587,14 +1621,13 @@ impl GpuKernelExecutor {
         let stream = self.context.default_stream();
         let mut random_data = stream.alloc_zeros::<f32>(n)?;
 
-        // Generate standard normal on GPU
-        if let Some(ref rng_mutex) = self.rng {
-            let rng = rng_mutex.lock().unwrap();
-            rng.fill_with_normal(&mut random_data, mean, std)
-                .map_err(|e| anyhow::anyhow!("cuRAND normal generation failed: {:?}", e))?;
-        } else {
-            anyhow::bail!("cuRAND not available - GPU random generation required");
-        }
+        // Create cuRAND on-demand (avoids Send/Sync issues)
+        let rng = CudaRng::new(43, stream.clone())
+            .map_err(|e| anyhow::anyhow!("cuRAND creation failed: {:?}", e))?;
+
+        // Generate on GPU
+        rng.fill_with_normal(&mut random_data, mean, std)
+            .map_err(|e| anyhow::anyhow!("cuRAND normal generation failed: {:?}", e))?;
 
         // Download result
         let result = stream.memcpy_dtov(&random_data)?;
