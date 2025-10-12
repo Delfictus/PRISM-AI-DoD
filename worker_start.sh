@@ -70,9 +70,42 @@ fi
 
 echo ""
 
-# Step 3: Run auto-sync for dependencies
+# Step 3: Governance Check (STRICT)
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "🔄 Step 3: Auto-syncing dependencies"
+echo "🔒 Step 3: Strict Governance Check"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
+
+# Run governance engine
+if [ -f "./.worker-vault/STRICT_GOVERNANCE_ENGINE.sh" ]; then
+    ./.worker-vault/STRICT_GOVERNANCE_ENGINE.sh "$WORKER_ID"
+    GOVERNANCE_STATUS=$?
+
+    if [ $GOVERNANCE_STATUS -ne 0 ]; then
+        echo ""
+        echo "❌ GOVERNANCE CHECK FAILED"
+        echo "   Fix violations above before proceeding"
+        exit 1
+    fi
+elif [ -f "/home/diddy/Desktop/PRISM-AI-DoD/.obsidian-vault/Enforcement/STRICT_GOVERNANCE_ENGINE.sh" ]; then
+    /home/diddy/Desktop/PRISM-AI-DoD/.obsidian-vault/Enforcement/STRICT_GOVERNANCE_ENGINE.sh "$WORKER_ID"
+    GOVERNANCE_STATUS=$?
+
+    if [ $GOVERNANCE_STATUS -ne 0 ]; then
+        echo ""
+        echo "❌ GOVERNANCE CHECK FAILED"
+        echo "   Fix violations above before proceeding"
+        exit 1
+    fi
+else
+    echo "⚠️  Governance engine not found - skipping (NOT RECOMMENDED)"
+fi
+
+echo ""
+
+# Step 4: Run auto-sync for dependencies
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "🔄 Step 4: Auto-syncing dependencies"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 
@@ -90,9 +123,9 @@ fi
 
 echo ""
 
-# Step 4: Build check
+# Step 5: Build check
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "🔨 Step 4: Build validation"
+echo "🔨 Step 5: Build validation"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 
