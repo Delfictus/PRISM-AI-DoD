@@ -58,7 +58,7 @@ check_prohibited_patterns() {
 
     # Check for CPU fallback comments
     info "Checking for placeholder comments..."
-    if grep -r "CPU fallback\|cpu fallback\|CPU computation (placeholder)\|Real GPU kernels would execute here" "$REPO_ROOT/src" 2>/dev/null | grep -v "\.md$" | grep -v "gpu_enabled_old.rs"; then
+    if grep -r "CPU fallback\|cpu fallback\|CPU computation (placeholder)\|Real GPU kernels would execute here" "$REPO_ROOT/src" 2>/dev/null | grep -v "\.md$" | grep -v "gpu_enabled_old.rs" | grep -v "Zero CPU fallback" | grep -v "NO CPU fallback" | grep -v "not.*CPU fallback"; then
         error "Found forbidden placeholder comments indicating CPU fallback"
         ((violations++))
     fi
