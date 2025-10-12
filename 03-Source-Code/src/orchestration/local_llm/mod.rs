@@ -4,6 +4,7 @@ pub mod gguf_loader;
 pub mod gguf_gpu_loader;
 pub mod kv_cache;
 pub mod bpe_tokenizer;
+pub mod sampling;
 
 pub use gpu_llm_inference::{
     GpuLocalLLMSystem,
@@ -37,4 +38,9 @@ pub use kv_cache::{
 pub use bpe_tokenizer::{
     BPETokenizer,
     SpecialTokens,
+};
+
+pub use sampling::{
+    TokenSampler,
+    SamplingConfig,
 };
