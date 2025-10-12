@@ -12,16 +12,11 @@
 pub mod motion_planning;
 pub mod environment_model;
 pub mod trajectory;
-pub mod trajectory_forecasting;
 pub mod ros_bridge;
 
 pub use motion_planning::{MotionPlanner, PlanningConfig, MotionPlan};
 pub use environment_model::{EnvironmentModel, EnvironmentState, ObstacleModel};
-pub use trajectory::{
-    TrajectoryPredictor, Trajectory, TrajectoryPoint,
-    EnvironmentSnapshot, AgentState, InteractionHistory,
-};
-pub use trajectory_forecasting::{AdvancedTrajectoryForecaster, TrajectoryForecastConfig};
+pub use trajectory::{TrajectoryPredictor, Trajectory, TrajectoryPoint};
 pub use ros_bridge::{RosInterface, RobotState, RobotCommand};
 
 /// Robotics module configuration
