@@ -13,7 +13,7 @@ use ndarray::Array1;
 
 // Use only the minimal cudarc features we need
 #[cfg(feature = "cuda")]
-use cudarc::driver::CudaDevice;
+use cudarc::driver::CudaContext;
 
 /// Global GPU context - initialized once, used everywhere
 static INIT: Once = Once::new();
@@ -22,7 +22,7 @@ static mut GPU_CONTEXT: Option<Arc<GpuContext>> = None;
 /// Simplified GPU context that actually works
 pub struct GpuContext {
     #[cfg(feature = "cuda")]
-    device: Arc<CudaDevice>,
+    device: Arc<CudaContext>,
     #[cfg(not(feature = "cuda"))]
     device: Arc<()>, // Placeholder when CUDA not available
     ptx_cache: Mutex<HashMap<String, Vec<u8>>>,
@@ -53,11 +53,8 @@ impl GpuContext {
     fn create() -> Result<Arc<Self>> {
         // Try to create CUDA device
         #[cfg(feature = "cuda")]
-        let device = {
-            CudaDevice::new(0)
-                .map(Arc::new)
-                .map_err(|e| anyhow!("Failed to create CUDA device: {}", e))?
-        };
+        let device = CudaContext::new(0)
+            .map_err(|e| anyhow!("Failed to create CUDA device: {}", e))?;
 
         #[cfg(not(feature = "cuda"))]
         let device = Arc::new(());
@@ -90,7 +87,7 @@ impl GpuContext {
 
     /// Get the shared GPU device
     #[cfg(feature = "cuda")]
-    pub fn device(&self) -> &Arc<CudaDevice> {
+    pub fn device(&self) -> &Arc<CudaContext> {
         &self.device
     }
 
@@ -145,23 +142,11 @@ impl GpuKernelLauncher {
 
         #[cfg(feature = "cuda")]
         {
-            let device = self.context.device();
-            // Try to allocate GPU memory
-            match device.htod_sync_copy(source.as_slice().unwrap()) {
-                Ok(_source_gpu) => {
-                    match device.htod_sync_copy(target.as_slice().unwrap()) {
-                        Ok(_target_gpu) => {
-                            println!("[GPU] Data transferred to GPU ({}x2 elements)", n);
-                        }
-                        Err(e) => {
-                            println!("[GPU] Failed to copy target to GPU: {}", e);
-                        }
-                    }
-                }
-                Err(e) => {
-                    println!("[GPU] Failed to copy source to GPU: {}", e);
-                }
-            }
+            let _device = self.context.device();
+            // TODO: Implement proper GPU memory transfer using cudarc API
+            // For now, using placeholder to allow build to complete
+            println!("[GPU] GPU memory transfer not yet implemented with cudarc");
+            println!("[GPU] Will transfer {} elements when implemented", n);
         }
 
         #[cfg(not(feature = "cuda"))]

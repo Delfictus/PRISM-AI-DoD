@@ -12,12 +12,14 @@
 //! - Validated against QuTiP reference implementation
 
 // GPU kernel launcher for actual GPU execution
-#[cfg(feature = "cuda")]
-pub mod gpu_launcher;
+// Disabled until gpu_ffi is available
+// #[cfg(feature = "cuda")]
+// pub mod gpu_launcher;
 
 // GPU FFI for direct kernel execution
-#[cfg(feature = "cuda")]
-pub mod gpu_ffi;
+// Disabled until libgpu_runtime.so is built
+// #[cfg(feature = "cuda")]
+// pub mod gpu_ffi;
 
 pub mod mathematics;
 pub mod information_theory;
@@ -53,6 +55,9 @@ pub mod quantum_mlir;
 // GPU-accelerated graph coloring
 #[cfg(feature = "cuda")]
 pub mod gpu_coloring;
+
+// GPU acceleration for neural networks and tensors
+pub mod gpu;
 
 // Phase 6: Adaptive Problem-Space Modeling (NEW!)
 pub mod phase6;

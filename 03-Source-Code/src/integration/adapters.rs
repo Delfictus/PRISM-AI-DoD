@@ -6,6 +6,8 @@
 use std::sync::Arc;
 use ndarray::{Array1, Array2};
 use anyhow::Result;
+
+#[cfg(feature = "cuda")]
 use cudarc::driver::CudaContext;
 
 use neuromorphic_engine::GpuReservoirComputer;

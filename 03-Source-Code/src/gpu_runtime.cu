@@ -135,7 +135,19 @@ void launch_thermodynamic(double* phases, double* velocities, int n_osc, int n_s
 int gpu_available() {
     int deviceCount = 0;
     cudaError_t error = cudaGetDeviceCount(&deviceCount);
-    return (error == cudaSuccess && deviceCount > 0) ? 1 : 0;
+
+    // Reset any prior errors
+    cudaGetLastError();
+
+    // Check if we got a valid device count
+    if (error != cudaSuccess || deviceCount <= 0 || deviceCount > 100) {
+        // Try to reset and check again
+        cudaDeviceReset();
+        error = cudaGetDeviceCount(&deviceCount);
+    }
+
+    // Return 1 if we have at least one GPU
+    return (error == cudaSuccess && deviceCount > 0 && deviceCount < 100) ? 1 : 0;
 }
 
 } // extern "C"

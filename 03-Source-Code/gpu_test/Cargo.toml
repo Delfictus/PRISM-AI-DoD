@@ -1,0 +1,14 @@
+[package]
+name = "gpu-test-minimal"
+version = "0.1.0"
+edition = "2021"
+
+[workspace]
+
+[features]
+default = ["cuda"]
+cuda = []
+
+[dependencies]
+# Direct cudarc dependency for CUDA 13
+cudarc = { git = "https://github.com/coreylowman/cudarc.git", branch = "main", default-features = false, features = ["cuda-13000", "driver", "nvrtc", "f16", "dynamic-loading"] }

@@ -66,16 +66,16 @@ rand_chacha = "0.3"
 rand_distr = "0.4"
 uuid = { version = "1.0", features = ["v4"] }
 chrono = "0.4"
-# cudarc = "0.12"  # Removed - using patched version for CUDA 12.8 support
+# Use latest cudarc from git for CUDA 13 support
+cudarc = { git = "https://github.com/coreylowman/cudarc.git", branch = "main", default-features = false, features = ["cuda-13000", "driver", "nvrtc", "cublas", "curand", "f16"] }
 dashmap = "5.5"
 bincode = "1.3"
 tempfile = "3.8"
 sha2 = "0.10"
 fastrand = "2.0"
 parking_lot = "0.12"
-cudarc = { version = "0.17", features = ["driver", "nvrtc", "cublas", "curand"] }
-candle-core = { version = "0.9", features = ["cuda"] }
-candle-nn = "0.9"
+once_cell = "1.19"
+# Candle removed - using cudarc directly for GPU acceleration
 colored = "2.1"
 # Week 2: Encryption for classified data
 aes-gcm = "0.10"
@@ -199,6 +199,26 @@ path = "examples/comprehensive_benchmark.rs"
 name = "prism_ai"
 path = "src/lib.rs"
 
+[[bin]]
+name = "prism"
+path = "src/bin/prism.rs"
+
+[[bin]]
+name = "test_llm"
+path = "src/bin/test_llm.rs"
+
+[[bin]]
+name = "test_gpu"
+path = "src/bin/test_gpu.rs"
+
+[[bin]]
+name = "benchmark_pwsa_gpu"
+path = "src/bin/benchmark_pwsa_gpu.rs"
+
+[[bin]]
+name = "test_gpu_real"
+path = "src/bin/test_gpu_real.rs"
+
 [[test]]
 name = "transfer_entropy"
 path = "tests/transfer_entropy_tests.rs"
@@ -217,28 +237,12 @@ harness = false
 required-features = ["pwsa"]
 
 # ═══════════════════════════════════════════════════════════════════════════
-# DEPENDENCY COMPATIBILITY PATCH
+# CUDA 13 SUPPORT
 # ═══════════════════════════════════════════════════════════════════════════
-#
-# Purpose: Resolve CUDA 12.8 compatibility issue
-#
-# Problem:
-#   - cudarc v0.12.1 (crates.io) only supports CUDA up to 12.6
-#   - System has CUDA 12.8 installed
-#   - candle-core depends on cudarc v0.12.1
-#   - Build fails: "Unsupported cuda toolkit version: 12.8"
-#
-# Solution:
-#   - Override cudarc dependency with latest git version
-#   - Git main branch supports CUDA 12.8 (verified in build.rs)
-#   - Applies to ALL transitive dependencies (candle, neuromorphic, quantum)
-#
-# Governance:
-#   - Constitutional Amendment proposed: Task 0.3 DependencyValidator
-#   - Future: Automated CUDA version compatibility checking
-#   - CI/CD: Dependency validation on every PR
-#
+# Using latest git versions of cudarc and candle for CUDA 13 compatibility
+# These versions auto-detect CUDA version at build time
 # ═══════════════════════════════════════════════════════════════════════════
+
 [patch.crates-io]
-# Pinned to specific commit for reproducibility (CUDA 12.8 support)
-cudarc = { git = "https://github.com/coreylowman/cudarc.git", rev = "fdf313cc10cf5504953ac9fe6a5dc78dc6ec4152" }
+# Override ALL cudarc versions to use our CUDA 13 compatible version
+cudarc = { git = "https://github.com/coreylowman/cudarc.git", branch = "main", default-features = false, features = ["cuda-13000", "driver", "nvrtc", "cublas", "curand", "f16"] }

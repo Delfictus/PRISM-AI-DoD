@@ -158,14 +158,13 @@ impl MetaLearningCoordinator {
         let tda = Arc::new(RwLock::new(TdaAdapter::new(2)?));
 
         // GNN would be loaded from pre-trained model
-        // For now, create a new one (in production, load from file)
-        let device = candle_core::Device::Cpu;
-        let gnn = Arc::new(RwLock::new(E3EquivariantGNN::new(
+        // For now, create a stub (GPU support to be added with cudarc)
+        // TODO: Replace with actual GPU implementation using cudarc
+        let gnn = Arc::new(RwLock::new(E3EquivariantGNN::new_cpu(
             8,  // node features
             4,  // edge features
             64, // hidden dim
             3,  // num layers
-            device,
         )?));
 
         let neuro = Arc::new(RwLock::new(PredictiveNeuromorphic::new(

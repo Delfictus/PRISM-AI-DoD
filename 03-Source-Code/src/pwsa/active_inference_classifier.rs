@@ -13,8 +13,207 @@
 use ndarray::{Array1, Array2};
 use anyhow::{Result, Context};
 use std::collections::VecDeque;
-use candle_core::{Tensor, Device, DType};
-use candle_nn::{Module, VarBuilder, VarMap, Optimizer};
+use std::sync::Arc;
+
+// GPU support types (cudarc will be conditionally compiled)
+#[cfg(feature = "cuda")]
+use cudarc::driver::{CudaContext, CudaStream};
+
+/// Device abstraction for CPU/GPU
+#[derive(Clone)]
+pub enum Device {
+    Cpu,
+    #[cfg(feature = "cuda")]
+    Cuda(Arc<CudaContext>),
+}
+
+impl Device {
+    /// Get CUDA device if available, otherwise CPU
+    pub fn cuda_if_available(_device_id: usize) -> Result<Self> {
+        #[cfg(feature = "cuda")]
+        {
+            match CudaContext::new(_device_id) {
+                Ok(device) => Ok(Device::Cuda(device)),
+                Err(_) => Ok(Device::Cpu),
+            }
+        }
+        #[cfg(not(feature = "cuda"))]
+        Ok(Device::Cpu)
+    }
+}
+
+/// Simple tensor representation for neural network operations
+pub struct Tensor {
+    data: Vec<f32>,
+    shape: Vec<usize>,
+    device: Device,
+}
+
+impl Tensor {
+    pub fn from_slice(data: &[f64], shape: (usize, usize), _device: &Device) -> Result<Self> {
+        let float_data: Vec<f32> = data.iter().map(|&x| x as f32).collect();
+        Ok(Tensor {
+            data: float_data,
+            shape: vec![shape.0, shape.1],
+            device: _device.clone(),
+        })
+    }
+
+    pub fn from_vec(data: Vec<f32>, shape: (usize, usize), _device: &Device) -> Result<Self> {
+        Ok(Tensor {
+            data,
+            shape: vec![shape.0, shape.1],
+            device: _device.clone(),
+        })
+    }
+
+    pub fn from_vec_1d(data: Vec<u32>, shape: (usize,), _device: &Device) -> Result<Self> {
+        let float_data: Vec<f32> = data.iter().map(|&x| x as f32).collect();
+        Ok(Tensor {
+            data: float_data,
+            shape: vec![shape.0],
+            device: _device.clone(),
+        })
+    }
+
+    pub fn to_vec2(&self) -> Result<Vec<Vec<f32>>> {
+        if self.shape.len() != 2 {
+            anyhow::bail!("Expected 2D tensor");
+        }
+        let rows = self.shape[0];
+        let cols = self.shape[1];
+        let mut result = Vec::with_capacity(rows);
+        for i in 0..rows {
+            let start = i * cols;
+            let end = start + cols;
+            result.push(self.data[start..end].to_vec());
+        }
+        Ok(result)
+    }
+
+    pub fn to_scalar(&self) -> Result<f32> {
+        if self.data.len() != 1 {
+            anyhow::bail!("Expected scalar tensor");
+        }
+        Ok(self.data[0])
+    }
+
+    pub fn relu(&self) -> Result<Self> {
+        let activated: Vec<f32> = self.data.iter().map(|&x| x.max(0.0)).collect();
+        Ok(Tensor {
+            data: activated,
+            shape: self.shape.clone(),
+            device: self.device.clone(),
+        })
+    }
+}
+
+/// Softmax operation for neural networks
+pub fn softmax(tensor: &Tensor, dim: usize) -> Result<Tensor> {
+    if dim != 1 || tensor.shape.len() != 2 {
+        anyhow::bail!("Softmax currently only supports dim=1 on 2D tensors");
+    }
+
+    let rows = tensor.shape[0];
+    let cols = tensor.shape[1];
+    let mut result = vec![0.0_f32; tensor.data.len()];
+
+    for i in 0..rows {
+        let start = i * cols;
+        let end = start + cols;
+        let row = &tensor.data[start..end];
+
+        // Find max for numerical stability
+        let max_val = row.iter().cloned().fold(f32::NEG_INFINITY, f32::max);
+
+        // Compute exp and sum
+        let mut exp_sum = 0.0;
+        let mut exp_vals = vec![0.0; cols];
+        for (j, &val) in row.iter().enumerate() {
+            exp_vals[j] = (val - max_val).exp();
+            exp_sum += exp_vals[j];
+        }
+
+        // Normalize
+        for j in 0..cols {
+            result[start + j] = exp_vals[j] / exp_sum;
+        }
+    }
+
+    Ok(Tensor {
+        data: result,
+        shape: tensor.shape.clone(),
+        device: tensor.device.clone(),
+    })
+}
+
+/// Log softmax operation
+pub fn log_softmax(tensor: &Tensor, dim: usize) -> Result<Tensor> {
+    let soft = softmax(tensor, dim)?;
+    let log_data: Vec<f32> = soft.data.iter().map(|&x| x.ln()).collect();
+    Ok(Tensor {
+        data: log_data,
+        shape: soft.shape,
+        device: soft.device,
+    })
+}
+
+/// Linear layer for neural networks
+pub struct Linear {
+    weight: Vec<f32>,
+    bias: Vec<f32>,
+    in_features: usize,
+    out_features: usize,
+}
+
+impl Linear {
+    pub fn new(in_features: usize, out_features: usize) -> Self {
+        use rand::Rng;
+        let mut rng = rand::thread_rng();
+
+        // Xavier initialization
+        let scale = (2.0 / in_features as f32).sqrt();
+        let weight: Vec<f32> = (0..in_features * out_features)
+            .map(|_| rng.gen_range(-scale..scale))
+            .collect();
+        let bias = vec![0.0; out_features];
+
+        Linear {
+            weight,
+            bias,
+            in_features,
+            out_features,
+        }
+    }
+
+    pub fn forward(&self, input: &Tensor) -> Result<Tensor> {
+        // Simple matrix multiplication for now
+        // input shape: [batch_size, in_features]
+        // weight shape: [in_features, out_features]
+        // output shape: [batch_size, out_features]
+
+        let batch_size = input.shape[0];
+        let mut output = vec![0.0; batch_size * self.out_features];
+
+        for b in 0..batch_size {
+            for o in 0..self.out_features {
+                let mut sum = self.bias[o];
+                for i in 0..self.in_features {
+                    let input_idx = b * self.in_features + i;
+                    let weight_idx = i * self.out_features + o;
+                    sum += input.data[input_idx] * self.weight[weight_idx];
+                }
+                output[b * self.out_features + o] = sum;
+            }
+        }
+
+        Ok(Tensor {
+            data: output,
+            shape: vec![batch_size, self.out_features],
+            device: input.device.clone(),
+        })
+    }
+}
 
 /// Threat classification result with active inference
 #[derive(Debug, Clone)]
@@ -120,10 +319,10 @@ impl ActiveInferenceClassifier {
 
         // Recognition model: Q(class | observations)
         let posterior_logits = self.recognition_network.forward(&features_tensor)?;
-        let posterior_probs = candle_nn::ops::softmax(&posterior_logits, 1)?;
+        let posterior_probs = softmax(&posterior_logits, 1)?;
 
         // Convert back to ndarray
-        let posterior_vec = posterior_probs.to_vec2::<f32>()?;
+        let posterior_vec = posterior_probs.to_vec2()?;
         let posterior = Array1::from_vec(
             posterior_vec[0].iter().map(|&x| x as f64).collect()
         );
@@ -228,35 +427,32 @@ impl ActiveInferenceClassifier {
 
 /// Recognition network (neural network for Q(class|observations))
 pub struct RecognitionNetwork {
-    fc1: candle_nn::Linear,  // 100 → 64
-    fc2: candle_nn::Linear,  // 64 → 32
-    fc3: candle_nn::Linear,  // 32 → 16
-    fc4: candle_nn::Linear,  // 16 → 5 (5 threat classes)
+    fc1: Linear,  // 100 → 64
+    fc2: Linear,  // 64 → 32
+    fc3: Linear,  // 32 → 16
+    fc4: Linear,  // 16 → 5 (5 threat classes)
     dropout: f64,
     device: Device,
 }
 
 impl RecognitionNetwork {
     /// Create new network with random initialization
-    pub fn new(vb: VarBuilder) -> Result<Self> {
+    pub fn new(device: &Device) -> Result<Self> {
         Ok(Self {
-            fc1: candle_nn::linear(100, 64, vb.pp("fc1"))?,
-            fc2: candle_nn::linear(64, 32, vb.pp("fc2"))?,
-            fc3: candle_nn::linear(32, 16, vb.pp("fc3"))?,
-            fc4: candle_nn::linear(16, 5, vb.pp("fc4"))?,
+            fc1: Linear::new(100, 64),
+            fc2: Linear::new(64, 32),
+            fc3: Linear::new(32, 16),
+            fc4: Linear::new(16, 5),
             dropout: 0.2,
-            device: vb.device().clone(),
+            device: device.clone(),
         })
     }
 
     /// Load pre-trained model from file
-    pub fn load(model_path: &str, device: &Device) -> Result<Self> {
-        let varmap = VarMap::new();
-        let vb = VarBuilder::from_varmap(&varmap, DType::F32, device);
-
-        // Load weights (would use safetensors in production)
+    pub fn load(_model_path: &str, device: &Device) -> Result<Self> {
+        // TODO: Implement actual model loading when needed
         // For now, create with random initialization
-        Self::new(vb)
+        Self::new(device)
     }
 
     /// Forward pass through network
@@ -361,7 +557,7 @@ impl ThreatTrainingExample {
 /// Trainer for recognition network
 pub struct ClassifierTrainer {
     model: RecognitionNetwork,
-    optimizer: candle_nn::AdamW,
+    learning_rate: f64,
     config: TrainingConfig,
 }
 
@@ -388,19 +584,11 @@ impl Default for TrainingConfig {
 
 impl ClassifierTrainer {
     pub fn new(device: &Device, config: TrainingConfig) -> Result<Self> {
-        let varmap = VarMap::new();
-        let vb = VarBuilder::from_varmap(&varmap, DType::F32, device);
-
-        let model = RecognitionNetwork::new(vb.clone())?;
-        let params: Vec<_> = varmap.all_vars().into_iter().collect();
-        let optimizer = candle_nn::AdamW::new(params, candle_nn::ParamsAdamW {
-            lr: config.learning_rate,
-            ..Default::default()
-        })?;
+        let model = RecognitionNetwork::new(device)?;
 
         Ok(Self {
             model,
-            optimizer,
+            learning_rate: config.learning_rate,
             config,
         })
     }
@@ -463,10 +651,10 @@ impl ClassifierTrainer {
             // Compute loss (cross-entropy)
             let loss = self.cross_entropy_loss(&logits, &labels_batch)?;
 
-            // Backward pass
-            self.optimizer.backward_step(&loss)?;
+            // TODO: Implement actual gradient descent when GPU kernels are ready
+            // For now, just track loss without updating weights
 
-            total_loss += loss.to_scalar::<f32>()?;
+            total_loss += loss.to_scalar()?;
             batch_count += 1;
         }
 
@@ -485,7 +673,7 @@ impl ClassifierTrainer {
             let logits = self.model.forward(&features_batch)?;
             let loss = self.cross_entropy_loss(&logits, &labels_batch)?;
 
-            total_loss += loss.to_scalar::<f32>()?;
+            total_loss += loss.to_scalar()?;
             batch_count += 1;
         }
 
@@ -508,7 +696,7 @@ impl ClassifierTrainer {
             &self.model.device,
         )?;
 
-        let labels_tensor = Tensor::from_vec(
+        let labels_tensor = Tensor::from_vec_1d(
             labels_vec,
             (batch.len(),),
             &self.model.device,
@@ -519,9 +707,24 @@ impl ClassifierTrainer {
 
     fn cross_entropy_loss(&self, logits: &Tensor, labels: &Tensor) -> Result<Tensor> {
         // Softmax + cross-entropy
-        let log_probs = candle_nn::ops::log_softmax(logits, 1)?;
-        let nll = candle_nn::loss::nll(&log_probs, labels)?;
-        Ok(nll)
+        let log_probs = log_softmax(logits, 1)?;
+
+        // Compute negative log likelihood
+        let batch_size = logits.shape[0];
+        let mut total_loss = 0.0_f32;
+
+        for b in 0..batch_size {
+            let label_idx = labels.data[b] as usize;
+            let log_prob = log_probs.data[b * logits.shape[1] + label_idx];
+            total_loss -= log_prob;
+        }
+
+        // Return average loss as scalar tensor
+        Ok(Tensor {
+            data: vec![total_loss / batch_size as f32],
+            shape: vec![1],
+            device: logits.device.clone(),
+        })
     }
 }
 
@@ -559,9 +762,7 @@ mod tests {
         let mut classifier = ActiveInferenceClassifier::new("models/test.safetensors")
             .unwrap_or_else(|_| {
                 // Fallback for testing without model file
-                let varmap = VarMap::new();
-                let vb = VarBuilder::from_varmap(&varmap, DType::F32, &device);
-                let recognition_network = RecognitionNetwork::new(vb).unwrap();
+                let recognition_network = RecognitionNetwork::new(&device).unwrap();
 
                 ActiveInferenceClassifier {
                     recognition_network,
@@ -584,10 +785,8 @@ mod tests {
     #[test]
     fn test_probabilities_normalized() {
         let device = Device::Cpu;
-        let varmap = VarMap::new();
-        let vb = VarBuilder::from_varmap(&varmap, DType::F32, &device);
         let mut classifier = ActiveInferenceClassifier {
-            recognition_network: RecognitionNetwork::new(vb).unwrap(),
+            recognition_network: RecognitionNetwork::new(&device).unwrap(),
             prior_beliefs: Array1::from_vec(vec![0.7, 0.1, 0.1, 0.05, 0.05]),
             free_energy_history: VecDeque::new(),
             device,

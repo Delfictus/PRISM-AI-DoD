@@ -14,6 +14,8 @@ pub mod vendor_sandbox;
 pub mod gpu_kernels;
 pub mod streaming;
 pub mod active_inference_classifier;
+pub mod gpu_classifier;
+pub mod gpu_classifier_v2;
 
 // Re-export primary types for convenient access
 pub use satellite_adapters::{

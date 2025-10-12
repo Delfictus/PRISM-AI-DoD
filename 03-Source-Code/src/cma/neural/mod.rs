@@ -13,8 +13,8 @@
 //! # Implementation Status
 //! Sprint 2.1: REAL E(3)-equivariant GNN (COMPLETE)
 
-use candle_core::Device;
-use candle_nn::Module;
+// Use Device type from neural_quantum module
+use self::neural_quantum::Device;
 
 pub mod gnn_integration;   // REAL GNN implementation (Sprint 2.1)
 pub mod diffusion;          // REAL diffusion model (Sprint 2.2)

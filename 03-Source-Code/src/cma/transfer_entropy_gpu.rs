@@ -7,6 +7,7 @@
 //! # Constitution Reference
 //! Phase 6 Implementation Constitution - Sprint 1.2
 
+#[cfg(feature = "cuda")]
 use cudarc::driver::*;
 use std::sync::Arc;
 use anyhow::{Result, Context};
@@ -14,6 +15,7 @@ use anyhow::{Result, Context};
 use super::transfer_entropy_ksg::{TimeSeries, TransferEntropyResult};
 
 /// GPU-accelerated KSG estimator
+#[cfg(feature = "cuda")]
 pub struct GpuKSGEstimator {
     device: Arc<CudaContext>,
     module: Arc<CudaModule>,
@@ -22,6 +24,14 @@ pub struct GpuKSGEstimator {
     delay: usize,
 }
 
+#[cfg(not(feature = "cuda"))]
+pub struct GpuKSGEstimator {
+    k: usize,
+    embed_dim: usize,
+    delay: usize,
+}
+
+#[cfg(feature = "cuda")]
 impl GpuKSGEstimator {
     /// Create new GPU KSG estimator
     pub fn new(k: usize, embed_dim: usize, delay: usize) -> Result<Self> {
@@ -301,6 +311,52 @@ struct GpuEmbeddings {
     y_past: Vec<f32>,
     x_past: Vec<f32>,
     n_points: usize,
+}
+
+/// CPU fallback implementation when CUDA is not available
+#[cfg(not(feature = "cuda"))]
+impl GpuKSGEstimator {
+    /// Create new estimator (CPU fallback)
+    pub fn new(k: usize, embed_dim: usize, delay: usize) -> Result<Self> {
+        Ok(Self {
+            k,
+            embed_dim,
+            delay,
+        })
+    }
+
+    /// Compute TE (CPU fallback)
+    pub fn compute_te_gpu(&self, source: &TimeSeries, target: &TimeSeries) -> Result<TransferEntropyResult> {
+        // Use CPU KSG implementation
+        let cpu_ksg = super::transfer_entropy_ksg::KSGEstimator::new(self.k, self.embed_dim, self.delay);
+        cpu_ksg.compute_te(source, target)
+    }
+
+    pub fn create_embeddings(&self, source: &TimeSeries, target: &TimeSeries) -> Result<GpuEmbeddings> {
+        let n = source.len();
+        let n_points = n - (self.embed_dim - 1) * self.delay - 1;
+
+        let mut y_current = Vec::with_capacity(n_points);
+        let mut y_past = Vec::with_capacity(n_points * self.embed_dim);
+        let mut x_past = Vec::with_capacity(n_points * self.embed_dim);
+
+        for t in (self.embed_dim * self.delay)..(n - 1) {
+            y_current.push(target.data[t + 1] as f32);
+
+            for d in 0..self.embed_dim {
+                let idx = t - d * self.delay;
+                y_past.push(target.data[idx] as f32);
+                x_past.push(source.data[idx] as f32);
+            }
+        }
+
+        Ok(GpuEmbeddings {
+            y_current,
+            y_past,
+            x_past,
+            n_points,
+        })
+    }
 }
 
 #[cfg(test)]

@@ -9,7 +9,9 @@
 // - Inference: <5ms (current CPU: ~112ms, need 22x)
 // - Controller: <2ms
 
+#[cfg(feature = "cuda")]
 use cudarc::driver::*;
+#[cfg(feature = "cuda")]
 use cudarc::nvrtc::compile_ptx;
 use ndarray::{Array1, Array2};
 use std::sync::Arc;
@@ -50,6 +52,7 @@ extern "C" __global__ void gemv_kernel(
 "#;
 
 /// GPU-accelerated inference engine
+#[cfg(feature = "cuda")]
 pub struct GpuInferenceEngine {
     /// CUDA context
     device: Arc<CudaContext>,
@@ -59,6 +62,14 @@ pub struct GpuInferenceEngine {
     cpu_inference: VariationalInference,
 }
 
+/// CPU fallback when CUDA is not available
+#[cfg(not(feature = "cuda"))]
+pub struct GpuInferenceEngine {
+    /// CPU inference engine (fallback and validation)
+    cpu_inference: VariationalInference,
+}
+
+#[cfg(feature = "cuda")]
 impl GpuInferenceEngine {
     /// Create new GPU inference engine with device
     pub fn new_with_device(
@@ -304,6 +315,111 @@ impl GpuInferenceEngine {
                 .mapv(|x| x * x).sum();
             let ambiguity = model.level1.belief.variance.sum();
             let novelty = 0.1;  // Information gain (simplified)
+
+            let g = risk + ambiguity - novelty;
+            expected_free_energies.push(g);
+        }
+
+        Ok(expected_free_energies)
+    }
+}
+
+/// CPU fallback implementation when CUDA is not available
+#[cfg(not(feature = "cuda"))]
+impl GpuInferenceEngine {
+    /// Create new inference engine (CPU fallback)
+    pub fn new(cpu_inference: VariationalInference) -> anyhow::Result<Self> {
+        Ok(Self { cpu_inference })
+    }
+
+    /// Create with device (ignored in CPU mode)
+    pub fn new_with_device(
+        cpu_inference: VariationalInference,
+        _device: std::sync::Arc<()>,
+    ) -> anyhow::Result<Self> {
+        Ok(Self { cpu_inference })
+    }
+
+    /// CPU observation prediction
+    pub fn predict_observations_gpu(
+        &self,
+        jacobian: &Array2<f64>,
+        state: &Array1<f64>,
+    ) -> anyhow::Result<Array1<f64>> {
+        Ok(jacobian.dot(state))
+    }
+
+    /// CPU Jacobian transpose multiply
+    pub fn jacobian_transpose_multiply_gpu(
+        &self,
+        jacobian: &Array2<f64>,
+        error: &Array1<f64>,
+    ) -> anyhow::Result<Array1<f64>> {
+        Ok(jacobian.t().dot(error))
+    }
+
+    /// CPU window evolution
+    pub fn evolve_windows_gpu(
+        &self,
+        level: &mut WindowPhaseLevel,
+        dt: f64,
+    ) -> anyhow::Result<()> {
+        let damping = level.damping;
+        let velocities = &level.generalized.velocity;
+        let phases = &level.generalized.position;
+
+        level.generalized.velocity = velocities - damping * velocities * dt;
+        level.generalized.position = phases + &level.generalized.velocity * dt;
+        level.belief.mean = level.generalized.position.clone();
+
+        Ok(())
+    }
+
+    /// CPU inference step
+    pub fn gpu_inference_step(
+        &mut self,
+        observations: &Array1<f64>,
+        model: &mut HierarchicalModel,
+    ) -> anyhow::Result<f64> {
+        let predicted = self.predict_observations_gpu(
+            &self.cpu_inference.observation_model.jacobian,
+            &model.level1.belief.mean,
+        )?;
+
+        let error = observations - &predicted;
+
+        let gradient = self.jacobian_transpose_multiply_gpu(
+            &self.cpu_inference.observation_model.jacobian,
+            &error,
+        )?;
+
+        let learning_rate = 0.01;
+        model.level1.belief.mean = &model.level1.belief.mean - &(learning_rate * &gradient);
+
+        self.evolve_windows_gpu(&mut model.level1, 0.001)?;
+
+        let free_energy = error.mapv(|e| e * e).sum() * 0.5;
+        Ok(free_energy)
+    }
+
+    /// CPU policy evaluation
+    pub fn evaluate_policies_gpu(
+        &self,
+        policies: &[Array1<f64>],
+        model: &HierarchicalModel,
+    ) -> anyhow::Result<Vec<f64>> {
+        let mut expected_free_energies = Vec::new();
+
+        for policy in policies {
+            let predicted = self.predict_observations_gpu(
+                &self.cpu_inference.observation_model.jacobian,
+                policy,
+            )?;
+
+            let risk = (policy - &model.level1.belief.mean)
+                .mapv(|x| x * x).sum();
+            let ambiguity = model.level1.belief.variance.sum();
+            let novelty = 0.1;
 
             let g = risk + ambiguity - novelty;
             expected_free_energies.push(g);

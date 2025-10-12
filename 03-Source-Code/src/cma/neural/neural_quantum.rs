@@ -10,11 +10,156 @@
 //! Purpose: 100x speedup over traditional quantum Monte Carlo by using
 //! neural networks to parameterize quantum wavefunctions.
 
-use candle_core::{Tensor, Device, DType, Result as CandleResult, Shape};
-use candle_nn::{Module, Linear, VarBuilder, LayerNorm, layer_norm};
+use anyhow::Result;
 use rand::Rng;
 use rand_chacha::ChaCha20Rng;
 use rand::SeedableRng;
+use std::sync::Arc;
+
+// GPU support (cudarc will be conditionally compiled)
+#[cfg(feature = "cuda")]
+use cudarc::driver::CudaContext;
+
+/// Device abstraction for CPU/GPU
+#[derive(Clone)]
+pub enum Device {
+    Cpu,
+    #[cfg(feature = "cuda")]
+    Cuda(Arc<CudaContext>),
+}
+
+impl Device {
+    pub fn cuda_if_available(_device_id: usize) -> Result<Self> {
+        #[cfg(feature = "cuda")]
+        {
+            match CudaContext::new(_device_id) {
+                Ok(device) => Ok(Device::Cuda(device)),
+                Err(_) => Ok(Device::Cpu),
+            }
+        }
+        #[cfg(not(feature = "cuda"))]
+        Ok(Device::Cpu)
+    }
+}
+
+/// Simple tensor representation
+pub struct Tensor {
+    data: Vec<f32>,
+    shape: Vec<usize>,
+}
+
+impl Tensor {
+    pub fn from_vec(data: Vec<f32>, shape: Vec<usize>) -> Result<Self> {
+        Ok(Tensor { data, shape })
+    }
+
+    pub fn randn(mean: f32, std: f32, shape: Vec<usize>, _device: &Device) -> Result<Self> {
+        use rand_distr::{Normal, Distribution};
+        let normal = Normal::new(mean, std)?;
+        let mut rng = rand::thread_rng();
+        let size: usize = shape.iter().product();
+        let data: Vec<f32> = (0..size).map(|_| normal.sample(&mut rng)).collect();
+        Ok(Tensor { data, shape })
+    }
+
+    pub fn to_vec0(&self) -> Result<f32> {
+        if self.data.len() != 1 {
+            anyhow::bail!("Expected scalar tensor");
+        }
+        Ok(self.data[0])
+    }
+
+    pub fn tanh(&self) -> Result<Self> {
+        let data: Vec<f32> = self.data.iter().map(|x| x.tanh()).collect();
+        Ok(Tensor { data, shape: self.shape.clone() })
+    }
+
+    pub fn add(&self, other: &Tensor) -> Result<Self> {
+        if self.shape != other.shape {
+            anyhow::bail!("Shape mismatch");
+        }
+        let data: Vec<f32> = self.data.iter().zip(&other.data).map(|(a, b)| a + b).collect();
+        Ok(Tensor { data, shape: self.shape.clone() })
+    }
+
+    pub fn sub(&self, other: &Tensor) -> Result<Self> {
+        if self.shape != other.shape {
+            anyhow::bail!("Shape mismatch");
+        }
+        let data: Vec<f32> = self.data.iter().zip(&other.data).map(|(a, b)| a - b).collect();
+        Ok(Tensor { data, shape: self.shape.clone() })
+    }
+
+    pub fn mul(&self, scalar: f32) -> Result<Self> {
+        let data: Vec<f32> = self.data.iter().map(|x| x * scalar).collect();
+        Ok(Tensor { data, shape: self.shape.clone() })
+    }
+}
+
+/// Linear layer for neural networks
+pub struct Linear {
+    weight: Vec<f32>,
+    bias: Vec<f32>,
+    in_features: usize,
+    out_features: usize,
+}
+
+impl Linear {
+    pub fn new(in_features: usize, out_features: usize) -> Self {
+        use rand::Rng;
+        let mut rng = rand::thread_rng();
+        let scale = (2.0 / in_features as f32).sqrt();
+        let weight: Vec<f32> = (0..in_features * out_features)
+            .map(|_| rng.gen_range(-scale..scale))
+            .collect();
+        let bias = vec![0.0; out_features];
+        Linear { weight, bias, in_features, out_features }
+    }
+
+    pub fn forward(&self, input: &Tensor) -> Result<Tensor> {
+        let batch_size = input.shape[0];
+        let mut output = vec![0.0; batch_size * self.out_features];
+
+        for b in 0..batch_size {
+            for o in 0..self.out_features {
+                let mut sum = self.bias[o];
+                for i in 0..self.in_features {
+                    let input_idx = b * self.in_features + i;
+                    let weight_idx = i * self.out_features + o;
+                    sum += input.data[input_idx] * self.weight[weight_idx];
+                }
+                output[b * self.out_features + o] = sum;
+            }
+        }
+
+        Ok(Tensor {
+            data: output,
+            shape: vec![batch_size, self.out_features],
+        })
+    }
+}
+
+/// Layer normalization
+pub struct LayerNorm {
+    normalized_shape: usize,
+    eps: f32,
+}
+
+impl LayerNorm {
+    pub fn new(normalized_shape: usize, eps: f32) -> Self {
+        LayerNorm { normalized_shape, eps }
+    }
+
+    pub fn forward(&self, input: &Tensor) -> Result<Tensor> {
+        // Simple layer norm implementation
+        let mean = input.data.iter().sum::<f32>() / input.data.len() as f32;
+        let variance = input.data.iter().map(|x| (x - mean).powi(2)).sum::<f32>() / input.data.len() as f32;
+        let std = (variance + self.eps).sqrt();
+
+        let data: Vec<f32> = input.data.iter().map(|x| (x - mean) / std).collect();
+        Ok(Tensor { data, shape: input.shape.clone() })
+    }
+}
 
 /// Neural Quantum State with Variational Monte Carlo
 pub struct NeuralQuantumState {
@@ -31,9 +176,8 @@ impl NeuralQuantumState {
         hidden_dim: usize,
         num_layers: usize,
         device: Device,
-    ) -> CandleResult<Self> {
-        let vs = VarBuilder::zeros(DType::F32, &device);
-        let network = ResNet::new(solution_dim, hidden_dim, num_layers, device.clone(), vs)?;
+    ) -> Result<Self> {
+        let network = ResNet::new(solution_dim, hidden_dim, num_layers, device.clone())?;
 
         Ok(Self {
             network,
@@ -49,7 +193,7 @@ impl NeuralQuantumState {
         &mut self,
         manifold: &crate::cma::CausalManifold,
         initial: &crate::cma::Solution,
-    ) -> CandleResult<crate::cma::Solution> {
+    ) -> Result<crate::cma::Solution> {
         let num_iterations = 100;
         let num_samples = 1000;
 
@@ -93,7 +237,7 @@ impl NeuralQuantumState {
     }
 
     /// Compute log amplitude of neural wavefunction: log|ψ(s)|
-    pub fn log_amplitude(&self, configuration: &Tensor) -> CandleResult<Tensor> {
+    pub fn log_amplitude(&self, configuration: &Tensor) -> Result<Tensor> {
         // Neural network outputs log amplitude
         self.network.forward(configuration)
     }
@@ -103,7 +247,7 @@ impl NeuralQuantumState {
         &self,
         initial_params: &[f64],
         num_samples: usize,
-    ) -> CandleResult<Vec<Vec<f64>>> {
+    ) -> Result<Vec<Vec<f64>>> {
         let mut rng = ChaCha20Rng::from_entropy();
         let mut samples = Vec::new();
         let mut current = initial_params.to_vec();
@@ -127,7 +271,7 @@ impl NeuralQuantumState {
         &self,
         current: &[f64],
         rng: &mut ChaCha20Rng,
-    ) -> CandleResult<Vec<f64>> {
+    ) -> Result<Vec<f64>> {
         // Propose move
         let mut proposed = current.to_vec();
         let idx = rng.gen_range(0..current.len());
@@ -141,8 +285,9 @@ impl NeuralQuantumState {
         let log_psi_proposed = self.log_amplitude(&proposed_tensor)?;
 
         // Acceptance ratio: |ψ(proposed)|² / |ψ(current)|²
-        let log_ratio = ((log_psi_proposed - log_psi_current)? * 2.0)?;
-        let log_ratio_val = log_ratio.to_vec0::<f32>()? as f64;
+        let diff = log_psi_proposed.sub(&log_psi_current)?;
+        let log_ratio = diff.mul(2.0)?;
+        let log_ratio_val = log_ratio.to_vec0()? as f64;
 
         // Accept or reject
         if log_ratio_val > 0.0 || rng.gen::<f64>() < log_ratio_val.exp() {
@@ -157,7 +302,7 @@ impl NeuralQuantumState {
         &self,
         samples: &[Vec<f64>],
         manifold: &crate::cma::CausalManifold,
-    ) -> CandleResult<Vec<f64>> {
+    ) -> Result<Vec<f64>> {
         let mut local_energies = Vec::new();
 
         for sample in samples {
@@ -185,7 +330,7 @@ impl NeuralQuantumState {
         current_params: &[f64],
         samples: &[Vec<f64>],
         local_energies: &[f64],
-    ) -> CandleResult<Vec<f64>> {
+    ) -> Result<Vec<f64>> {
         // Compute energy gradient
         let energy_mean = local_energies.iter().sum::<f64>() / local_energies.len() as f64;
 
@@ -217,12 +362,11 @@ impl NeuralQuantumState {
         Ok(new_params)
     }
 
-    fn vec_to_tensor(&self, data: &[f64]) -> CandleResult<Tensor> {
+    fn vec_to_tensor(&self, data: &[f64]) -> Result<Tensor> {
         let float_data: Vec<f32> = data.iter().map(|&x| x as f32).collect();
         Tensor::from_vec(
             float_data,
-            Shape::from_dims(&[1, data.len()]),
-            &self.device,
+            vec![1, data.len()],
         )
     }
 }
@@ -246,28 +390,26 @@ impl ResNet {
         hidden_dim: usize,
         num_layers: usize,
         device: Device,
-        vs: VarBuilder,
-    ) -> CandleResult<Self> {
-        let input_layer = candle_nn::linear(input_dim, hidden_dim, vs.pp("input"))?;
+    ) -> Result<Self> {
+        let input_layer = Linear::new(input_dim, hidden_dim);
 
         let mut residual_blocks = Vec::new();
         let mut layer_norms = Vec::new();
 
-        for i in 0..num_layers {
+        for _ in 0..num_layers {
             let block = ResidualLayer::new(
                 hidden_dim,
                 hidden_dim,
                 device.clone(),
-                vs.pp(&format!("block_{}", i)),
             )?;
             residual_blocks.push(block);
 
-            let ln = layer_norm(hidden_dim, 1e-5, vs.pp(&format!("ln_{}", i)))?;
+            let ln = LayerNorm::new(hidden_dim, 1e-5);
             layer_norms.push(ln);
         }
 
         // Output: single scalar for log amplitude
-        let output_layer = candle_nn::linear(hidden_dim, 1, vs.pp("output"))?;
+        let output_layer = Linear::new(hidden_dim, 1);
 
         Ok(Self {
             input_dim,
@@ -281,7 +423,7 @@ impl ResNet {
         })
     }
 
-    pub fn forward(&self, x: &Tensor) -> CandleResult<Tensor> {
+    pub fn forward(&self, x: &Tensor) -> Result<Tensor> {
         // Input projection
         let mut h = self.input_layer.forward(x)?;
         h = h.tanh()?;
@@ -310,10 +452,9 @@ impl ResidualLayer {
         input_dim: usize,
         hidden_dim: usize,
         device: Device,
-        vs: VarBuilder,
-    ) -> CandleResult<Self> {
-        let linear1 = candle_nn::linear(input_dim, hidden_dim, vs.pp("linear1"))?;
-        let linear2 = candle_nn::linear(hidden_dim, hidden_dim, vs.pp("linear2"))?;
+    ) -> Result<Self> {
+        let linear1 = Linear::new(input_dim, hidden_dim);
+        let linear2 = Linear::new(hidden_dim, hidden_dim);
 
         Ok(Self {
             hidden_dim,
@@ -323,8 +464,11 @@ impl ResidualLayer {
         })
     }
 
-    fn forward(&self, x: &Tensor) -> CandleResult<Tensor> {
-        let residual = x.clone();
+    fn forward(&self, x: &Tensor) -> Result<Tensor> {
+        let residual = Tensor {
+            data: x.data.clone(),
+            shape: x.shape.clone()
+        };
 
         // First layer
         let mut h = self.linear1.forward(x)?;
@@ -335,7 +479,7 @@ impl ResidualLayer {
         h = h.tanh()?;
 
         // Residual connection
-        (h + residual)?.to_dtype(DType::F32)
+        h.add(&residual)
     }
 }
 
@@ -352,7 +496,7 @@ impl VariationalMonteCarlo {
         hidden_dim: usize,
         num_layers: usize,
         device: Device,
-    ) -> CandleResult<Self> {
+    ) -> Result<Self> {
         let neural_state = NeuralQuantumState::new(
             solution_dim,
             hidden_dim,
@@ -372,7 +516,7 @@ impl VariationalMonteCarlo {
         &mut self,
         hamiltonian: &ProblemHamiltonian,
         initial: &crate::cma::Solution,
-    ) -> CandleResult<crate::cma::Solution> {
+    ) -> Result<crate::cma::Solution> {
         let manifold = crate::cma::CausalManifold {
             edges: Vec::new(),
             intrinsic_dim: initial.data.len(),
@@ -387,7 +531,7 @@ impl VariationalMonteCarlo {
         &self,
         hamiltonian: &ProblemHamiltonian,
         params: &[f64],
-    ) -> CandleResult<f64> {
+    ) -> Result<f64> {
         let samples = self.neural_state.sample_wavefunction(params, self.num_samples)?;
 
         let manifold = crate::cma::CausalManifold {
@@ -437,8 +581,7 @@ mod tests {
     #[test]
     fn test_resnet_creation() {
         let device = Device::Cpu;
-        let vs = VarBuilder::zeros(DType::F32, &device);
-        let result = ResNet::new(10, 32, 3, device, vs);
+        let result = ResNet::new(10, 32, 3, device);
         assert!(result.is_ok());
     }
 
@@ -452,15 +595,14 @@ mod tests {
     #[test]
     fn test_resnet_forward() {
         let device = Device::Cpu;
-        let vs = VarBuilder::zeros(DType::F32, &device);
-        let resnet = ResNet::new(5, 32, 2, device.clone(), vs);
+        let resnet = ResNet::new(5, 32, 2, device.clone());
 
         if resnet.is_err() {
             return;
         }
 
         let resnet = resnet.unwrap();
-        let x = Tensor::randn(0f32, 1.0, Shape::from_dims(&[1, 5]), &device);
+        let x = Tensor::randn(0f32, 1.0, vec![1, 5], &device);
 
         if x.is_err() {
             return;
