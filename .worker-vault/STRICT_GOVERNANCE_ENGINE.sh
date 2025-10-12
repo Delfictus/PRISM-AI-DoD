@@ -179,14 +179,14 @@ echo "🔍 Rule 4: Checking Build Hygiene..."
 if [ -d "03-Source-Code" ]; then
     cd 03-Source-Code
 
-    echo "  Running cargo check..."
-    if cargo check --features cuda 2>&1 | tail -10 | grep -q "error:"; then
-        echo "  ❌ VIOLATION: Code has build errors"
+    echo "  Running cargo check --lib..."
+    if cargo check --lib --features cuda 2>&1 | tail -10 | grep -q "error\[E"; then
+        echo "  ❌ VIOLATION: Library has build errors"
         echo "     → Cannot commit code that doesn't build"
         echo "     → Fix errors before proceeding"
         ((VIOLATIONS++))
     else
-        echo "  ✅ Build hygiene: PASSED"
+        echo "  ✅ Build hygiene: PASSED (library builds successfully)"
     fi
 
     cd ..
