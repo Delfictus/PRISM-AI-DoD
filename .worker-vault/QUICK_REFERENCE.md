@@ -1,0 +1,48 @@
+# Worker 8 Quick Reference
+
+## Your Worktree
+`/home/diddy/Desktop/PRISM-Worker-8`
+
+## Your Branch
+`worker-8-[branch-name]`
+
+## Your Time
+~254 hours (7 weeks)
+
+## Daily Commands
+
+**Pull latest**:
+```bash
+cd /home/diddy/Desktop/PRISM-Worker-8
+git pull origin worker-8-*
+git merge parallel-development
+```
+
+**Build & Test**:
+```bash
+cargo build --features cuda
+cargo test --lib [your_module]
+```
+
+**Commit**:
+```bash
+git add -A
+git commit -m "feat: [description]"
+git push origin worker-8-*
+```
+
+## Your Documentation
+
+All in `.worker-vault/`:
+- Constitution/ - Your rules
+- Tasks/ - Your work
+- Progress/ - Daily tracker
+- Reference/ - Full plans
+
+## Need Help?
+
+- Kernel request → GitHub issue [KERNEL]
+- Question → GitHub issue [QUESTION]  
+- Blocker → GitHub issue [BLOCKER]
+
+Check `.worker-vault/Reference/8_WORKER_ENHANCED_PLAN.md` for complete context.
