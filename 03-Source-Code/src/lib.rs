@@ -68,6 +68,9 @@ pub mod cma;
 // Time Series Forecasting (Worker 1 - Weeks 7-8)
 pub mod time_series;
 
+// Finance applications
+pub mod finance;
+
 // Re-export key components
 pub use mathematics::{
     MathematicalStatement, ProofResult, Assumption,
