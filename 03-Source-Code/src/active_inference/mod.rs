@@ -25,11 +25,25 @@ pub mod gpu;
 #[cfg(feature = "cuda")]
 pub mod gpu_policy_eval;
 
+// GPU-accelerated hierarchical inference
+#[cfg(feature = "cuda")]
+pub mod hierarchical_inference_gpu;
+
+// GPU-accelerated policy search
+#[cfg(feature = "cuda")]
+pub mod policy_search_gpu;
+
 #[cfg(feature = "cuda")]
 pub use gpu::ActiveInferenceGpu;
 
 #[cfg(feature = "cuda")]
 pub use gpu_policy_eval::GpuPolicyEvaluator;
+
+#[cfg(feature = "cuda")]
+pub use hierarchical_inference_gpu::{HierarchicalActiveInferenceGpu, HierarchicalConfig, GpuHierarchicalLevel};
+
+#[cfg(feature = "cuda")]
+pub use policy_search_gpu::{GpuPolicySearch, PolicySearchConfig};
 
 pub use generative_model::{GenerativeModel, PerformanceMetrics};
 pub use hierarchical_model::{HierarchicalModel, StateSpaceLevel, GaussianBelief, GeneralizedCoordinates};

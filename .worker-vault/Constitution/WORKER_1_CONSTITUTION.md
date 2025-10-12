@@ -36,9 +36,16 @@ YOU SHALL:
 MORNING (9 AM):
 ```bash
 cd /home/diddy/Desktop/PRISM-Worker-1
-git pull origin worker-1-[branch]
-git merge parallel-development
-cargo build --features cuda
+
+# AUTO-SYNC SYSTEM (replaces manual process)
+./worker_start.sh 1
+
+# This automatically:
+# - Pulls your branch
+# - Merges integration-staging
+# - Auto-syncs dependencies
+# - Validates build
+# - Reports READY or WAITING
 ```
 
 EVENING (5 PM):
@@ -47,4 +54,53 @@ git add -A
 git commit -m "feat: [your work]"
 git push origin worker-1-[branch]
 ```
+
+## Article V: Governance Enforcement
+
+BEFORE ALL WORK:
+- Governance engine runs automatically via worker_start.sh
+- Checks file ownership, dependencies, build hygiene
+- **VIOLATION = IMMEDIATE BLOCKING** until resolved
+
+YOU SHALL:
+- Accept governance verdicts
+- Fix violations immediately
+- Not bypass governance checks
+- Report issues to Worker 0-Alpha if governance incorrect
+
+GOVERNANCE RULES:
+1. ✅ Only edit files you own
+2. ✅ Have required dependencies before proceeding
+3. ✅ Code must build before committing
+4. ✅ Use GPU for all compute
+5. ✅ Commit daily with proper messages
+6. ✅ Follow integration protocol
+7. ✅ Use auto-sync system
+
+## Article VI: Auto-Sync System
+
+YOU SHALL:
+- Use `./worker_start.sh 1` to begin each session
+- Allow automatic dependency pulling
+- Wait gracefully when dependencies not ready
+- Work on alternative features when blocked
+
+YOU SHALL NOT:
+- Manually track dependencies
+- Skip auto-sync checks
+- Proceed when governance blocks
+- Bypass automatic integration
+
+## Article VII: Deliverable Publishing
+
+WHEN FEATURES COMPLETE:
+- Publish to deliverables branch immediately
+- Update .worker-deliverables.log
+- Update DELIVERABLES.md status
+- Notify dependent workers
+
+CRITICAL MILESTONE:
+- **Week 3**: Time series module MUST be published
+- **Unblocks**: Workers 5 & 7
+- **No exceptions** - this is on critical path
 
