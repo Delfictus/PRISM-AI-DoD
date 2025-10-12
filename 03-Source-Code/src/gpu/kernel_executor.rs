@@ -588,6 +588,107 @@ pub mod kernels {
     }
     "#;
 
+    pub const ELEMENTWISE_EXP: &str = r#"
+    extern "C" __global__ void elementwise_exp(
+        float* input, float* output, int n
+    ) {
+        int idx = blockIdx.x * blockDim.x + threadIdx.x;
+        if (idx < n) {
+            output[idx] = expf(input[idx]);
+        }
+    }
+    "#;
+
+    pub const DOT_PRODUCT: &str = r#"
+    extern "C" __global__ void dot_product(
+        float* a, float* b, float* result_out, int n
+    ) {
+        int idx = threadIdx.x;
+
+        float local_product = 0.0f;
+        if (idx < n) {
+            local_product = a[idx] * b[idx];
+        }
+
+        // Reduction
+        __shared__ float sdata[256];
+        sdata[idx] = local_product;
+        __syncthreads();
+
+        for (unsigned int s = 128; s > 0; s >>= 1) {
+            if (idx < s && (idx + s) < 256) {
+                sdata[idx] += sdata[idx + s];
+            }
+            __syncthreads();
+        }
+
+        if (idx == 0) {
+            result_out[0] = sdata[0];
+        }
+    }
+    "#;
+
+    pub const REDUCE_SUM: &str = r#"
+    extern "C" __global__ void reduce_sum(
+        float* data, float* sum_out, int n
+    ) {
+        int idx = threadIdx.x;
+
+        float local_sum = 0.0f;
+        if (idx < n) {
+            local_sum = data[idx];
+        }
+
+        // Reduction
+        __shared__ float sdata[256];
+        sdata[idx] = local_sum;
+        __syncthreads();
+
+        for (unsigned int s = 128; s > 0; s >>= 1) {
+            if (idx < s && (idx + s) < 256) {
+                sdata[idx] += sdata[idx + s];
+            }
+            __syncthreads();
+        }
+
+        if (idx == 0) {
+            sum_out[0] = sdata[0];
+        }
+    }
+    "#;
+
+    pub const SHANNON_ENTROPY: &str = r#"
+    extern "C" __global__ void shannon_entropy(
+        float* probabilities, float* entropy_out, int n
+    ) {
+        int idx = threadIdx.x;
+
+        float local_entropy = 0.0f;
+        if (idx < n) {
+            float p = probabilities[idx];
+            if (p > 1e-10f) {
+                local_entropy = p * logf(p);
+            }
+        }
+
+        // Reduction
+        __shared__ float sdata[256];
+        sdata[idx] = local_entropy;
+        __syncthreads();
+
+        for (unsigned int s = 128; s > 0; s >>= 1) {
+            if (idx < s && (idx + s) < 256) {
+                sdata[idx] += sdata[idx + s];
+            }
+            __syncthreads();
+        }
+
+        if (idx == 0) {
+            entropy_out[0] = -sdata[0];  // Shannon entropy is -Σ p log p
+        }
+    }
+    "#;
+
     pub const FREE_ENERGY: &str = r#"
     extern "C" __global__ void free_energy_kernel(
         float* posterior, float* prior,
@@ -716,7 +817,13 @@ impl GpuKernelExecutor {
         self.register_kernel("cnot_gate", kernels::CNOT_GATE)?;
         self.register_kernel("quantum_measurement", kernels::QUANTUM_MEASUREMENT)?;
 
-        println!("✅ All standard kernels registered (29 total)");
+        // Additional utility kernels
+        self.register_kernel("elementwise_exp", kernels::ELEMENTWISE_EXP)?;
+        self.register_kernel("dot_product", kernels::DOT_PRODUCT)?;
+        self.register_kernel("reduce_sum", kernels::REDUCE_SUM)?;
+        self.register_kernel("shannon_entropy", kernels::SHANNON_ENTROPY)?;
+
+        println!("✅ All standard kernels registered (33 total)");
         Ok(())
     }
 
@@ -1064,6 +1171,135 @@ impl GpuKernelExecutor {
         let result = stream.memcpy_dtov(&state_dev)?;
         state.copy_from_slice(&result);
         Ok(())
+    }
+
+    /// Element-wise exponential on GPU
+    /// GPU ONLY - NO CPU LOOPS
+    pub fn elementwise_exp(&self, input: &[f32]) -> Result<Vec<f32>> {
+        let n = input.len();
+        let stream = self.context.default_stream();
+        let kernel = self.get_kernel("elementwise_exp")?;
+
+        // Upload data
+        let input_dev = stream.memcpy_stod(input)?;
+        let mut output_dev = stream.alloc_zeros::<f32>(n)?;
+
+        // Launch kernel
+        let cfg = LaunchConfig::for_num_elems(n as u32);
+        unsafe {
+            stream.launch_builder(kernel)
+                .arg(&input_dev)
+                .arg(&mut output_dev)
+                .arg(&(n as i32))
+                .launch(cfg)?;
+        }
+
+        // Download result
+        let result = stream.memcpy_dtov(&output_dev)?;
+        Ok(result)
+    }
+
+    /// Dot product on GPU
+    /// GPU ONLY - NO CPU LOOPS
+    pub fn dot_product(&self, a: &[f32], b: &[f32]) -> Result<f32> {
+        let n = a.len();
+        anyhow::ensure!(b.len() == n, "Vectors must have same length");
+        anyhow::ensure!(n <= 256, "Dot product kernel supports max 256 elements");
+
+        let stream = self.context.default_stream();
+        let kernel = self.get_kernel("dot_product")?;
+
+        // Upload data
+        let a_dev = stream.memcpy_stod(a)?;
+        let b_dev = stream.memcpy_stod(b)?;
+        let mut result_dev = stream.alloc_zeros::<f32>(1)?;
+
+        // Launch with single block for reduction
+        let cfg = LaunchConfig {
+            grid_dim: (1, 1, 1),
+            block_dim: (256, 1, 1),
+            shared_mem_bytes: 0,
+        };
+
+        unsafe {
+            stream.launch_builder(kernel)
+                .arg(&a_dev)
+                .arg(&b_dev)
+                .arg(&mut result_dev)
+                .arg(&(n as i32))
+                .launch(cfg)?;
+        }
+
+        // Download result
+        let result = stream.memcpy_dtov(&result_dev)?;
+        Ok(result[0])
+    }
+
+    /// Reduce array to sum on GPU
+    /// GPU ONLY - NO CPU LOOPS
+    pub fn reduce_sum(&self, data: &[f32]) -> Result<f32> {
+        let n = data.len();
+        anyhow::ensure!(n <= 256, "Reduce sum kernel supports max 256 elements");
+
+        let stream = self.context.default_stream();
+        let kernel = self.get_kernel("reduce_sum")?;
+
+        // Upload data
+        let data_dev = stream.memcpy_stod(data)?;
+        let mut sum_dev = stream.alloc_zeros::<f32>(1)?;
+
+        // Launch with single block for reduction
+        let cfg = LaunchConfig {
+            grid_dim: (1, 1, 1),
+            block_dim: (256, 1, 1),
+            shared_mem_bytes: 0,
+        };
+
+        unsafe {
+            stream.launch_builder(kernel)
+                .arg(&data_dev)
+                .arg(&mut sum_dev)
+                .arg(&(n as i32))
+                .launch(cfg)?;
+        }
+
+        // Download result
+        let result = stream.memcpy_dtov(&sum_dev)?;
+        Ok(result[0])
+    }
+
+    /// Compute Shannon entropy on GPU
+    /// S = -Σ P_i log P_i
+    /// GPU ONLY - NO CPU LOOPS
+    pub fn shannon_entropy(&self, probabilities: &[f32]) -> Result<f32> {
+        let n = probabilities.len();
+        anyhow::ensure!(n <= 256, "Shannon entropy kernel supports max 256 elements");
+
+        let stream = self.context.default_stream();
+        let kernel = self.get_kernel("shannon_entropy")?;
+
+        // Upload data
+        let probs_dev = stream.memcpy_stod(probabilities)?;
+        let mut entropy_dev = stream.alloc_zeros::<f32>(1)?;
+
+        // Launch with single block for reduction
+        let cfg = LaunchConfig {
+            grid_dim: (1, 1, 1),
+            block_dim: (256, 1, 1),
+            shared_mem_bytes: 0,
+        };
+
+        unsafe {
+            stream.launch_builder(kernel)
+                .arg(&probs_dev)
+                .arg(&mut entropy_dev)
+                .arg(&(n as i32))
+                .launch(cfg)?;
+        }
+
+        // Download result
+        let result = stream.memcpy_dtov(&entropy_dev)?;
+        Ok(result[0])
     }
 }
 

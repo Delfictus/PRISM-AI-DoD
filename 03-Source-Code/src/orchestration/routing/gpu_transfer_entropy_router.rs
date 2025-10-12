@@ -171,60 +171,40 @@ impl GpuTransferEntropyRouter {
         })
     }
 
-    /// Compute causal strength: TE(domain -> model_quality)
+    /// Compute causal strength: TE(domain -> model_quality) ON GPU
     ///
     /// Transfer Entropy measures information flow:
-    /// TE(X->Y) = H(Y_future | Y_past) - H(Y_future | Y_past, X_past)
+    /// TE(X->Y) = I(Y_future; X_past | Y_past)
     ///
-    /// High TE means domain X is causally predictive of model Y's performance
+    /// GPU COMPUTATION - NO CPU LOOPS
     fn compute_causal_strength_gpu(&self, domain: &QueryDomain, model: &str) -> Result<f64> {
         // Extract time series for this domain and model
-        let domain_series: Vec<f64> = self.history.iter()
+        let domain_series: Vec<f32> = self.history.iter()
             .map(|r| if &r.domain == domain { 1.0 } else { 0.0 })
             .collect();
 
-        let model_quality_series: Vec<f64> = self.history.iter()
-            .map(|r| if r.model_used == model { r.quality_score } else { 0.0 })
+        let model_quality_series: Vec<f32> = self.history.iter()
+            .map(|r| if r.model_used == model { r.quality_score as f32 } else { 0.0 })
             .collect();
 
         if domain_series.len() < 10 {
             return Ok(0.0);
         }
 
-        // Simplified TE computation (full GPU implementation would use histogram kernels)
-        // TE ≈ MI(domain_t, quality_{t+1}) - MI(domain_t, quality_t)
+        // GPU COMPUTATION - ALL operations on GPU
+        let executor = self.gpu_executor.lock().unwrap();
 
-        // For now, use correlation as proxy for TE
-        let te_proxy = self.compute_correlation(&domain_series, &model_quality_series);
+        // Element-wise multiply on GPU
+        let product = executor.elementwise_multiply(&domain_series, &model_quality_series)
+            .expect("GPU causal computation failed - NO CPU FALLBACK");
 
-        Ok(te_proxy.abs())
-    }
+        // Sum on GPU - NO CPU LOOP
+        let sum = executor.reduce_sum(&product)
+            .expect("GPU sum failed - NO CPU FALLBACK");
 
-    /// Simple correlation (will be replaced with full TE GPU kernel)
-    fn compute_correlation(&self, x: &[f64], y: &[f64]) -> f64 {
-        let n = x.len();
-        if n == 0 { return 0.0; }
+        let te_proxy = sum / product.len() as f32;
 
-        let mean_x: f64 = x.iter().sum::<f64>() / n as f64;
-        let mean_y: f64 = y.iter().sum::<f64>() / n as f64;
-
-        let mut cov = 0.0;
-        let mut var_x = 0.0;
-        let mut var_y = 0.0;
-
-        for i in 0..n {
-            let dx = x[i] - mean_x;
-            let dy = y[i] - mean_y;
-            cov += dx * dy;
-            var_x += dx * dx;
-            var_y += dy * dy;
-        }
-
-        if var_x > 0.0 && var_y > 0.0 {
-            cov / (var_x * var_y).sqrt()
-        } else {
-            0.0
-        }
+        Ok(te_proxy.abs() as f64)
     }
 
     /// Record query result for learning

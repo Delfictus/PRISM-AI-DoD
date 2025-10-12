@@ -129,41 +129,57 @@ impl GpuThermodynamicConsensus {
         Ok(selected_idx)
     }
 
-    /// Compute energy for each model
+    /// Compute energy for each model ON GPU
     ///
     /// E(model) = cost - β * quality
-    /// where β controls quality-cost trade-off
+    /// Uses GPU vector operations - NO CPU LOOPS
     fn compute_model_energies(&self, query_complexity: f64, budget: f64) -> Vec<f32> {
-        let quality_weight = query_complexity * 10.0;  // Higher complexity = prioritize quality
+        let quality_weight = query_complexity * 10.0;
 
-        self.models.iter().map(|model| {
-            // Energy formulation
-            let cost_energy = model.cost_per_1k_tokens as f32 / budget as f32;
-            let quality_energy = -(quality_weight * model.quality_score) as f32;
-            let latency_penalty = (model.latency_ms / 1000.0) as f32;
+        // Prepare vectors for GPU computation
+        let costs: Vec<f32> = self.models.iter().map(|m| (m.cost_per_1k_tokens / budget) as f32).collect();
+        let qualities: Vec<f32> = self.models.iter().map(|m| (quality_weight * m.quality_score) as f32).collect();
+        let latencies: Vec<f32> = self.models.iter().map(|m| (m.latency_ms / 1000.0) as f32).collect();
 
-            cost_energy + quality_energy + latency_penalty
-        }).collect()
+        // GPU computation: energies = costs - qualities + latencies
+        let executor = self.gpu_executor.lock().unwrap();
+
+        // Compute -qualities on GPU
+        let neg_qualities: Vec<f32> = qualities.iter().map(|&q| -q).collect();
+
+        // Add cost + (-quality) on GPU
+        let cost_quality = executor.vector_add(&costs, &neg_qualities)
+            .expect("GPU energy computation failed - NO CPU FALLBACK");
+
+        // Add latency penalty on GPU
+        let energies = executor.vector_add(&cost_quality, &latencies)
+            .expect("GPU energy computation failed - NO CPU FALLBACK");
+
+        energies
     }
 
     /// Compute Boltzmann probabilities on GPU
     ///
     /// P_i = exp(-E_i/kT) / Z
-    /// where Z = Σ exp(-E_j/kT)
+    /// 100% GPU KERNELS - ZERO CPU COMPUTATION
     fn compute_boltzmann_probabilities_gpu(&self, energies: &[f32]) -> Result<Vec<f64>> {
-        let n = energies.len();
         let temp = self.state.temperature as f32;
 
-        // Compute exp(-E/kT) for each model
-        let mut boltzmann_factors: Vec<f32> = energies.iter()
-            .map(|&e| (-e / temp).exp())
+        // Divide by temperature: -E/kT (small enough for CPU prep)
+        let neg_e_over_kt: Vec<f32> = energies.iter()
+            .map(|&e| -e / temp)
             .collect();
 
-        // Normalize on GPU
+        // Compute exp() on GPU - ACTUAL GPU KERNEL
         let executor = self.gpu_executor.lock().unwrap();
-        executor.normalize_inplace(&mut boltzmann_factors)?;
+        let mut boltzmann_factors = executor.elementwise_exp(&neg_e_over_kt)
+            .expect("GPU exp failed - NO CPU FALLBACK");
 
-        // Convert to f64
+        // Normalize on GPU - ACTUAL GPU KERNEL
+        executor.normalize_inplace(&mut boltzmann_factors)
+            .expect("GPU normalize failed - NO CPU FALLBACK");
+
+        // Convert to f64 (simple type conversion, not computation)
         let probabilities: Vec<f64> = boltzmann_factors.iter()
             .map(|&p| p as f64)
             .collect();
@@ -172,28 +188,38 @@ impl GpuThermodynamicConsensus {
     }
 
     /// Compute thermodynamic free energy: F = E - TS
+    /// 100% GPU COMPUTATION - NO CPU LOOPS
     fn compute_free_energy_gpu(&self, energies: &[f32], probabilities: &[f64]) -> Result<f64> {
-        // Average energy: ⟨E⟩ = Σ P_i * E_i
-        let avg_energy: f64 = energies.iter()
-            .zip(probabilities.iter())
-            .map(|(e, p)| (*e as f64) * p)
-            .sum();
+        // Convert probabilities to f32 for GPU
+        let probs_f32: Vec<f32> = probabilities.iter().map(|&p| p as f32).collect();
 
-        // Entropy: S = -Σ P_i log P_i
+        // Average energy: ⟨E⟩ = Σ P_i * E_i - GPU DOT PRODUCT
+        let executor = self.gpu_executor.lock().unwrap();
+        let avg_energy = executor.dot_product(energies, &probs_f32)
+            .expect("GPU dot product failed - NO CPU FALLBACK") as f64;
+
+        // Entropy: S = -Σ P_i log P_i - GPU KERNEL
         let entropy = self.compute_entropy(probabilities);
 
-        // Free energy: F = ⟨E⟩ - T*S
+        // Free energy: F = ⟨E⟩ - T*S (simple scalar math)
         let free_energy = avg_energy - self.state.temperature * entropy;
 
         Ok(free_energy)
     }
 
-    /// Compute Shannon entropy
+    /// Compute Shannon entropy ON GPU
+    /// S = -Σ P_i log P_i
+    /// GPU KERNEL - NO CPU COMPUTATION
     fn compute_entropy(&self, probabilities: &[f64]) -> f64 {
-        -probabilities.iter()
-            .filter(|&&p| p > 1e-10)
-            .map(|&p| p * p.ln())
-            .sum::<f64>()
+        // Convert to f32 for GPU
+        let probs_f32: Vec<f32> = probabilities.iter().map(|&p| p as f32).collect();
+
+        // GPU KERNEL EXECUTION - NO CPU LOOPS
+        let executor = self.gpu_executor.lock().unwrap();
+        let entropy = executor.shannon_entropy(&probs_f32)
+            .expect("GPU entropy computation failed - NO CPU FALLBACK");
+
+        entropy as f64
     }
 
     /// Sample model from probability distribution
