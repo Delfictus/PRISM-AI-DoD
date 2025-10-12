@@ -689,6 +689,240 @@ pub mod kernels {
     }
     "#;
 
+    // Transformer / LLM Kernels
+    pub const MULTI_HEAD_ATTENTION: &str = r#"
+    extern "C" __global__ void multi_head_attention(
+        float* Q, float* K, float* V,
+        float* output, float* attention_weights,
+        int batch_size, int seq_len, int d_model, int n_heads
+    ) {
+        int head_idx = blockIdx.z;
+        int seq_idx = blockIdx.y * blockDim.y + threadIdx.y;
+        int batch_idx = blockIdx.x;
+
+        if (batch_idx >= batch_size || seq_idx >= seq_len || head_idx >= n_heads) return;
+
+        int d_k = d_model / n_heads;  // Dimension per head
+        float scale = 1.0f / sqrtf((float)d_k);
+
+        // Compute attention scores for this position
+        float* q_head = Q + batch_idx * seq_len * d_model + seq_idx * d_model + head_idx * d_k;
+
+        __shared__ float scores[512];  // Max seq_len = 512 for shared memory
+
+        // Compute Q·K^T for all positions
+        for (int k_pos = 0; k_pos < seq_len; k_pos++) {
+            float* k_head = K + batch_idx * seq_len * d_model + k_pos * d_model + head_idx * d_k;
+
+            float score = 0.0f;
+            for (int d = 0; d < d_k; d++) {
+                score += q_head[d] * k_head[d];
+            }
+            scores[k_pos] = score * scale;
+        }
+        __syncthreads();
+
+        // Softmax over scores
+        float max_score = scores[0];
+        for (int i = 1; i < seq_len; i++) {
+            max_score = fmaxf(max_score, scores[i]);
+        }
+
+        float sum_exp = 0.0f;
+        for (int i = 0; i < seq_len; i++) {
+            scores[i] = expf(scores[i] - max_score);
+            sum_exp += scores[i];
+        }
+
+        for (int i = 0; i < seq_len; i++) {
+            scores[i] /= sum_exp;
+        }
+        __syncthreads();
+
+        // Compute weighted sum of V
+        for (int d = threadIdx.x; d < d_k; d += blockDim.x) {
+            float sum = 0.0f;
+            for (int v_pos = 0; v_pos < seq_len; v_pos++) {
+                float* v_head = V + batch_idx * seq_len * d_model + v_pos * d_model + head_idx * d_k;
+                sum += scores[v_pos] * v_head[d];
+            }
+
+            int out_idx = batch_idx * seq_len * d_model + seq_idx * d_model + head_idx * d_k + d;
+            output[out_idx] = sum;
+        }
+    }
+    "#;
+
+    pub const ROPE_ENCODING: &str = r#"
+    extern "C" __global__ void rope_encoding(
+        float* qk, int seq_len, int d_model, int position_offset
+    ) {
+        int seq_idx = blockIdx.x * blockDim.x + threadIdx.x;
+        int dim_idx = blockIdx.y * blockDim.y + threadIdx.y;
+
+        if (seq_idx >= seq_len || dim_idx >= d_model / 2) return;
+
+        int pos = position_offset + seq_idx;
+        float theta = powf(10000.0f, -2.0f * (float)dim_idx / (float)d_model);
+        float angle = (float)pos * theta;
+
+        float cos_angle = cosf(angle);
+        float sin_angle = sinf(angle);
+
+        // Rotate pairs of dimensions
+        int idx1 = seq_idx * d_model + dim_idx * 2;
+        int idx2 = idx1 + 1;
+
+        float x1 = qk[idx1];
+        float x2 = qk[idx2];
+
+        qk[idx1] = x1 * cos_angle - x2 * sin_angle;
+        qk[idx2] = x1 * sin_angle + x2 * cos_angle;
+    }
+    "#;
+
+    pub const LAYER_NORM: &str = r#"
+    extern "C" __global__ void layer_norm(
+        float* input, float* output,
+        float* gamma, float* beta,
+        int batch_size, int seq_len, int d_model, float eps
+    ) {
+        int batch_idx = blockIdx.x;
+        int seq_idx = blockIdx.y;
+
+        if (batch_idx >= batch_size || seq_idx >= seq_len) return;
+
+        int offset = (batch_idx * seq_len + seq_idx) * d_model;
+        float* x = input + offset;
+        float* y = output + offset;
+
+        // Compute mean
+        __shared__ float mean;
+        __shared__ float variance;
+
+        if (threadIdx.x == 0) {
+            float sum = 0.0f;
+            for (int i = 0; i < d_model; i++) {
+                sum += x[i];
+            }
+            mean = sum / (float)d_model;
+
+            // Compute variance
+            float var_sum = 0.0f;
+            for (int i = 0; i < d_model; i++) {
+                float diff = x[i] - mean;
+                var_sum += diff * diff;
+            }
+            variance = var_sum / (float)d_model;
+        }
+        __syncthreads();
+
+        // Normalize
+        for (int i = threadIdx.x; i < d_model; i += blockDim.x) {
+            float normalized = (x[i] - mean) / sqrtf(variance + eps);
+            y[i] = gamma[i] * normalized + beta[i];
+        }
+    }
+    "#;
+
+    pub const TOP_K_SAMPLING: &str = r#"
+    extern "C" __global__ void top_k_sampling(
+        float* logits, int* top_k_indices, float* top_k_probs,
+        int vocab_size, int k
+    ) {
+        // Parallel top-k selection
+        // Each thread finds local maximums, then reduce
+
+        int tid = threadIdx.x;
+        __shared__ float shared_logits[1024];
+        __shared__ int shared_indices[1024];
+
+        // Load into shared memory
+        if (tid < vocab_size) {
+            shared_logits[tid] = logits[tid];
+            shared_indices[tid] = tid;
+        } else {
+            shared_logits[tid] = -3.402823e+38f;  // -FLT_MAX
+            shared_indices[tid] = -1;
+        }
+        __syncthreads();
+
+        // Parallel bitonic sort for top-k
+        for (int k_iter = 2; k_iter <= 1024; k_iter *= 2) {
+            for (int j = k_iter / 2; j > 0; j /= 2) {
+                int ixj = tid ^ j;
+                if (ixj > tid) {
+                    if ((tid & k_iter) == 0) {
+                        // Ascending
+                        if (shared_logits[tid] < shared_logits[ixj]) {
+                            float temp_logit = shared_logits[tid];
+                            int temp_idx = shared_indices[tid];
+                            shared_logits[tid] = shared_logits[ixj];
+                            shared_indices[tid] = shared_indices[ixj];
+                            shared_logits[ixj] = temp_logit;
+                            shared_indices[ixj] = temp_idx;
+                        }
+                    } else {
+                        // Descending
+                        if (shared_logits[tid] > shared_logits[ixj]) {
+                            float temp_logit = shared_logits[tid];
+                            int temp_idx = shared_indices[tid];
+                            shared_logits[tid] = shared_logits[ixj];
+                            shared_indices[tid] = shared_indices[ixj];
+                            shared_logits[ixj] = temp_logit;
+                            shared_indices[ixj] = temp_idx;
+                        }
+                    }
+                }
+                __syncthreads();
+            }
+        }
+
+        // Write top-k results
+        if (tid < k) {
+            top_k_indices[tid] = shared_indices[tid];
+            top_k_probs[tid] = expf(shared_logits[tid]);  // Convert logits to probs
+        }
+    }
+    "#;
+
+    pub const GELU_ACTIVATION: &str = r#"
+    extern "C" __global__ void gelu_activation(
+        float* input, float* output, int n
+    ) {
+        int idx = blockIdx.x * blockDim.x + threadIdx.x;
+        if (idx < n) {
+            float x = input[idx];
+            // GELU(x) = x * Φ(x) where Φ is standard normal CDF
+            // Approximation: 0.5 * x * (1 + tanh(sqrt(2/π) * (x + 0.044715 * x^3)))
+            float x3 = x * x * x;
+            float inner = 0.79788456f * (x + 0.044715f * x3);  // sqrt(2/π) ≈ 0.797885
+            output[idx] = 0.5f * x * (1.0f + tanhf(inner));
+        }
+    }
+    "#;
+
+    pub const EMBEDDING_LOOKUP: &str = r#"
+    extern "C" __global__ void embedding_lookup(
+        int* token_ids, float* embedding_table,
+        float* output, int batch_size, int seq_len,
+        int vocab_size, int d_model
+    ) {
+        int batch_idx = blockIdx.x;
+        int seq_idx = blockIdx.y;
+        int dim_idx = threadIdx.x;
+
+        if (batch_idx >= batch_size || seq_idx >= seq_len || dim_idx >= d_model) return;
+
+        int token_id = token_ids[batch_idx * seq_len + seq_idx];
+        if (token_id >= 0 && token_id < vocab_size) {
+            int emb_idx = token_id * d_model + dim_idx;
+            int out_idx = (batch_idx * seq_len + seq_idx) * d_model + dim_idx;
+            output[out_idx] = embedding_table[emb_idx];
+        }
+    }
+    "#;
+
     pub const FREE_ENERGY: &str = r#"
     extern "C" __global__ void free_energy_kernel(
         float* posterior, float* prior,
@@ -823,7 +1057,15 @@ impl GpuKernelExecutor {
         self.register_kernel("reduce_sum", kernels::REDUCE_SUM)?;
         self.register_kernel("shannon_entropy", kernels::SHANNON_ENTROPY)?;
 
-        println!("✅ All standard kernels registered (33 total)");
+        // Transformer / LLM kernels
+        self.register_kernel("multi_head_attention", kernels::MULTI_HEAD_ATTENTION)?;
+        self.register_kernel("rope_encoding", kernels::ROPE_ENCODING)?;
+        self.register_kernel("layer_norm", kernels::LAYER_NORM)?;
+        self.register_kernel("top_k_sampling", kernels::TOP_K_SAMPLING)?;
+        self.register_kernel("gelu_activation", kernels::GELU_ACTIVATION)?;
+        self.register_kernel("embedding_lookup", kernels::EMBEDDING_LOOKUP)?;
+
+        println!("✅ All standard kernels registered (39 total)");
         Ok(())
     }
 
