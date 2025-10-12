@@ -3,6 +3,7 @@ pub mod gpu_transformer;
 pub mod gguf_loader;
 pub mod gguf_gpu_loader;
 pub mod kv_cache;
+pub mod bpe_tokenizer;
 
 pub use gpu_llm_inference::{
     GpuLocalLLMSystem,
@@ -31,4 +32,9 @@ pub use kv_cache::{
     LayerKVCache,
     TransformerKVCache,
     KVCacheStats,
+};
+
+pub use bpe_tokenizer::{
+    BPETokenizer,
+    SpecialTokens,
 };
