@@ -183,6 +183,181 @@ pub mod kernels {
     }
     "#;
 
+    // Neuromorphic Computing Kernels
+    pub const LEAKY_INTEGRATE_FIRE: &str = r#"
+    extern "C" __global__ void leaky_integrate_fire(
+        float* state_current, float* state_previous,
+        float* input, float leak_rate, float threshold,
+        bool* spikes, int n
+    ) {
+        int idx = blockIdx.x * blockDim.x + threadIdx.x;
+        if (idx < n) {
+            // Leaky integration
+            float new_state = (1.0f - leak_rate) * state_previous[idx] + input[idx];
+
+            // Apply tanh nonlinearity
+            new_state = tanhf(new_state);
+
+            // Spike generation
+            spikes[idx] = new_state > threshold;
+
+            // Reset if spiked
+            if (spikes[idx]) {
+                new_state = 0.0f;
+            }
+
+            state_current[idx] = new_state;
+        }
+    }
+    "#;
+
+    pub const RESERVOIR_UPDATE: &str = r#"
+    extern "C" __global__ void reservoir_update(
+        float* state, float* prev_state, float* input,
+        float leak_rate, int n
+    ) {
+        int idx = blockIdx.x * blockDim.x + threadIdx.x;
+        if (idx < n) {
+            // Leaky integration: x(t) = (1-α)x(t-1) + u(t)
+            float integrated = (1.0f - leak_rate) * prev_state[idx] + input[idx];
+            // Apply tanh nonlinearity
+            state[idx] = tanhf(integrated);
+        }
+    }
+    "#;
+
+    pub const STDP_UPDATE: &str = r#"
+    extern "C" __global__ void stdp_update(
+        float* weights, bool* pre_spikes, bool* post_spikes,
+        float* spike_times_pre, float* spike_times_post,
+        float learning_rate, float tau_plus, float tau_minus,
+        int n_pre, int n_post
+    ) {
+        int i = blockIdx.y * blockDim.y + threadIdx.y;  // Post neuron
+        int j = blockIdx.x * blockDim.x + threadIdx.x;  // Pre neuron
+
+        if (i < n_post && j < n_pre) {
+            if (pre_spikes[j] && post_spikes[i]) {
+                float dt = spike_times_post[i] - spike_times_pre[j];
+                float dw = 0.0f;
+
+                if (dt > 0.0f) {
+                    // LTP: post after pre
+                    dw = learning_rate * expf(-dt / tau_plus);
+                } else if (dt < 0.0f) {
+                    // LTD: pre after post
+                    dw = -learning_rate * expf(dt / tau_minus);
+                }
+
+                int idx = i * n_pre + j;
+                weights[idx] += dw;
+                // Clamp weights to [-1, 1]
+                weights[idx] = fmaxf(-1.0f, fminf(1.0f, weights[idx]));
+            }
+        }
+    }
+    "#;
+
+    // Statistical Mechanics / Thermodynamic Kernels
+    pub const KURAMOTO_EVOLUTION: &str = r#"
+    extern "C" __global__ void kuramoto_evolution(
+        float* phases, float* frequencies,
+        float* coupling_matrix, float* new_phases,
+        int n, float dt, float coupling_strength
+    ) {
+        int i = blockIdx.x * blockDim.x + threadIdx.x;
+        if (i < n) {
+            // Kuramoto model: dθ/dt = ω_i + (K/N) Σ sin(θ_j - θ_i)
+            float omega = frequencies[i];
+            float coupling_sum = 0.0f;
+
+            for (int j = 0; j < n; j++) {
+                if (i != j) {
+                    float phase_diff = phases[j] - phases[i];
+                    float coupling = coupling_matrix[i * n + j];
+                    coupling_sum += coupling * sinf(phase_diff);
+                }
+            }
+
+            float dphi = omega + (coupling_strength / (float)n) * coupling_sum;
+            new_phases[i] = phases[i] + dphi * dt;
+
+            // Wrap to [0, 2π]
+            while (new_phases[i] > 6.28318531f) new_phases[i] -= 6.28318531f;
+            while (new_phases[i] < 0.0f) new_phases[i] += 6.28318531f;
+        }
+    }
+    "#;
+
+    pub const ENTROPY_PRODUCTION: &str = r#"
+    extern "C" __global__ void entropy_production(
+        float* velocities, float* entropy_rate,
+        float temperature, int n
+    ) {
+        int idx = threadIdx.x;
+
+        float local_entropy = 0.0f;
+        if (idx < n) {
+            // Entropy production from velocity dissipation
+            float v = velocities[idx];
+            local_entropy = v * v / (2.0f * temperature);
+        }
+
+        // Reduction
+        __shared__ float sdata[256];
+        sdata[idx] = local_entropy;
+        __syncthreads();
+
+        for (unsigned int s = 128; s > 0; s >>= 1) {
+            if (idx < s && (idx + s) < 256) {
+                sdata[idx] += sdata[idx + s];
+            }
+            __syncthreads();
+        }
+
+        if (idx == 0) {
+            entropy_rate[0] = sdata[0];
+        }
+    }
+    "#;
+
+    pub const ORDER_PARAMETER: &str = r#"
+    extern "C" __global__ void order_parameter(
+        float* phases, float* order_real, float* order_imag, int n
+    ) {
+        int idx = threadIdx.x;
+
+        float local_real = 0.0f;
+        float local_imag = 0.0f;
+
+        if (idx < n) {
+            local_real = cosf(phases[idx]);
+            local_imag = sinf(phases[idx]);
+        }
+
+        // Reduction for real part
+        __shared__ float sdata_real[256];
+        __shared__ float sdata_imag[256];
+
+        sdata_real[idx] = local_real;
+        sdata_imag[idx] = local_imag;
+        __syncthreads();
+
+        for (unsigned int s = 128; s > 0; s >>= 1) {
+            if (idx < s && (idx + s) < 256) {
+                sdata_real[idx] += sdata_real[idx + s];
+                sdata_imag[idx] += sdata_imag[idx + s];
+            }
+            __syncthreads();
+        }
+
+        if (idx == 0) {
+            order_real[0] = sdata_real[0] / (float)n;
+            order_imag[0] = sdata_imag[0] / (float)n;
+        }
+    }
+    "#;
+
     pub const FREE_ENERGY: &str = r#"
     extern "C" __global__ void free_energy_kernel(
         float* posterior, float* prior,
@@ -287,6 +462,16 @@ impl GpuKernelExecutor {
         self.register_kernel("elementwise_multiply", kernels::ELEMENTWISE_MULTIPLY)?;
         self.register_kernel("normalize", kernels::NORMALIZE)?;
         self.register_kernel("free_energy_kernel", kernels::FREE_ENERGY)?;
+
+        // Neuromorphic kernels
+        self.register_kernel("leaky_integrate_fire", kernels::LEAKY_INTEGRATE_FIRE)?;
+        self.register_kernel("reservoir_update", kernels::RESERVOIR_UPDATE)?;
+        self.register_kernel("stdp_update", kernels::STDP_UPDATE)?;
+
+        // Statistical Mechanics kernels
+        self.register_kernel("kuramoto_evolution", kernels::KURAMOTO_EVOLUTION)?;
+        self.register_kernel("entropy_production", kernels::ENTROPY_PRODUCTION)?;
+        self.register_kernel("order_parameter", kernels::ORDER_PARAMETER)?;
 
         println!("✅ All standard kernels registered");
         Ok(())
@@ -605,6 +790,37 @@ impl GpuKernelExecutor {
         // Download result
         let result = stream.memcpy_dtov(&fe_dev)?;
         Ok(result[0])
+    }
+
+    /// Reservoir state update with leaky integration on GPU
+    pub fn reservoir_update(&self, state: &mut [f32], prev_state: &[f32], input: &[f32], leak_rate: f32) -> Result<()> {
+        let n = state.len();
+        anyhow::ensure!(prev_state.len() == n && input.len() == n, "All arrays must have same length");
+
+        let stream = self.context.default_stream();
+        let kernel = self.get_kernel("reservoir_update")?;
+
+        // Upload data
+        let prev_state_dev = stream.memcpy_stod(prev_state)?;
+        let input_dev = stream.memcpy_stod(input)?;
+        let mut state_dev = stream.alloc_zeros::<f32>(n)?;
+
+        // Launch kernel
+        let cfg = LaunchConfig::for_num_elems(n as u32);
+        unsafe {
+            stream.launch_builder(kernel)
+                .arg(&mut state_dev)
+                .arg(&prev_state_dev)
+                .arg(&input_dev)
+                .arg(&leak_rate)
+                .arg(&(n as i32))
+                .launch(cfg)?;
+        }
+
+        // Download result
+        let result = stream.memcpy_dtov(&state_dev)?;
+        state.copy_from_slice(&result);
+        Ok(())
     }
 }
 
