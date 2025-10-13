@@ -21,6 +21,7 @@ pub mod kalman;
 pub mod advanced_kalman;
 pub mod portfolio;
 pub mod rate_limit;
+pub mod performance;
 
 use axum::{
     Router,
@@ -103,6 +104,7 @@ pub fn build_router(state: AppState) -> Router {
         .nest("/api/v1/llm", routes::llm::routes())
         .nest("/api/v1/timeseries", routes::time_series::routes())
         .nest("/api/v1/pixels", routes::pixels::routes())
+        .nest("/api/v1/gpu", routes::gpu_monitoring::routes())
 
         // WebSocket endpoint
         .route("/ws", get(websocket::ws_handler))

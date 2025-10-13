@@ -8,6 +8,7 @@ mod test_llm_endpoints;
 mod test_performance;
 mod test_pwsa_endpoints;
 mod test_websocket;
+mod test_worker_integrations;
 
 // Test utilities and helpers
 pub mod common;
