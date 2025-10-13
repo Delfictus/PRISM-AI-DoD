@@ -16,7 +16,9 @@ pub mod middleware;
 pub mod models;
 pub mod error;
 pub mod info_theory;
+pub mod advanced_info_theory;
 pub mod kalman;
+pub mod advanced_kalman;
 pub mod portfolio;
 pub mod rate_limit;
 
