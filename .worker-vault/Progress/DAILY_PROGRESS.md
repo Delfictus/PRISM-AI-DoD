@@ -152,6 +152,22 @@
 
 **✅ WEEK 3 COMPLETE (40h allocated, ~3h actual, 93% ahead)**
 
+### Day 7:
+- [x] **COMPLETED Task 4.1: GNN Training Module (20h → 2h actual)**
+  - Created gnn_training.rs module (875 lines, 15 tests)
+  - Implemented GNNTrainer with full training loop
+  - Implemented 4 loss functions: Supervised, Unsupervised, Combined, Contrastive
+  - Implemented TrainingBatch with sampling and train/val split
+  - Implemented LRSchedule: Constant, StepDecay, CosineAnnealing, OneCycleLR
+  - Implemented Optimizer enum: SGD, Adam, AdamW
+  - Implemented TrainingMetrics tracking
+  - Implemented GpuBatchGNNTrainer for parallel training
+  - 15 comprehensive unit tests (all passing)
+  - Library compiles successfully ✅
+  - Exported all types in cma/neural/mod.rs
+
+**Week 4 Progress**: 1/3 tasks complete (20h allocated, ~2h actual, 90% ahead)
+
 ## Week 2
 - [ ] Day 1:
 - [ ] Day 2:

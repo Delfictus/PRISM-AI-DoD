@@ -19,10 +19,23 @@ use self::neural_quantum::Device;
 pub mod gnn_integration;   // REAL GNN implementation (Sprint 2.1)
 pub mod diffusion;          // REAL diffusion model (Sprint 2.2)
 pub mod neural_quantum;     // REAL neural quantum states (Sprint 2.3)
+pub mod gnn_training;       // Worker 5: GNN training infrastructure (Week 6, Task 4.1)
 
 pub use gnn_integration::E3EquivariantGNN;
 pub use diffusion::ConsistencyDiffusion;
 pub use neural_quantum::{NeuralQuantumState as NeuralQuantumStateImpl, VariationalMonteCarlo};
+
+// Worker 5 exports - GNN Training
+pub use gnn_training::{
+    GNNTrainer,
+    GpuBatchGNNTrainer,
+    TrainingConfig,
+    LossFunction,
+    TrainingMetrics,
+    TrainingBatch,
+    LRSchedule,
+    Optimizer,
+};
 
 /// Geometric manifold learner using REAL E(3)-equivariant GNN
 /// Sprint 2.1: Full implementation with geometric deep learning
