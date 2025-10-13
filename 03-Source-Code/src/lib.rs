@@ -86,6 +86,9 @@ pub use information_theory::{
     // Phase 2 enhancements
     IncrementalTe, SparseHistogram, CountMinSketch, CompressedKey, CompressedHistogram,
     AdaptiveEmbedding, EmbeddingParams, SymbolicTe,
+    // Phase 3 enhancements
+    PartialInfoDecomp, PidResult, PidMethod,
+    MultipleTestingCorrection, CorrectedPValues, CorrectionMethod,
 };
 
 pub use statistical_mechanics::{
