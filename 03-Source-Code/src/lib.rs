@@ -65,6 +65,9 @@ pub mod phase6;
 // CMA: Causal Manifold Annealing (includes GNN)
 pub mod cma;
 
+// Time Series Forecasting (Worker 1 - Weeks 7-8)
+pub mod time_series;
+
 // Re-export key components
 pub use mathematics::{
     MathematicalStatement, ProofResult, Assumption,
@@ -108,6 +111,13 @@ pub use phase6::{
     PredictiveNeuromorphic, PredictionError, DendriticModel,
     MetaLearningCoordinator, ModulatedHamiltonian,
     Phase6Integration, AdaptiveSolver, AdaptiveSolution,
+};
+
+// Time Series exports
+pub use time_series::{
+    ArimaGpu, ArimaConfig, LstmForecaster, LstmConfig, CellType,
+    UncertaintyQuantifier, UncertaintyConfig, ForecastWithUncertainty,
+    TimeSeriesForecaster,
 };
 
 /// Platform version information
