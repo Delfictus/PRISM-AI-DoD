@@ -12,9 +12,11 @@
 - **[WORKER_2_FINAL_STATUS.md](WORKER_2_FINAL_STATUS.md)** - Complete status report (88% complete)
 
 ### Integration Guides
-- **[GPU_KERNEL_INTEGRATION_GUIDE.md](GPU_KERNEL_INTEGRATION_GUIDE.md)** - How to use 61 GPU kernels
+- **[INTEGRATION_OPPORTUNITIES_SUMMARY.md](INTEGRATION_OPPORTUNITIES_SUMMARY.md)** - Cross-worker integration opportunities (START HERE!)
+- **[GPU_KERNEL_INTEGRATION_GUIDE.md](GPU_KERNEL_INTEGRATION_GUIDE.md)** - How to use 61 GPU kernels (all workers)
 - **[GPU_MONITORING_API_INTEGRATION.md](GPU_MONITORING_API_INTEGRATION.md)** - Worker 8 API integration
 - **[TRANSFER_ENTROPY_GPU_INTEGRATION.md](TRANSFER_ENTROPY_GPU_INTEGRATION.md)** - Worker 5 causal inference
+- **[WORKER_3_GPU_IT_INTEGRATION.md](WORKER_3_GPU_IT_INTEGRATION.md)** - Worker 3 pixel entropy acceleration
 
 ### Performance & Benchmarking
 - **[TENSOR_CORE_BENCHMARK_ANALYSIS.md](TENSOR_CORE_BENCHMARK_ANALYSIS.md)** - Tensor Core performance validation
@@ -377,12 +379,12 @@
 
 | Category | Count | Total Lines |
 |----------|-------|-------------|
-| **Integration Guides** | 3 | ~1,800 |
+| **Integration Guides** | 5 | ~3,315 |
 | **Status Reports** | 4 | ~1,200 |
 | **Governance Docs** | 3 | ~500 |
 | **Mathematical Docs** | 2 | ~800 |
 | **Examples** | 5 | ~1,165 |
-| **Total** | **17** | **~5,465** |
+| **Total** | **19** | **~6,980** |
 
 ### Code Created (Worker 2)
 
@@ -394,7 +396,7 @@
 | **Tests** | 3 | ~800 |
 | **Total** | **20** | **~9,165** |
 
-**Grand Total**: 17 docs (~5,465 lines) + 20 code files (~9,165 lines) = **~14,630 lines** (documentation + code)
+**Grand Total**: 19 docs (~6,980 lines) + 20 code files (~9,165 lines) = **~16,145 lines** (documentation + code)
 
 ---
 
