@@ -76,6 +76,10 @@ pub use mathematics::{
 pub use information_theory::{
     TransferEntropy, TransferEntropyResult, CausalDirection,
     detect_causal_direction,
+    // Phase 1 enhancements
+    KdTree, Neighbor, KsgEstimator, ConditionalTe,
+    BootstrapResampler, BootstrapCi, BootstrapMethod,
+    TransferEntropyGpu,
 };
 
 pub use statistical_mechanics::{

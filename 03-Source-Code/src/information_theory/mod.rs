@@ -4,6 +4,13 @@
 pub mod transfer_entropy;
 pub mod advanced_transfer_entropy;
 
+// Phase 1 Enhancements: High-Accuracy TE Estimation
+pub mod kdtree;
+pub mod ksg_estimator;
+pub mod conditional_te;
+pub mod bootstrap_ci;
+pub mod transfer_entropy_gpu;
+
 pub use transfer_entropy::{
     TransferEntropy,
     TransferEntropyResult,
@@ -16,12 +23,19 @@ pub use advanced_transfer_entropy::{
     KozachenkoLeonenkoEstimator,
     SymbolicTransferEntropy,
     RenyiTransferEntropy,
-    ConditionalTransferEntropy,
+    ConditionalTransferEntropy as AdvancedConditionalTe,
     LocalTransferEntropy,
     SurrogateDataGenerator,
     PartialInformationDecomposition,
     SurrogateMethod,
 };
+
+// Phase 1 exports
+pub use kdtree::{KdTree, Neighbor};
+pub use ksg_estimator::KsgEstimator;
+pub use conditional_te::ConditionalTe;
+pub use bootstrap_ci::{BootstrapResampler, BootstrapCi, BootstrapMethod};
+pub use transfer_entropy_gpu::TransferEntropyGpu;
 
 // GPU-accelerated transfer entropy
 pub mod gpu_transfer_entropy;
