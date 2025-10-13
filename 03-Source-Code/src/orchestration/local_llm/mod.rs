@@ -11,6 +11,7 @@ pub mod transfer_entropy_llm;
 pub mod speculative_decoding;
 pub mod llm_analysis;
 pub mod phase6_adapters;
+pub mod phase6_llm_adapters;
 
 pub use gpu_llm_inference::{
     GpuLocalLLMSystem,
@@ -96,4 +97,11 @@ pub use phase6_adapters::{
     PlaceholderGnnAdapter,
     PlaceholderTdaAdapter,
     PlaceholderMetaLearningAdapter,
+};
+
+pub use phase6_llm_adapters::{
+    // LLM-specific Phase 6 implementations
+    LlmTdaAdapter,
+    LlmMetaLearningAdapter,
+    LlmGnnAdapter,
 };
