@@ -85,6 +85,7 @@ async fn plan_motion(
 ) -> Result<Json<ApiResponse<MotionPlan>>> {
     use std::time::Instant;
     use crate::applications::robotics::{RoboticsController, RoboticsConfig, RobotState as WorkerRobotState};
+    use ndarray::Array1;
 
     log::info!("Motion planning - Robot: {}, {} obstacles",
         request.robot_id, request.obstacles.len());
@@ -103,18 +104,20 @@ async fn plan_motion(
     let mut controller = RoboticsController::new(config)
         .map_err(|e| ApiError::ServerError(format!("Failed to create controller: {}", e)))?;
 
-    // Convert API robot states to Worker 7's format
+    // Convert API robot states to Worker 7's format (2D only: x, y)
     let current_state = WorkerRobotState {
-        position: request.start_state.position,
-        velocity: request.start_state.velocity,
-        joint_angles: request.start_state.joint_angles.clone(),
+        position: Array1::from_vec(vec![request.start_state.position.0, request.start_state.position.1]),
+        velocity: Array1::from_vec(vec![request.start_state.velocity.0, request.start_state.velocity.1]),
+        orientation: 0.0, // Worker 7 uses 2D orientation (radians)
+        angular_velocity: 0.0,
         timestamp: chrono::Utc::now().timestamp_millis() as f64 / 1000.0,
     };
 
     let goal_state = WorkerRobotState {
-        position: request.goal_state.position,
-        velocity: request.goal_state.velocity,
-        joint_angles: request.goal_state.joint_angles.clone(),
+        position: Array1::from_vec(vec![request.goal_state.position.0, request.goal_state.position.1]),
+        velocity: Array1::from_vec(vec![request.goal_state.velocity.0, request.goal_state.velocity.1]),
+        orientation: 0.0,
+        angular_velocity: 0.0,
         timestamp: (chrono::Utc::now().timestamp_millis() as f64 / 1000.0) + 5.0,
     };
 
@@ -129,26 +132,31 @@ async fn plan_motion(
         TrajectoryPoint {
             time: wp.time,
             state: RobotState {
-                position: wp.state.position,
-                orientation: request.start_state.orientation, // Preserve orientation (not in Worker 7's model)
-                joint_angles: wp.state.joint_angles.clone(),
-                velocity: wp.state.velocity,
+                position: (wp.position[0], wp.position[1], 0.0), // Map 2D to 3D (z=0)
+                orientation: request.start_state.orientation, // Preserve orientation
+                joint_angles: request.start_state.joint_angles.clone(), // Preserve joint angles
+                velocity: (wp.velocity[0], wp.velocity[1], 0.0), // Map 2D to 3D
             },
         }
     }).collect();
 
+    // Compute total distance from Worker 7's waypoints
     let total_distance = worker_plan.waypoints.windows(2).map(|w| {
-        let dx = w[1].state.position.0 - w[0].state.position.0;
-        let dy = w[1].state.position.1 - w[0].state.position.1;
-        let dz = w[1].state.position.2 - w[0].state.position.2;
-        (dx*dx + dy*dy + dz*dz).sqrt()
+        let dx = w[1].position[0] - w[0].position[0];
+        let dy = w[1].position[1] - w[0].position[1];
+        (dx*dx + dy*dy).sqrt()
     }).sum();
+
+    // Compute total time (last waypoint time)
+    let total_time = worker_plan.waypoints.last()
+        .map(|wp| wp.time)
+        .unwrap_or(0.0);
 
     let plan = MotionPlan {
         trajectory,
-        total_time: worker_plan.total_time,
+        total_time,
         total_distance,
-        is_collision_free: worker_plan.is_collision_free,
+        is_collision_free: worker_plan.reaches_goal, // Use reaches_goal as proxy
         planning_time_ms: planning_time,
     };
 
