@@ -90,6 +90,7 @@ pub mod cma_integration;
 pub mod timeseries_integration;
 pub mod problem_embedding;
 pub mod solution_patterns;
+pub mod multi_objective;
 
 pub use problem::{Problem, ProblemData, AssetSpec};
 pub use solution::{Solution, SolutionMetrics};
@@ -99,6 +100,10 @@ pub use problem_embedding::{ProblemEmbedding, ProblemEmbedder, EMBEDDING_DIM};
 pub use solution_patterns::{
     SolutionPattern, PatternDatabase, PatternQuery, PatternMatch,
     SimilarityMetric, DatabaseStats,
+};
+pub use multi_objective::{
+    MultiObjectiveProblem, MultiObjectiveSolution, ParetoFront,
+    NsgaIIOptimizer, NsgaIIConfig,
 };
 
 /// Universal solver configuration
