@@ -22,6 +22,7 @@
 
 use ndarray::{Array1, Array2};
 use anyhow::{Result, Context};
+use crate::mathematics::EnhancedITMetrics;
 
 #[cfg(feature = "cuda")]
 use crate::gpu::GpuMemoryPool;
@@ -37,6 +38,9 @@ pub struct PixelProcessor {
     /// TDA persistence threshold
     tda_threshold: f64,
 
+    /// Enhanced IT metrics computer with bias correction
+    it_metrics: EnhancedITMetrics,
+
     #[cfg(feature = "cuda")]
     gpu_context: Option<GpuMemoryPool>,
 }
@@ -48,10 +52,14 @@ impl PixelProcessor {
         let gpu_context = Some(GpuMemoryPool::new()
             .context("Failed to initialize GPU for pixel processing")?);
 
+        let it_metrics = EnhancedITMetrics::new()
+            .with_bias_correction(true); // Enable Miller-Madow correction
+
         Ok(Self {
             entropy_window_size: 16,
             conv_kernel_size: 3,
             tda_threshold: 1000.0,
+            it_metrics,
             #[cfg(feature = "cuda")]
             gpu_context,
         })
@@ -163,23 +171,13 @@ impl PixelProcessor {
     }
 
     /// Compute Shannon entropy from histogram
+    ///
+    /// Now uses EnhancedITMetrics with Miller-Madow bias correction for improved accuracy.
     fn compute_shannon_entropy(&self, histogram: &[usize]) -> f64 {
-        let total: usize = histogram.iter().sum();
+        // Use enhanced IT metrics with bias correction
+        let entropy = self.it_metrics.shannon_entropy_from_histogram(histogram);
 
-        if total == 0 {
-            return 0.0;
-        }
-
-        let mut entropy = 0.0;
-
-        for &count in histogram {
-            if count > 0 {
-                let p = count as f64 / total as f64;
-                entropy -= p * p.log2();
-            }
-        }
-
-        // Normalize by maximum possible entropy
+        // Normalize by maximum possible entropy for consistency with existing API
         let max_entropy = (histogram.len() as f64).log2();
 
         if max_entropy > 0.0 {

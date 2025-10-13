@@ -24,12 +24,14 @@
 //! ```
 
 pub mod information_theory;
+pub mod enhanced_information_theory;
 pub mod proof_system;
 pub mod quantum_mechanics;
 pub mod thermodynamics;
 
 // Re-export main types for convenience
 pub use proof_system::{Assumption, MathematicalStatement, NumericalConfig, ProofResult};
+pub use enhanced_information_theory::EnhancedITMetrics;
 
 /// Verify all fundamental theorems required by the constitution
 ///
