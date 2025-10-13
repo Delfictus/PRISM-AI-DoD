@@ -65,11 +65,8 @@ pub mod phase6;
 // CMA: Causal Manifold Annealing (includes GNN)
 pub mod cma;
 
-// Time Series Forecasting (Worker 1 - Weeks 7-8)
-pub mod time_series;
-
-// Finance applications
-pub mod finance;
+// Worker 7: Domain-Specific Applications (Robotics, Scientific Discovery, Drug Discovery)
+pub mod applications;
 
 // Re-export key components
 pub use mathematics::{
@@ -79,16 +76,6 @@ pub use mathematics::{
 pub use information_theory::{
     TransferEntropy, TransferEntropyResult, CausalDirection,
     detect_causal_direction,
-    // Phase 1 enhancements
-    KdTree, Neighbor, KsgEstimator, ConditionalTe,
-    BootstrapResampler, BootstrapCi, BootstrapMethod,
-    TransferEntropyGpu,
-    // Phase 2 enhancements
-    IncrementalTe, SparseHistogram, CountMinSketch, CompressedKey, CompressedHistogram,
-    AdaptiveEmbedding, EmbeddingParams, SymbolicTe,
-    // Phase 3 enhancements
-    PartialInfoDecomp, PidResult, PidMethod,
-    MultipleTestingCorrection, CorrectedPValues, CorrectionMethod,
 };
 
 pub use statistical_mechanics::{
@@ -126,11 +113,14 @@ pub use phase6::{
     Phase6Integration, AdaptiveSolver, AdaptiveSolution,
 };
 
-// Time Series exports
-pub use time_series::{
-    ArimaGpu, ArimaConfig, LstmForecaster, LstmConfig, CellType,
-    UncertaintyQuantifier, UncertaintyConfig, ForecastWithUncertainty,
-    TimeSeriesForecaster,
+// Worker 7 Applications exports
+pub use applications::{
+    // Robotics
+    RoboticsController, RoboticsConfig, MotionPlanner, MotionPlan,
+    // Scientific Discovery
+    ScientificDiscovery, ScientificConfig,
+    // Drug Discovery
+    DrugDiscoveryController, DrugDiscoveryConfig,
 };
 
 /// Platform version information
