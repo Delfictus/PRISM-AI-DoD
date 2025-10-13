@@ -58,7 +58,7 @@ impl<'a> MolecularOptimizer<'a> {
     /// 4. Update beliefs
     /// 5. Repeat until convergence
     pub fn optimize(
-        &self,
+        &mut self,
         initial_molecule: &Molecule,
         target: &Protein,
     ) -> Result<OptimizationResult> {
@@ -100,11 +100,13 @@ impl<'a> MolecularOptimizer<'a> {
         // Evaluate final binding affinity
         let binding_affinity = self.estimate_binding_affinity(&current_molecule, target);
 
+        let iterations = free_energy_history.len();
+
         Ok(OptimizationResult {
             molecule: current_molecule,
             binding_affinity,
             free_energy_history,
-            iterations: free_energy_history.len(),
+            iterations,
             converged,
         })
     }

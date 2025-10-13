@@ -65,6 +65,9 @@ pub mod phase6;
 // CMA: Causal Manifold Annealing (includes GNN)
 pub mod cma;
 
+// Worker 7: Domain-Specific Applications (Robotics, Scientific Discovery, Drug Discovery)
+pub mod applications;
+
 // Re-export key components
 pub use mathematics::{
     MathematicalStatement, ProofResult, Assumption,
@@ -108,6 +111,16 @@ pub use phase6::{
     PredictiveNeuromorphic, PredictionError, DendriticModel,
     MetaLearningCoordinator, ModulatedHamiltonian,
     Phase6Integration, AdaptiveSolver, AdaptiveSolution,
+};
+
+// Worker 7 Applications exports
+pub use applications::{
+    // Robotics
+    RoboticsController, RoboticsConfig, MotionPlanner, MotionPlan,
+    // Scientific Discovery
+    ScientificDiscovery, ScientificConfig,
+    // Drug Discovery
+    DrugDiscoveryController, DrugDiscoveryConfig,
 };
 
 /// Platform version information

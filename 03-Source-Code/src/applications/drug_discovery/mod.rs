@@ -69,7 +69,7 @@ impl DrugDiscoveryController {
         initial_molecule: &molecular::Molecule,
         target_protein: &molecular::Protein,
     ) -> Result<optimization::OptimizationResult> {
-        let optimizer = optimization::MolecularOptimizer::new(
+        let mut optimizer = optimization::MolecularOptimizer::new(
             self.config.clone(),
             &mut self.generative_model,
         );
