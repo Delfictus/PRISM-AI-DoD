@@ -65,6 +65,9 @@ pub mod phase6;
 // CMA: Causal Manifold Annealing (includes GNN)
 pub mod cma;
 
+// Time Series Forecasting (Worker 1 - Weeks 7-8)
+pub mod time_series;
+
 // Worker 7: Domain-Specific Applications (Robotics, Scientific Discovery, Drug Discovery)
 pub mod applications;
 
@@ -111,6 +114,13 @@ pub use phase6::{
     PredictiveNeuromorphic, PredictionError, DendriticModel,
     MetaLearningCoordinator, ModulatedHamiltonian,
     Phase6Integration, AdaptiveSolver, AdaptiveSolution,
+};
+
+// Time Series exports
+pub use time_series::{
+    ArimaGpu, ArimaConfig, LstmForecaster, LstmConfig, CellType,
+    UncertaintyQuantifier, UncertaintyConfig, ForecastWithUncertainty,
+    TimeSeriesForecaster,
 };
 
 // Worker 7 Applications exports
