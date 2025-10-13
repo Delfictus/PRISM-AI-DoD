@@ -25,6 +25,7 @@ pub mod risk_analysis;
 pub mod rebalancing;
 pub mod backtest;
 pub mod multi_objective_portfolio;
+pub mod interior_point_qp;
 
 pub use market_regime::{MarketRegime, MarketRegimeDetector};
 pub use forecasting::{PortfolioForecaster, ForecastOptimizationConfig};
@@ -34,6 +35,9 @@ pub use backtest::{Backtester, BacktestConfig, BacktestResult, PerformanceMetric
 pub use multi_objective_portfolio::{
     MultiObjectivePortfolioOptimizer, MultiObjectiveConfig,
     MultiObjectivePortfolioResult,
+};
+pub use interior_point_qp::{
+    InteriorPointQpSolver, InteriorPointConfig, InteriorPointResult,
 };
 
 /// Represents a financial asset
@@ -88,6 +92,8 @@ pub struct OptimizationConfig {
     pub use_regime_detection: bool,
     pub max_weight_per_asset: f64,
     pub min_weight_per_asset: f64,
+    /// Use Interior Point Method (more accurate, slower) vs Gradient Descent (faster, approximate)
+    pub use_interior_point: bool,
 }
 
 impl Default for OptimizationConfig {
@@ -101,6 +107,7 @@ impl Default for OptimizationConfig {
             use_regime_detection: true,
             max_weight_per_asset: 0.4,  // No single asset > 40%
             min_weight_per_asset: 0.0,  // Allow zero weight
+            use_interior_point: false,  // Default to fast gradient descent
         }
     }
 }
@@ -280,9 +287,6 @@ impl PortfolioOptimizer {
     /// Solve mean-variance optimization problem
     /// Maximize: w^T * μ - λ * w^T * Σ * w
     /// Subject to: sum(w) = 1, w_i >= min_weight, w_i <= max_weight
-    ///
-    /// This is a simplified quadratic programming solver
-    /// TODO: Request GPU-accelerated QP solver from Worker 2
     fn solve_mvo(
         &self,
         expected_returns: &Array1<f64>,
@@ -290,7 +294,8 @@ impl PortfolioOptimizer {
         causal_weights: &Array1<f64>,
         regime_factor: f64,
     ) -> Result<Array1<f64>> {
-        let n_assets = expected_returns.len();
+        // Adjust expected returns with causal weights and regime factor
+        let adjusted_returns = expected_returns * causal_weights * regime_factor;
 
         // Risk aversion parameter (λ)
         let risk_aversion = if let Some(target_return) = self.config.target_return {
@@ -300,20 +305,50 @@ impl PortfolioOptimizer {
             1.0
         };
 
-        // Adjust expected returns with causal weights and regime factor
-        let adjusted_returns = expected_returns * causal_weights * regime_factor;
+        if self.config.use_interior_point {
+            // Use Interior Point Method for accurate, provably optimal solution
+            let ip_config = interior_point_qp::InteriorPointConfig::default();
+            let ip_solver = interior_point_qp::InteriorPointQpSolver::new(ip_config);
+
+            let result = ip_solver.solve_portfolio(
+                &adjusted_returns,
+                covariance_matrix,
+                risk_aversion,
+                self.config.min_weight_per_asset,
+                self.config.max_weight_per_asset,
+            )?;
+
+            Ok(result.weights)
+        } else {
+            // Use fast gradient descent for approximate solution
+            self.solve_mvo_gradient_descent(
+                &adjusted_returns,
+                covariance_matrix,
+                risk_aversion,
+            )
+        }
+    }
+
+    /// Fast gradient descent solver (approximate but fast)
+    fn solve_mvo_gradient_descent(
+        &self,
+        expected_returns: &Array1<f64>,
+        covariance_matrix: &Array2<f64>,
+        risk_aversion: f64,
+    ) -> Result<Array1<f64>> {
+        let n_assets = expected_returns.len();
 
         // Simple equal-weight initialization
         let mut weights = Array1::from_elem(n_assets, 1.0 / n_assets as f64);
 
-        // Gradient descent optimization (simplified)
+        // Gradient descent optimization
         let learning_rate = 0.01;
         let max_iterations = 1000;
 
         for _iter in 0..max_iterations {
             // Gradient = μ_adjusted - 2λ * Σ * w
             let portfolio_variance_grad = covariance_matrix.dot(&weights) * (2.0 * risk_aversion);
-            let gradient = &adjusted_returns - &portfolio_variance_grad;
+            let gradient = expected_returns - &portfolio_variance_grad;
 
             // Update weights
             weights = &weights + &(gradient * learning_rate);

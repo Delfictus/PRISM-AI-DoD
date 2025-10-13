@@ -27,6 +27,19 @@ pub use advanced_transfer_entropy::{
 pub mod gpu_transfer_entropy;
 pub use gpu_transfer_entropy::{GpuTransferEntropy, TransferEntropyGpuExt};
 
+// Worker 4 Enhancements: Advanced Information-Theoretic Estimators
+pub mod kdtree;
+pub mod ksg_estimator;
+pub mod mutual_information;
+
+pub use kdtree::{KdTree, Point};
+pub use ksg_estimator::{KsgEstimator, KsgConfig, KsgResult, digamma};
+pub use mutual_information::{
+    MutualInformationEstimator,
+    MutualInformationResult,
+    MiMethod,
+};
+
 /// Information-theoretic measures for the Active Inference Platform
 pub trait InformationMeasure {
     /// Calculate entropy H(X)
