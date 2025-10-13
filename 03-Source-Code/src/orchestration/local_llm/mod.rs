@@ -10,6 +10,7 @@ pub mod attention_analyzer;
 pub mod transfer_entropy_llm;
 pub mod speculative_decoding;
 pub mod llm_analysis;
+pub mod phase6_adapters;
 
 pub use gpu_llm_inference::{
     GpuLocalLLMSystem,
@@ -74,4 +75,25 @@ pub use speculative_decoding::{
 
 pub use llm_analysis::{
     LLMAnalysis,
+};
+
+pub use phase6_adapters::{
+    // Trait interfaces for Phase 6 enhancements
+    GnnConsensusAdapter,
+    TdaTopologyAdapter,
+    MetaLearningAdapter,
+
+    // Supporting types
+    TopologyFeatures,
+    GenerationContext,
+    AnalysisStrategy,
+    SamplingParams,
+    QueryType,
+    PerformanceRequirements,
+    DecodingStrategy,
+
+    // Placeholder implementations (until Phase 6)
+    PlaceholderGnnAdapter,
+    PlaceholderTdaAdapter,
+    PlaceholderMetaLearningAdapter,
 };

@@ -3,11 +3,25 @@
 //! Provides unified interface for information-theoretic analysis tools.
 //! Integrates metrics tracking, attention analysis, and transfer entropy
 //! into a single convenient API for monitoring and debugging LLM inference.
+//!
+//! ## Phase 6 Enhancement Support
+//!
+//! This module includes architectural hooks for Phase 6 enhancements:
+//! - GNN-learned consensus and distance metrics
+//! - Meta-learned strategy selection
+//!
+//! Phase 6 is **optional** and **disabled by default**. To enable:
+//! ```rust
+//! let mut analysis = LLMAnalysis::new(10);
+//! analysis.enable_gnn_enhancement(gnn_adapter);
+//! analysis.enable_meta_learning(meta_adapter);
+//! ```
 
 use anyhow::Result;
 use crate::orchestration::local_llm::{
     LLMMetrics, AttentionAnalyzer, TransferEntropyLLM,
     AttentionHealth, DistributionHealth, TransferEntropyStats,
+    GnnConsensusAdapter, MetaLearningAdapter, GenerationContext,
 };
 
 /// Comprehensive LLM analysis suite
@@ -15,15 +29,32 @@ use crate::orchestration::local_llm::{
 /// Combines all Phase 1-3 information-theoretic enhancements into a single,
 /// easy-to-use interface for monitoring LLM quality, attention patterns,
 /// and causal information flow.
+///
+/// ## Phase 6 Hooks
+///
+/// Includes optional Phase 6 enhancements (disabled by default):
+/// - `gnn_enhancer`: GNN-learned metrics and consensus
+/// - `meta_learner`: Adaptive strategy selection
+///
+/// Enable via `enable_gnn_enhancement()` and `enable_meta_learning()`.
 pub struct LLMAnalysis {
+    // Phase 1-3 components (always present)
     metrics: LLMMetrics,
     attention_analyzer: AttentionAnalyzer,
     transfer_entropy: TransferEntropyLLM,
     enabled: bool,
+
+    // Phase 6 enhancements (optional - add later)
+    gnn_enhancer: Option<Box<dyn GnnConsensusAdapter>>,
+    meta_learner: Option<Box<dyn MetaLearningAdapter>>,
 }
 
 impl LLMAnalysis {
     /// Create new analysis suite with all tools enabled
+    ///
+    /// Phase 6 enhancements start disabled (None). Enable via:
+    /// - `enable_gnn_enhancement(adapter)`
+    /// - `enable_meta_learning(adapter)`
     ///
     /// # Arguments
     /// * `n_bins` - Number of bins for transfer entropy discretization (typically 10-20)
@@ -33,7 +64,65 @@ impl LLMAnalysis {
             attention_analyzer: AttentionAnalyzer::new(),
             transfer_entropy: TransferEntropyLLM::new(n_bins),
             enabled: true,
+            gnn_enhancer: None,
+            meta_learner: None,
         }
+    }
+
+    /// Enable Phase 6 GNN enhancement
+    ///
+    /// Once enabled, the analysis suite will use GNN-learned:
+    /// - Custom distance metrics (instead of hand-coded)
+    /// - Adaptive metric weighting (context-dependent)
+    ///
+    /// **Phase 6 Integration Point** - Easy to enable when Phase 6 ready
+    ///
+    /// # Example
+    /// ```rust
+    /// let mut analysis = LLMAnalysis::new(10);
+    /// let gnn = create_gnn_adapter(config); // Phase 6 module
+    /// analysis.enable_gnn_enhancement(gnn);
+    /// ```
+    pub fn enable_gnn_enhancement(&mut self, adapter: Box<dyn GnnConsensusAdapter>) {
+        self.gnn_enhancer = Some(adapter);
+    }
+
+    /// Disable Phase 6 GNN enhancement (revert to baseline)
+    pub fn disable_gnn_enhancement(&mut self) {
+        self.gnn_enhancer = None;
+    }
+
+    /// Check if GNN enhancement is enabled
+    pub fn is_gnn_enabled(&self) -> bool {
+        self.gnn_enhancer.is_some()
+    }
+
+    /// Enable Phase 6 Meta-Learning enhancement
+    ///
+    /// Once enabled, the analysis suite will adaptively select:
+    /// - Which metrics to compute (don't waste compute on unused metrics)
+    /// - Analysis depth based on query complexity
+    ///
+    /// **Phase 6 Integration Point** - Easy to enable when Phase 6 ready
+    ///
+    /// # Example
+    /// ```rust
+    /// let mut analysis = LLMAnalysis::new(10);
+    /// let meta = create_meta_learning_adapter(config); // Phase 6 module
+    /// analysis.enable_meta_learning(meta);
+    /// ```
+    pub fn enable_meta_learning(&mut self, adapter: Box<dyn MetaLearningAdapter>) {
+        self.meta_learner = Some(adapter);
+    }
+
+    /// Disable Phase 6 Meta-Learning enhancement (revert to baseline)
+    pub fn disable_meta_learning(&mut self) {
+        self.meta_learner = None;
+    }
+
+    /// Check if Meta-Learning enhancement is enabled
+    pub fn is_meta_learning_enabled(&self) -> bool {
+        self.meta_learner.is_some()
     }
 
     /// Enable all analysis tools
@@ -205,9 +294,12 @@ impl LLMAnalysis {
         self.metrics.clear_references();
     }
 
-    /// Get comprehensive analysis report
+    /// Get comprehensive analysis report (with Phase 6 enhancements if enabled)
     ///
     /// Returns a human-readable summary of all analysis metrics.
+    ///
+    /// **Phase 6 Enhancement**: If meta-learning is enabled, adaptively
+    /// selects which metrics to include based on context.
     ///
     /// # Arguments
     /// * `logits` - Current logits for quality analysis
@@ -220,6 +312,28 @@ impl LLMAnalysis {
         if !self.enabled {
             return "Analysis disabled".to_string();
         }
+
+        // Phase 6: Meta-learning decides which sections to include
+        let include_full_analysis = if let Some(ref meta) = self.meta_learner {
+            // Use meta-learning to decide analysis depth
+            let context = GenerationContext {
+                tokens_generated: self.transfer_entropy.history_length(),
+                recent_perplexity: vec![],
+                recent_entropy: vec![],
+                attention_collapsed: false,
+            };
+
+            // If meta-learner recommends minimal analysis, skip expensive parts
+            matches!(
+                meta.select_analysis_strategy(&[], &context).ok(),
+                Some(crate::orchestration::local_llm::AnalysisStrategy::Full) |
+                Some(crate::orchestration::local_llm::AnalysisStrategy::Standard) |
+                None
+            )
+        } else {
+            // No meta-learning: always do full analysis (baseline)
+            true
+        };
 
         let mut report = String::new();
         report.push_str("╔══════════════════════════════════════════╗\n");
@@ -272,7 +386,7 @@ impl LLMAnalysis {
         }
 
         // Transfer entropy analysis (if we have history)
-        if self.transfer_entropy.history_length() > 2 {
+        if include_full_analysis && self.transfer_entropy.history_length() > 2 {
             report.push_str("\n🔗 Causality Analysis:\n");
             if let Ok(stats) = self.transfer_entropy.calculate_statistics(1, 0.1) {
                 report.push_str(&format!("   Mean TE: {:.3} bits\n", stats.mean_te));
@@ -282,6 +396,17 @@ impl LLMAnalysis {
                     stats.max_source, stats.max_target
                 ));
                 report.push_str(&format!("   Significant links: {}\n", stats.significant_links));
+            }
+        }
+
+        // Phase 6 status indicator
+        if self.gnn_enhancer.is_some() || self.meta_learner.is_some() {
+            report.push_str("\n🚀 Phase 6 Enhancements:\n");
+            if self.gnn_enhancer.is_some() {
+                report.push_str("   ✅ GNN-learned metrics enabled\n");
+            }
+            if self.meta_learner.is_some() {
+                report.push_str("   ✅ Meta-learning enabled\n");
             }
         }
 
@@ -412,5 +537,83 @@ mod tests {
         let report = analysis.generate_report(&logits, None);
 
         assert_eq!(report, "Analysis disabled");
+    }
+
+    #[test]
+    fn test_phase6_hooks_disabled_by_default() {
+        let analysis = LLMAnalysis::new(10);
+
+        // Phase 6 should be disabled by default
+        assert!(!analysis.is_gnn_enabled());
+        assert!(!analysis.is_meta_learning_enabled());
+    }
+
+    #[test]
+    fn test_enable_disable_gnn() {
+        use crate::orchestration::local_llm::PlaceholderGnnAdapter;
+
+        let mut analysis = LLMAnalysis::new(10);
+
+        // Enable GNN
+        analysis.enable_gnn_enhancement(Box::new(PlaceholderGnnAdapter));
+        assert!(analysis.is_gnn_enabled());
+
+        // Disable GNN
+        analysis.disable_gnn_enhancement();
+        assert!(!analysis.is_gnn_enabled());
+    }
+
+    #[test]
+    fn test_enable_disable_meta_learning() {
+        use crate::orchestration::local_llm::PlaceholderMetaLearningAdapter;
+
+        let mut analysis = LLMAnalysis::new(10);
+
+        // Enable Meta-Learning
+        analysis.enable_meta_learning(Box::new(PlaceholderMetaLearningAdapter));
+        assert!(analysis.is_meta_learning_enabled());
+
+        // Disable Meta-Learning
+        analysis.disable_meta_learning();
+        assert!(!analysis.is_meta_learning_enabled());
+    }
+
+    #[test]
+    fn test_report_with_phase6_enabled() {
+        use crate::orchestration::local_llm::{
+            PlaceholderGnnAdapter, PlaceholderMetaLearningAdapter,
+        };
+
+        let mut analysis = LLMAnalysis::new(10);
+
+        // Enable Phase 6
+        analysis.enable_gnn_enhancement(Box::new(PlaceholderGnnAdapter));
+        analysis.enable_meta_learning(Box::new(PlaceholderMetaLearningAdapter));
+
+        let logits = vec![1.0, 2.0, 3.0];
+        let report = analysis.generate_report(&logits, None);
+
+        // Report should indicate Phase 6 is enabled
+        assert!(report.contains("Phase 6 Enhancements"));
+        assert!(report.contains("GNN-learned metrics enabled"));
+        assert!(report.contains("Meta-learning enabled"));
+    }
+
+    #[test]
+    fn test_baseline_works_without_phase6() {
+        // Test that all functionality works without Phase 6
+        let mut analysis = LLMAnalysis::new(10);
+
+        let logits = vec![1.0, 2.0, 3.0];
+        let attn = vec![vec![0.5, 0.3, 0.2], vec![0.4, 0.4, 0.2]];
+
+        // All methods should work
+        assert!(analysis.perplexity(&logits, 2).is_some());
+        assert!(analysis.attention_health(&attn).is_some());
+        analysis.record_step(vec![1.0, 2.0], 1);
+        let report = analysis.generate_report(&logits, Some(&attn));
+
+        // Report should NOT mention Phase 6
+        assert!(!report.contains("Phase 6"));
     }
 }

@@ -15,6 +15,13 @@
 //! - Attention validation: Does high attention correlate with high information transfer?
 //! - Context importance: Which parts of prompt are most influential?
 //!
+//! ## Phase 6 Enhancement Support
+//!
+//! Includes hooks for TDA (Topological Data Analysis) for causal discovery:
+//! - Topological causal structure detection (beyond pairwise TE)
+//! - Multi-scale causal analysis using persistent homology
+//! - Causal graph simplification (remove redundant edges)
+//!
 //! References:
 //! - Schreiber, T. (2000). "Measuring Information Transfer"
 //! - Lizier, J. T. (2014). "JIDT: Java Information Dynamics Toolkit"
@@ -22,11 +29,19 @@
 
 use anyhow::Result;
 use std::collections::HashMap;
+use crate::orchestration::local_llm::TdaTopologyAdapter;
 
 /// Transfer Entropy Calculator for LLM Token Sequences
 ///
 /// Analyzes information transfer between tokens using probability distributions
 /// from model logits to measure causal influence.
+///
+/// ## Phase 6 Hook
+///
+/// Includes optional TDA enhancement (disabled by default):
+/// - `tda_causal`: TDA-based causal structure discovery
+///
+/// Enable via `enable_tda_causal_discovery()`.
 pub struct TransferEntropyLLM {
     /// History of token logits for analysis
     /// Maps position -> logits (probability distributions)
@@ -37,10 +52,16 @@ pub struct TransferEntropyLLM {
 
     /// Discretization bins for probability distributions
     n_bins: usize,
+
+    /// Phase 6 enhancement: TDA causal discovery (optional)
+    tda_causal: Option<Box<dyn TdaTopologyAdapter>>,
 }
 
 impl TransferEntropyLLM {
     /// Create new transfer entropy calculator
+    ///
+    /// Phase 6 TDA causal discovery starts disabled (None).
+    /// Enable via `enable_tda_causal_discovery(adapter)`.
     ///
     /// # Arguments
     /// * `n_bins` - Number of bins for discretizing probability distributions (typically 10-20)
@@ -49,7 +70,37 @@ impl TransferEntropyLLM {
             logit_history: Vec::new(),
             token_history: Vec::new(),
             n_bins,
+            tda_causal: None,
         }
+    }
+
+    /// Enable Phase 6 TDA causal discovery
+    ///
+    /// Once enabled, transfer entropy analysis will include:
+    /// - Topological causal structure (beyond pairwise TE)
+    /// - Multi-scale causality (persistent homology)
+    /// - Causal graph simplification
+    ///
+    /// **Phase 6 Integration Point**
+    ///
+    /// # Example
+    /// ```rust
+    /// let mut te = TransferEntropyLLM::new(10);
+    /// let tda = create_tda_adapter(config); // Phase 6 module
+    /// te.enable_tda_causal_discovery(tda);
+    /// ```
+    pub fn enable_tda_causal_discovery(&mut self, adapter: Box<dyn TdaTopologyAdapter>) {
+        self.tda_causal = Some(adapter);
+    }
+
+    /// Disable Phase 6 TDA causal discovery (revert to baseline)
+    pub fn disable_tda_causal_discovery(&mut self) {
+        self.tda_causal = None;
+    }
+
+    /// Check if TDA causal discovery is enabled
+    pub fn is_tda_causal_enabled(&self) -> bool {
+        self.tda_causal.is_some()
     }
 
     /// Record a generation step
@@ -178,6 +229,10 @@ impl TransferEntropyLLM {
     /// Returns a matrix where element [i][j] represents TE(i → j).
     /// Useful for visualizing information flow through the entire sequence.
     ///
+    /// **Phase 6 Enhancement**: If TDA causal discovery is enabled, uses
+    /// topological methods to find causal structure (more accurate than
+    /// pairwise TE alone).
+    ///
     /// # Example
     /// ```no_run
     /// let te_matrix = te_calc.calculate_pairwise_transfer_entropy(1)?;
@@ -192,6 +247,19 @@ impl TransferEntropyLLM {
         &self,
         history_length: usize,
     ) -> Result<Vec<Vec<f32>>> {
+        // Phase 6: Use TDA causal discovery if available
+        if let Some(ref tda) = self.tda_causal {
+            // TDA can find causal structure more accurately than pairwise TE
+            // by analyzing topology of joint distribution space
+            match tda.discover_causal_topology(&self.logit_history) {
+                Ok(causal_graph) => return Ok(causal_graph),
+                Err(_) => {
+                    // TDA failed, fall back to baseline
+                }
+            }
+        }
+
+        // Baseline: compute pairwise TE
         let n = self.logit_history.len();
         let mut matrix = vec![vec![0.0; n]; n];
 
@@ -493,6 +561,51 @@ mod tests {
         assert!(stats.max_source < 5);
         assert!(stats.max_target < 5);
         assert!(stats.max_target > stats.max_source);
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_phase6_tda_causal_disabled_by_default() {
+        let te = TransferEntropyLLM::new(10);
+        assert!(!te.is_tda_causal_enabled());
+    }
+
+    #[test]
+    fn test_enable_disable_tda_causal() {
+        use crate::orchestration::local_llm::PlaceholderTdaAdapter;
+
+        let mut te = TransferEntropyLLM::new(10);
+
+        // Enable TDA causal discovery
+        te.enable_tda_causal_discovery(Box::new(PlaceholderTdaAdapter));
+        assert!(te.is_tda_causal_enabled());
+
+        // Disable TDA causal discovery
+        te.disable_tda_causal_discovery();
+        assert!(!te.is_tda_causal_enabled());
+    }
+
+    #[test]
+    fn test_baseline_works_without_tda() -> Result<()> {
+        // Verify all functionality works without Phase 6 TDA
+        let mut te = TransferEntropyLLM::new(10);
+
+        // Record sequence
+        for i in 0..5 {
+            let logits = vec![i as f32, (i + 1) as f32, (i + 2) as f32];
+            te.record_step(logits, i);
+        }
+
+        // All methods should work
+        let te_val = te.calculate_transfer_entropy(0, 2, 1)?;
+        assert!(te_val >= 0.0);
+
+        let matrix = te.calculate_pairwise_transfer_entropy(1)?;
+        assert_eq!(matrix.len(), 5);
+
+        let influential = te.find_influential_tokens(1, 3)?;
+        assert_eq!(influential.len(), 3);
 
         Ok(())
     }
