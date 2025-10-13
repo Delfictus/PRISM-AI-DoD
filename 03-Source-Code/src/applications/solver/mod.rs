@@ -92,6 +92,7 @@ pub mod problem_embedding;
 pub mod solution_patterns;
 pub mod multi_objective;
 pub mod gnn;
+pub mod hybrid;
 
 pub use problem::{Problem, ProblemData, AssetSpec};
 pub use solution::{Solution, SolutionMetrics};
@@ -109,7 +110,9 @@ pub use multi_objective::{
 pub use gnn::{
     GnnTrainer, TrainingConfig, TrainingSample, TrainingHistory,
     GraphAttentionLayer, GatConfig,
+    GnnPredictor, PredictorConfig, PredictionResult, HybridStats,
 };
+pub use hybrid::{HybridSolver, HybridConfig};
 
 /// Universal solver configuration
 #[derive(Debug, Clone)]
