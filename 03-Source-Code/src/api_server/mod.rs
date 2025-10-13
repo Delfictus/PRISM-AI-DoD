@@ -15,6 +15,10 @@ pub mod auth;
 pub mod middleware;
 pub mod models;
 pub mod error;
+pub mod info_theory;
+pub mod kalman;
+pub mod portfolio;
+pub mod rate_limit;
 
 use axum::{
     Router,

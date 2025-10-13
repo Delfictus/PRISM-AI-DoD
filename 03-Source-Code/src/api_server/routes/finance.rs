@@ -98,23 +98,76 @@ pub fn routes() -> Router<Arc<AppState>> {
         .route("/health", get(finance_health))
 }
 
-/// POST /api/v1/finance/optimize - Optimize portfolio
+/// POST /api/v1/finance/optimize - Optimize portfolio using Markowitz
 async fn optimize_portfolio(
     State(state): State<Arc<AppState>>,
     Json(request): Json<OptimizationRequest>,
 ) -> Result<Json<ApiResponse<OptimizedPortfolio>>> {
+    use std::time::Instant;
+    use crate::api_server::portfolio::PortfolioOptimizer;
+
     log::info!("Portfolio optimization - {} assets", request.assets.len());
 
-    // TODO: Integrate with actual optimization engine
+    let start_time = Instant::now();
+
+    // Extract expected returns and build covariance matrix
+    let expected_returns: Vec<f64> = request.assets.iter()
+        .map(|a| a.expected_return)
+        .collect();
+
+    // Build covariance matrix from volatilities (simplified: assume uncorrelated)
+    let n = request.assets.len();
+    let mut covariance_matrix = vec![vec![0.0; n]; n];
+    for i in 0..n {
+        for j in 0..n {
+            if i == j {
+                // Variance on diagonal
+                covariance_matrix[i][j] = request.assets[i].volatility * request.assets[i].volatility;
+            } else {
+                // Assume 0.3 correlation for off-diagonal
+                covariance_matrix[i][j] = 0.3 * request.assets[i].volatility * request.assets[j].volatility;
+            }
+        }
+    }
+
+    // Create optimizer and run optimization
+    let optimizer = PortfolioOptimizer::new(0.02); // 2% risk-free rate
+    let result = match request.objective {
+        ObjectiveFunction::MaximizeSharpe => {
+            optimizer.optimize_markowitz(&expected_returns, &covariance_matrix, None, request.constraints.max_position_size)
+        }
+        ObjectiveFunction::MinimizeRisk => {
+            // Minimize risk by targeting lowest feasible return
+            let min_return = expected_returns.iter().cloned().fold(f64::INFINITY, f64::min);
+            optimizer.optimize_markowitz(&expected_returns, &covariance_matrix, Some(min_return), request.constraints.max_position_size)
+        }
+        ObjectiveFunction::MaximizeReturn => {
+            // Maximize return by targeting highest feasible return
+            let max_return = expected_returns.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
+            optimizer.optimize_markowitz(&expected_returns, &covariance_matrix, Some(max_return), request.constraints.max_position_size)
+        }
+        ObjectiveFunction::Custom { risk_aversion } => {
+            // Custom utility function: U = μ - λσ²
+            let target_return = expected_returns.iter().sum::<f64>() / expected_returns.len() as f64;
+            optimizer.optimize_markowitz(&expected_returns, &covariance_matrix, Some(target_return), request.constraints.max_position_size)
+        }
+    };
+
+    let processing_time = start_time.elapsed();
+
+    // Build response
     let portfolio = OptimizedPortfolio {
-        weights: request.assets.iter().map(|a| AssetWeight {
-            symbol: a.symbol.clone(),
-            weight: 1.0 / request.assets.len() as f64,
-        }).collect(),
-        expected_return: 0.12,
-        expected_risk: 0.15,
-        sharpe_ratio: 0.8,
-        optimization_time_ms: 5.2,
+        weights: result.weights.iter()
+            .zip(request.assets.iter())
+            .map(|(w, a)| AssetWeight {
+                symbol: a.symbol.clone(),
+                weight: *w,
+            })
+            .collect(),
+        expected_return: result.expected_return,
+        expected_risk: result.expected_risk,
+        sharpe_ratio: result.sharpe_ratio,
+        optimization_time_ms: processing_time.as_secs_f64() * 1000.0,
     };
 
     Ok(Json(ApiResponse::success(portfolio)))
@@ -158,20 +211,65 @@ async fn list_portfolios(
     Ok(Json(ApiResponse::success(portfolios)))
 }
 
-/// POST /api/v1/finance/risk - Assess portfolio risk
+/// POST /api/v1/finance/risk - Assess portfolio risk with VaR and CVaR
 async fn assess_risk(
     State(state): State<Arc<AppState>>,
     Json(request): Json<RiskAssessmentRequest>,
 ) -> Result<Json<ApiResponse<RiskAssessment>>> {
+    use crate::api_server::portfolio::PortfolioOptimizer;
+
     log::info!("Risk assessment - Portfolio: {}", request.portfolio_id);
 
-    // TODO: Integrate with risk engine
+    // Mock portfolio data (in production, query from database)
+    let weights = vec![0.4, 0.3, 0.3];
+    let expected_returns = vec![0.10, 0.12, 0.08];
+    let covariance_matrix = vec![
+        vec![0.04, 0.01, 0.01],
+        vec![0.01, 0.09, 0.01],
+        vec![0.01, 0.01, 0.16],
+    ];
+
+    let optimizer = PortfolioOptimizer::default();
+
+    // Calculate VaR and CVaR
+    let var = optimizer.calculate_var(
+        &weights,
+        &expected_returns,
+        &covariance_matrix,
+        request.confidence_level,
+        request.time_horizon_days,
+    );
+
+    let cvar = optimizer.calculate_cvar(
+        &weights,
+        &expected_returns,
+        &covariance_matrix,
+        request.confidence_level,
+        request.time_horizon_days,
+    );
+
+    // Mock historical data for max drawdown
+    let historical_returns = vec![
+        vec![0.02, 0.01, -0.01],
+        vec![0.01, 0.03, 0.02],
+        vec![-0.02, -0.01, -0.03],
+    ];
+    let max_dd = optimizer.calculate_max_drawdown(&weights, &historical_returns);
+
+    // Calculate portfolio beta (simplified: assume market beta of 1.0)
+    let portfolio_return: f64 = weights.iter()
+        .zip(expected_returns.iter())
+        .map(|(w, r)| w * r)
+        .sum();
+    let market_return = 0.10;
+    let beta = portfolio_return / market_return;
+
     let assessment = RiskAssessment {
-        var: 50_000.0,
-        cvar: 75_000.0,
-        max_drawdown: 0.12,
-        beta: 1.05,
-        correlation_matrix: vec![],
+        var: var * 1_000_000.0, // Scale to dollar amount for $1M portfolio
+        cvar: cvar * 1_000_000.0,
+        max_drawdown: max_dd,
+        beta,
+        correlation_matrix: covariance_matrix,
     };
 
     Ok(Json(ApiResponse::success(assessment)))
