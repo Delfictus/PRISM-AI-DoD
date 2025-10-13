@@ -7,6 +7,7 @@ use anyhow::Result;
 use std::sync::Arc;
 use cudarc::driver::{CudaContext, CudaSlice, LaunchConfig, PushKernelArg};
 use crate::gpu::GpuKernelExecutor;
+use crate::orchestration::local_llm::{TokenSampler, SamplingConfig};
 
 /// GPU Transformer Layer - Complete Implementation
 pub struct GpuTransformerLayer {
@@ -252,6 +253,9 @@ pub struct GpuLLMInference {
     // Output projection
     output_proj: CudaSlice<f32>,
 
+    // Sampling strategy (Day 1 implementation)
+    sampler: TokenSampler,
+
     // Config
     vocab_size: usize,
     d_model: usize,
@@ -313,12 +317,16 @@ impl GpuLLMInference {
 
         println!("✅ GPU LLM created - all weights on GPU");
 
+        // Initialize sampler with standard config (can be updated at runtime)
+        let sampler = TokenSampler::new(SamplingConfig::standard());
+
         Ok(Self {
             executor,
             context,
             layers,
             token_embeddings,
             output_proj,
+            sampler,
             vocab_size,
             d_model,
             n_layers,
@@ -369,8 +377,8 @@ impl GpuLLMInference {
                 self.vocab_size,
             )?;
 
-            // 4. Sample next token (GPU top-k)
-            let next_token = self.sample_token_gpu(&logits)?;
+            // 4. Sample next token with strategy (greedy/temperature/top-k/top-p/min-p)
+            let next_token = self.sample_token_gpu(&logits, &generated_tokens)?;
             generated_tokens.push(next_token);
 
             if step % 10 == 0 {
@@ -412,23 +420,25 @@ impl GpuLLMInference {
         Ok(output)
     }
 
-    fn sample_token_gpu(&self, logits: &[f32]) -> Result<i32> {
-        let stream = self.context.default_stream();
-        let exec = self.executor.lock().unwrap();
-
-        // Apply softmax to get probabilities
-        let mut probs = logits.to_vec();
-        exec.softmax(&mut probs, 1, logits.len())?;
-
-        // For now, use greedy sampling (argmax)
-        // Full implementation would use top-k GPU kernel
-        let token = probs.iter()
-            .enumerate()
-            .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-            .map(|(i, _)| i as i32)
-            .unwrap_or(0);
-
+    fn sample_token_gpu(&self, logits: &[f32], context: &[i32]) -> Result<i32> {
+        // Use Day 1 TokenSampler with full strategy support:
+        // - Temperature scaling
+        // - Top-k filtering
+        // - Top-p (nucleus) sampling
+        // - Min-p sampling (2025 state-of-the-art)
+        // - Repetition penalty
+        let token = self.sampler.sample(logits, context)?;
         Ok(token)
+    }
+
+    /// Update sampling configuration at runtime
+    pub fn set_sampling_config(&mut self, config: SamplingConfig) {
+        self.sampler.update_config(config);
+    }
+
+    /// Get current sampling configuration
+    pub fn sampling_config(&self) -> &SamplingConfig {
+        self.sampler.config()
     }
 }
 

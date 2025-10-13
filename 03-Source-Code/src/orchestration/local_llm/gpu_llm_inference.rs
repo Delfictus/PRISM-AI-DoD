@@ -75,44 +75,13 @@ pub struct ModelConfig {
     pub max_seq_len: usize,
 }
 
-/// Simple tokenizer (BPE would go here for production)
-pub struct SimpleTokenizer {
-    vocab_size: usize,
-}
-
-impl SimpleTokenizer {
-    pub fn new(vocab_size: usize) -> Self {
-        Self { vocab_size }
-    }
-
-    /// Encode text to token IDs
-    /// Production version would use BPE/SentencePiece
-    pub fn encode(&self, text: &str) -> Vec<i32> {
-        // Simple character-level tokenization for demonstration
-        text.chars()
-            .map(|c| (c as u32 % self.vocab_size as u32) as i32)
-            .collect()
-    }
-
-    /// Decode token IDs to text
-    pub fn decode(&self, tokens: &[i32]) -> String {
-        // Simple decoding (production would use vocab lookup)
-        tokens.iter()
-            .filter_map(|&t| {
-                if t >= 0 && t < self.vocab_size as i32 {
-                    char::from_u32((t % 128) as u32)
-                } else {
-                    None
-                }
-            })
-            .collect()
-    }
-}
+// Re-export Day 1 implementations
+pub use crate::orchestration::local_llm::{BPETokenizer, TokenSampler, SamplingConfig};
 
 /// Complete GPU LLM System
 pub struct GpuLocalLLMSystem {
     model: GpuLLMInference,
-    tokenizer: SimpleTokenizer,
+    tokenizer: BPETokenizer,
     config: ModelConfig,
 }
 
@@ -137,7 +106,7 @@ impl GpuLocalLLMSystem {
             config.max_seq_len,
         )?;
 
-        let tokenizer = SimpleTokenizer::new(config.vocab_size);
+        let tokenizer = BPETokenizer::new(config.vocab_size);
 
         println!("\n✅ GPU LLM System Ready");
         println!("   {} layers on GPU", config.n_layers);
@@ -156,15 +125,15 @@ impl GpuLocalLLMSystem {
         println!("💬 Generating text...");
         println!("   Prompt: \"{}\"", prompt);
 
-        // Tokenize on CPU (fast, non-computational)
-        let input_tokens = self.tokenizer.encode(prompt);
+        // Tokenize with BPE (production-ready, supports all languages)
+        let input_tokens = self.tokenizer.encode(prompt, false)?;
         println!("   Tokenized to {} tokens", input_tokens.len());
 
         // Generate on GPU - COMPLETE IMPLEMENTATION
         let output_tokens = self.model.generate(&input_tokens, max_tokens)?;
 
-        // Detokenize (fast, non-computational)
-        let output_text = self.tokenizer.decode(&output_tokens);
+        // Detokenize with BPE (handles Unicode correctly)
+        let output_text = self.tokenizer.decode(&output_tokens)?;
 
         println!("   Generated {} total tokens", output_tokens.len());
         println!("✅ Generation complete\n");
@@ -181,6 +150,41 @@ impl GpuLocalLLMSystem {
             self.config.d_model,
             self.config.vocab_size
         )
+    }
+
+    /// Set sampling strategy (greedy, standard, creative, precise, min-p)
+    pub fn set_sampling_config(&mut self, config: SamplingConfig) {
+        self.model.set_sampling_config(config);
+    }
+
+    /// Get current sampling configuration
+    pub fn sampling_config(&self) -> &SamplingConfig {
+        self.model.sampling_config()
+    }
+
+    /// Convenience method: Set to greedy sampling (deterministic)
+    pub fn use_greedy_sampling(&mut self) {
+        self.set_sampling_config(SamplingConfig::greedy());
+    }
+
+    /// Convenience method: Set to standard sampling (balanced)
+    pub fn use_standard_sampling(&mut self) {
+        self.set_sampling_config(SamplingConfig::standard());
+    }
+
+    /// Convenience method: Set to creative sampling (high temperature)
+    pub fn use_creative_sampling(&mut self) {
+        self.set_sampling_config(SamplingConfig::creative());
+    }
+
+    /// Convenience method: Set to precise sampling (low temperature)
+    pub fn use_precise_sampling(&mut self) {
+        self.set_sampling_config(SamplingConfig::precise());
+    }
+
+    /// Convenience method: Set to min-p sampling (2025 recommended)
+    pub fn use_min_p_sampling(&mut self) {
+        self.set_sampling_config(SamplingConfig::min_p_recommended());
     }
 }
 
