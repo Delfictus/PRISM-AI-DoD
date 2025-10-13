@@ -13,6 +13,7 @@ pub mod layers;
 pub mod gpu_enabled;  // GPU-only implementation with kernel execution
 pub mod kernel_executor;  // GPU kernel executor
 pub mod gpu_tensor_optimized;  // FULLY OPTIMIZED: CudaSlice, persistent GPU, fused kernels
+pub mod memory_pool;  // GPU memory pooling for efficient buffer reuse
 
 // Use GPU-enabled implementation - NO CPU FALLBACK
 pub use gpu_enabled::{
@@ -34,3 +35,6 @@ pub use layers::GpuLinear as GpuLinearLayer;
 
 // Export kernel executor
 pub use kernel_executor::{GpuKernelExecutor, get_global_executor};
+
+// Export memory pool
+pub use memory_pool::{GpuMemoryPool as GpuMemoryPoolV2, MemoryPoolConfig, MemoryPoolStats};
