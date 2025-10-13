@@ -22,6 +22,8 @@ pub mod advanced_kalman;
 pub mod portfolio;
 pub mod rate_limit;
 pub mod performance;
+pub mod graphql_schema;
+pub mod dual_api;
 
 use axum::{
     Router,
@@ -91,12 +93,12 @@ impl AppState {
 pub fn build_router(state: AppState) -> Router {
     let shared_state = Arc::new(state);
 
-    Router::new()
+    let base_router = Router::new()
         // Health check
         .route("/health", get(health_check))
         .route("/", get(root_handler))
 
-        // API v1 routes
+        // API v1 routes (REST)
         .nest("/api/v1/pwsa", routes::pwsa::routes())
         .nest("/api/v1/finance", routes::finance::routes())
         .nest("/api/v1/telecom", routes::telecom::routes())
@@ -109,9 +111,14 @@ pub fn build_router(state: AppState) -> Router {
         // WebSocket endpoint
         .route("/ws", get(websocket::ws_handler))
 
-        // Apply state
-        .with_state(shared_state)
+        // Apply state to REST routes
+        .with_state(shared_state.clone());
 
+    // GraphQL API (dual API support) - merged after state application
+    let graphql_router = dual_api::routes(shared_state.clone());
+
+    base_router
+        .merge(graphql_router)
         // Apply middleware
         .layer(
             ServiceBuilder::new()
