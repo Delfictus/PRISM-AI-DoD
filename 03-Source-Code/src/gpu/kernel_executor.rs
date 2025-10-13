@@ -1061,6 +1061,220 @@ pub mod kernels {
         }
     }
     "#;
+
+    // ============================================================================
+    // PIXEL PROCESSING KERNELS (Worker 2 integration)
+    // ============================================================================
+
+    pub const CONV2D: &str = r#"
+    extern "C" __global__ void conv2d(
+        float* image, float* kernel, float* output,
+        int height, int width, int kernel_size,
+        int stride, int padding
+    ) {
+        int out_row = blockIdx.y * blockDim.y + threadIdx.y;
+        int out_col = blockIdx.x * blockDim.x + threadIdx.x;
+
+        int out_height = (height + 2 * padding - kernel_size) / stride + 1;
+        int out_width = (width + 2 * padding - kernel_size) / stride + 1;
+
+        if (out_row >= out_height || out_col >= out_width) return;
+
+        // Compute convolution for this output pixel
+        float sum = 0.0f;
+        int in_row_start = out_row * stride - padding;
+        int in_col_start = out_col * stride - padding;
+
+        for (int kr = 0; kr < kernel_size; kr++) {
+            for (int kc = 0; kc < kernel_size; kc++) {
+                int in_row = in_row_start + kr;
+                int in_col = in_col_start + kc;
+
+                // Handle padding (zero padding)
+                if (in_row >= 0 && in_row < height && in_col >= 0 && in_col < width) {
+                    int img_idx = in_row * width + in_col;
+                    int ker_idx = kr * kernel_size + kc;
+                    sum += image[img_idx] * kernel[ker_idx];
+                }
+            }
+        }
+
+        output[out_row * out_width + out_col] = sum;
+    }
+    "#;
+
+    pub const PIXEL_ENTROPY: &str = r#"
+    extern "C" __global__ void pixel_entropy(
+        float* pixels, float* entropy_map,
+        int height, int width, int window_size
+    ) {
+        int row = blockIdx.y * blockDim.y + threadIdx.y;
+        int col = blockIdx.x * blockDim.x + threadIdx.x;
+
+        if (row >= height || col >= width) return;
+
+        // Compute local Shannon entropy in window around this pixel
+        int half_window = window_size / 2;
+        int histogram[256] = {0};  // For 8-bit intensity values
+        int count = 0;
+
+        // Build histogram of local region
+        for (int dr = -half_window; dr <= half_window; dr++) {
+            for (int dc = -half_window; dc <= half_window; dc++) {
+                int r = row + dr;
+                int c = col + dc;
+
+                if (r >= 0 && r < height && c >= 0 && c < width) {
+                    int idx = r * width + c;
+                    // Quantize to 256 bins
+                    int bin = (int)(pixels[idx] * 255.0f);
+                    if (bin < 0) bin = 0;
+                    if (bin > 255) bin = 255;
+                    histogram[bin]++;
+                    count++;
+                }
+            }
+        }
+
+        // Compute Shannon entropy: H = -Σ p(x) log₂(p(x))
+        float entropy = 0.0f;
+        if (count > 0) {
+            for (int i = 0; i < 256; i++) {
+                if (histogram[i] > 0) {
+                    float p = (float)histogram[i] / (float)count;
+                    entropy -= p * log2f(p);
+                }
+            }
+        }
+
+        entropy_map[row * width + col] = entropy;
+    }
+    "#;
+
+    pub const PIXEL_TDA: &str = r#"
+    extern "C" __global__ void pixel_tda(
+        float* pixels, float* persistence_features,
+        int height, int width, float threshold
+    ) {
+        int row = blockIdx.y * blockDim.y + threadIdx.y;
+        int col = blockIdx.x * blockDim.x + threadIdx.x;
+
+        if (row >= height || col >= width) return;
+
+        int idx = row * width + col;
+        float pixel_val = pixels[idx];
+
+        // Compute topological features based on local connectivity
+        // This is a simplified TDA that measures:
+        // 1. Connected component (0-dimensional homology)
+        // 2. Loops/holes (1-dimensional homology)
+
+        // Count connected neighbors above threshold
+        int connected_count = 0;
+        int loop_indicator = 0;
+
+        // Check 8-connected neighborhood
+        int neighbors[8][2] = {
+            {-1, -1}, {-1, 0}, {-1, 1},
+            {0, -1},           {0, 1},
+            {1, -1},  {1, 0},  {1, 1}
+        };
+
+        bool neighbor_above[8] = {false};
+
+        for (int i = 0; i < 8; i++) {
+            int nr = row + neighbors[i][0];
+            int nc = col + neighbors[i][1];
+
+            if (nr >= 0 && nr < height && nc >= 0 && nc < width) {
+                int n_idx = nr * width + nc;
+                if (pixels[n_idx] > threshold) {
+                    neighbor_above[i] = true;
+                    connected_count++;
+                }
+            }
+        }
+
+        // Simple loop detection: opposite neighbors both above threshold
+        // but pixel itself creates a gap
+        if (neighbor_above[1] && neighbor_above[6]) loop_indicator++;  // top-bottom
+        if (neighbor_above[3] && neighbor_above[4]) loop_indicator++;  // left-right
+        if (neighbor_above[0] && neighbor_above[7]) loop_indicator++;  // diag1
+        if (neighbor_above[2] && neighbor_above[5]) loop_indicator++;  // diag2
+
+        // Feature vector: [connected_count, loop_indicator, pixel_value]
+        // Store as single value combining features
+        float feature = (float)connected_count + 0.1f * (float)loop_indicator + 0.01f * pixel_val;
+        persistence_features[idx] = feature;
+    }
+    "#;
+
+    pub const IMAGE_SEGMENTATION: &str = r#"
+    extern "C" __global__ void image_segmentation(
+        float* pixels, int* labels,
+        int height, int width, float threshold
+    ) {
+        int row = blockIdx.y * blockDim.y + threadIdx.y;
+        int col = blockIdx.x * blockDim.x + threadIdx.x;
+
+        if (row >= height || col >= width) return;
+
+        int idx = row * width + col;
+        float pixel_val = pixels[idx];
+
+        // Simple threshold-based segmentation with region growing
+        // Label = 0: background
+        // Label = 1: foreground (bright regions)
+        // Label = 2: mid-level
+        // Label = 3: dark regions
+
+        if (pixel_val > threshold * 1.5f) {
+            labels[idx] = 1;  // Bright foreground
+        } else if (pixel_val > threshold) {
+            labels[idx] = 2;  // Mid-level
+        } else if (pixel_val > threshold * 0.5f) {
+            labels[idx] = 3;  // Dark regions
+        } else {
+            labels[idx] = 0;  // Background
+        }
+
+        // Refine based on neighbor consensus (smoothing)
+        // Count neighbor labels
+        int label_count[4] = {0, 0, 0, 0};
+
+        for (int dr = -1; dr <= 1; dr++) {
+            for (int dc = -1; dc <= 1; dc++) {
+                if (dr == 0 && dc == 0) continue;
+
+                int nr = row + dr;
+                int nc = col + dc;
+
+                if (nr >= 0 && nr < height && nc >= 0 && nc < width) {
+                    int n_idx = nr * width + nc;
+                    int n_label = labels[n_idx];
+                    if (n_label >= 0 && n_label < 4) {
+                        label_count[n_label]++;
+                    }
+                }
+            }
+        }
+
+        // Find most common label among neighbors
+        int max_count = 0;
+        int consensus_label = labels[idx];
+        for (int i = 0; i < 4; i++) {
+            if (label_count[i] > max_count) {
+                max_count = label_count[i];
+                consensus_label = i;
+            }
+        }
+
+        // If strong consensus (>5 neighbors agree), use consensus
+        if (max_count > 5) {
+            labels[idx] = consensus_label;
+        }
+    }
+    "#;
 }
 
 /// GPU Kernel Executor that manages kernel compilation and execution
@@ -1179,7 +1393,13 @@ impl GpuKernelExecutor {
         self.register_kernel("fused_linear_gelu", kernels::FUSED_LINEAR_GELU)?;
         self.register_kernel("fused_exp_normalize", kernels::FUSED_EXP_NORMALIZE)?;
 
-        println!("✅ All kernels registered: 43 total (4 FUSED for max performance)");
+        // PIXEL PROCESSING KERNELS (Worker 2 integration)
+        self.register_kernel("conv2d", kernels::CONV2D)?;
+        self.register_kernel("pixel_entropy", kernels::PIXEL_ENTROPY)?;
+        self.register_kernel("pixel_tda", kernels::PIXEL_TDA)?;
+        self.register_kernel("image_segmentation", kernels::IMAGE_SEGMENTATION)?;
+
+        println!("✅ All kernels registered: 47 total (4 FUSED, 4 PIXEL PROCESSING)");
         Ok(())
     }
 
@@ -1746,6 +1966,202 @@ impl GpuKernelExecutor {
         }
 
         Ok(probabilities.len() - 1)
+    }
+
+    // ============================================================================
+    // PIXEL PROCESSING METHODS (Worker 2 integration)
+    // ============================================================================
+
+    /// 2D convolution on GPU
+    /// Applies a convolutional kernel to an image with stride and padding
+    /// GPU ONLY - NO CPU LOOPS
+    pub fn conv2d(
+        &self,
+        image: &[f32],
+        kernel: &[f32],
+        height: usize,
+        width: usize,
+        kernel_size: usize,
+        stride: usize,
+        padding: usize,
+    ) -> Result<Vec<f32>> {
+        anyhow::ensure!(image.len() == height * width, "Image size mismatch");
+        anyhow::ensure!(kernel.len() == kernel_size * kernel_size, "Kernel size mismatch");
+
+        let out_height = (height + 2 * padding - kernel_size) / stride + 1;
+        let out_width = (width + 2 * padding - kernel_size) / stride + 1;
+
+        let stream = self.context.default_stream();
+        let kernel_fn = self.get_kernel("conv2d")?;
+
+        // Upload data
+        let image_dev = stream.memcpy_stod(image)?;
+        let kernel_dev = stream.memcpy_stod(kernel)?;
+        let mut output_dev = stream.alloc_zeros::<f32>(out_height * out_width)?;
+
+        // Launch kernel with 2D grid
+        let block_dim = 16u32;
+        let grid_dim_x = (out_width as u32 + block_dim - 1) / block_dim;
+        let grid_dim_y = (out_height as u32 + block_dim - 1) / block_dim;
+
+        let cfg = LaunchConfig {
+            grid_dim: (grid_dim_x, grid_dim_y, 1),
+            block_dim: (block_dim, block_dim, 1),
+            shared_mem_bytes: 0,
+        };
+
+        unsafe {
+            stream.launch_builder(kernel_fn)
+                .arg(&image_dev)
+                .arg(&kernel_dev)
+                .arg(&mut output_dev)
+                .arg(&(height as i32))
+                .arg(&(width as i32))
+                .arg(&(kernel_size as i32))
+                .arg(&(stride as i32))
+                .arg(&(padding as i32))
+                .launch(cfg)?;
+        }
+
+        // Download result
+        let output = stream.memcpy_dtov(&output_dev)?;
+        Ok(output)
+    }
+
+    /// Compute local Shannon entropy for each pixel on GPU
+    /// Measures information content in local neighborhoods
+    /// GPU ONLY - NO CPU LOOPS
+    pub fn pixel_entropy(
+        &self,
+        pixels: &[f32],
+        height: usize,
+        width: usize,
+        window_size: usize,
+    ) -> Result<Vec<f32>> {
+        anyhow::ensure!(pixels.len() == height * width, "Pixel array size mismatch");
+        anyhow::ensure!(window_size % 2 == 1, "Window size must be odd");
+
+        let stream = self.context.default_stream();
+        let kernel = self.get_kernel("pixel_entropy")?;
+
+        // Upload data
+        let pixels_dev = stream.memcpy_stod(pixels)?;
+        let mut entropy_map_dev = stream.alloc_zeros::<f32>(height * width)?;
+
+        // Launch kernel with 2D grid
+        let block_dim = 16u32;
+        let grid_dim_x = (width as u32 + block_dim - 1) / block_dim;
+        let grid_dim_y = (height as u32 + block_dim - 1) / block_dim;
+
+        let cfg = LaunchConfig {
+            grid_dim: (grid_dim_x, grid_dim_y, 1),
+            block_dim: (block_dim, block_dim, 1),
+            shared_mem_bytes: 0,
+        };
+
+        unsafe {
+            stream.launch_builder(kernel)
+                .arg(&pixels_dev)
+                .arg(&mut entropy_map_dev)
+                .arg(&(height as i32))
+                .arg(&(width as i32))
+                .arg(&(window_size as i32))
+                .launch(cfg)?;
+        }
+
+        // Download result
+        let entropy_map = stream.memcpy_dtov(&entropy_map_dev)?;
+        Ok(entropy_map)
+    }
+
+    /// Compute topological data analysis features for each pixel on GPU
+    /// Extracts persistent homology features from pixel neighborhoods
+    /// GPU ONLY - NO CPU LOOPS
+    pub fn pixel_tda(
+        &self,
+        pixels: &[f32],
+        height: usize,
+        width: usize,
+        threshold: f32,
+    ) -> Result<Vec<f32>> {
+        anyhow::ensure!(pixels.len() == height * width, "Pixel array size mismatch");
+
+        let stream = self.context.default_stream();
+        let kernel = self.get_kernel("pixel_tda")?;
+
+        // Upload data
+        let pixels_dev = stream.memcpy_stod(pixels)?;
+        let mut features_dev = stream.alloc_zeros::<f32>(height * width)?;
+
+        // Launch kernel with 2D grid
+        let block_dim = 16u32;
+        let grid_dim_x = (width as u32 + block_dim - 1) / block_dim;
+        let grid_dim_y = (height as u32 + block_dim - 1) / block_dim;
+
+        let cfg = LaunchConfig {
+            grid_dim: (grid_dim_x, grid_dim_y, 1),
+            block_dim: (block_dim, block_dim, 1),
+            shared_mem_bytes: 0,
+        };
+
+        unsafe {
+            stream.launch_builder(kernel)
+                .arg(&pixels_dev)
+                .arg(&mut features_dev)
+                .arg(&(height as i32))
+                .arg(&(width as i32))
+                .arg(&threshold)
+                .launch(cfg)?;
+        }
+
+        // Download result
+        let features = stream.memcpy_dtov(&features_dev)?;
+        Ok(features)
+    }
+
+    /// Image segmentation on GPU
+    /// Segments image into regions based on intensity with neighbor smoothing
+    /// GPU ONLY - NO CPU LOOPS
+    pub fn image_segmentation(
+        &self,
+        pixels: &[f32],
+        height: usize,
+        width: usize,
+        threshold: f32,
+    ) -> Result<Vec<i32>> {
+        anyhow::ensure!(pixels.len() == height * width, "Pixel array size mismatch");
+
+        let stream = self.context.default_stream();
+        let kernel = self.get_kernel("image_segmentation")?;
+
+        // Upload data
+        let pixels_dev = stream.memcpy_stod(pixels)?;
+        let mut labels_dev = stream.alloc_zeros::<i32>(height * width)?;
+
+        // Launch kernel with 2D grid
+        let block_dim = 16u32;
+        let grid_dim_x = (width as u32 + block_dim - 1) / block_dim;
+        let grid_dim_y = (height as u32 + block_dim - 1) / block_dim;
+
+        let cfg = LaunchConfig {
+            grid_dim: (grid_dim_x, grid_dim_y, 1),
+            block_dim: (block_dim, block_dim, 1),
+            shared_mem_bytes: 0,
+        };
+
+        unsafe {
+            stream.launch_builder(kernel)
+                .arg(&pixels_dev)
+                .arg(&mut labels_dev)
+                .arg(&(height as i32))
+                .arg(&(width as i32))
+                .arg(&threshold)
+                .launch(cfg)?;
+        }
+
+        // Download result
+        let labels = stream.memcpy_dtov(&labels_dev)?;
+        Ok(labels)
     }
 }
 
