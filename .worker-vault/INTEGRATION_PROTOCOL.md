@@ -12,9 +12,12 @@ This document defines the integration protocol for Worker 1's deliverables with 
 
 **Worker 1 Deliverables**:
 - Transfer Entropy (KSG algorithm, GPU-accelerated)
+  - **Phase 1**: High-accuracy TE (KD-tree, Conditional TE, Bootstrap CI)
+  - **Phase 2**: Performance optimizations (Incremental TE, Memory-efficient, Adaptive embedding, Symbolic TE)
+  - **Phase 3**: Research extensions (PID, Multiple testing correction)
 - Thermodynamic Routing (energy models, temperature schedules, replica exchange)
 - Active Inference (hierarchical inference, policy search)
-- Time Series Forecasting (ARIMA, LSTM/GRU, uncertainty quantification)
+- Time Series Forecasting (ARIMA, LSTM/GRU, uncertainty quantification, Kalman Filter)
 
 **Dependent Workers**: 3, 5, 7
 **Optional Enhancement**: Worker 2 (GPU kernels)
@@ -98,8 +101,17 @@ cargo build --lib --features cuda
 Add to your Rust file:
 
 ```rust
-// Transfer Entropy
+// Transfer Entropy (Core)
 use prism_ai::{detect_causal_direction, CausalDirection};
+
+// Transfer Entropy (Phase 1: High-Accuracy)
+use prism_ai::{KsgEstimator, ConditionalTe, BootstrapResampler, BootstrapMethod, KdTree};
+
+// Transfer Entropy (Phase 2: Performance)
+use prism_ai::{IncrementalTe, AdaptiveEmbedding, SymbolicTe, CompressedHistogram};
+
+// Transfer Entropy (Phase 3: Research)
+use prism_ai::{PartialInfoDecomp, PidMethod, MultipleTestingCorrection, CorrectionMethod};
 
 // Thermodynamic
 use prism_ai::{ThermodynamicNetwork, NetworkConfig};
@@ -108,7 +120,7 @@ use prism_ai::{ThermodynamicNetwork, NetworkConfig};
 use prism_ai::{HierarchicalModel, StateSpaceLevel, PolicySelector};
 
 // Time Series
-use prism_ai::{TimeSeriesForecaster, ArimaConfig, LstmConfig, CellType};
+use prism_ai::{TimeSeriesForecaster, ArimaConfig, LstmConfig, CellType, KalmanFilter};
 ```
 
 ### Step 4: Test Integration
@@ -354,6 +366,211 @@ if coupling.te_x_to_y > 0.5 {
 - Complex decision pipelines
 - Multi-stage reasoning
 - Full system integration tests
+
+---
+
+### Pattern 6: High-Accuracy TE with KSG Estimator (Phase 1)
+
+**Use Case**: More accurate causal detection with reduced bias
+
+```rust
+use prism_ai::{KsgEstimator, ConditionalTe, BootstrapResampler, BootstrapMethod};
+
+// Step 1: Use KSG instead of histogram-based TE (50-80% bias reduction)
+let ksg = KsgEstimator::new(
+    k: 5,              // k-neighbors
+    source_embedding: 3,
+    target_embedding: 2,
+    time_lag: 1
+);
+
+let result = ksg.calculate(&source, &target)?;
+println!("TE (KSG): {:.4} bits", result.te_value);
+
+// Step 2: Control for confounders with Conditional TE
+let cte = ConditionalTe::new(5, 3, 2, 2, 1);
+let cte_result = cte.calculate(&source, &target, &confounder)?;
+println!("Conditional TE(X→Y|Z): {:.4} bits", cte_result.te_value);
+
+// Step 3: Add rigorous uncertainty quantification
+let resampler = BootstrapResampler::new(1000, 0.95, 10, BootstrapMethod::Bca);
+let ci = resampler.resample(|src, tgt| {
+    let ksg = KsgEstimator::new(5, 3, 2, 1);
+    ksg.calculate(src, tgt).map(|r| r.te_value)
+}, &source, &target)?;
+
+println!("TE = {:.4} [{:.4}, {:.4}] @ 95% CI", ci.observed, ci.lower, ci.upper);
+```
+
+**Best For**:
+- PWSA: High-accuracy missile coupling detection
+- LLM: Precise model interaction measurement
+- Robotics: Multi-agent coordination analysis
+- Any application requiring statistical rigor
+
+---
+
+### Pattern 7: Real-Time Streaming TE (Phase 2)
+
+**Use Case**: Monitor causal relationships in real-time data streams
+
+```rust
+use prism_ai::IncrementalTe;
+
+// Step 1: Initialize with historical data
+let mut inc_te = IncrementalTe::new(
+    source_embedding: 3,
+    target_embedding: 2,
+    time_lag: 1,
+    n_bins: 10,
+    window_size: Some(100)  // Sliding window
+);
+
+inc_te.init(&historical_source, &historical_target)?;
+
+// Step 2: Stream new data points with O(1) updates
+for (new_source, new_target) in real_time_stream {
+    inc_te.update(new_source, new_target)?;
+    let current_te = inc_te.calculate()?;
+
+    // Detect regime changes
+    if current_te > threshold {
+        println!("Alert: Coupling strength increased to {:.3}", current_te);
+    }
+}
+```
+
+**Best For**:
+- PWSA: Real-time threat coupling monitoring
+- LLM: Live model interaction tracking
+- Robotics: Dynamic multi-agent coordination
+- Any streaming data application (10-50x faster than batch recomputation)
+
+---
+
+### Pattern 8: Adaptive Parameter Selection (Phase 2)
+
+**Use Case**: Automatic optimal embedding parameter selection
+
+```rust
+use prism_ai::{AdaptiveEmbedding, SymbolicTe};
+
+// Step 1: Automatically determine optimal parameters
+let adaptive = AdaptiveEmbedding::new(
+    max_dimension: 10,
+    max_delay: 20,
+    tolerance: 0.01
+);
+
+let params = adaptive.select_embedding(&time_series)?;
+println!("Optimal embedding: dim={}, delay={}", params.dimension, params.delay);
+
+// Step 2: Use optimal parameters for TE calculation
+let ksg = KsgEstimator::new(5, params.dimension, params.dimension, params.delay);
+let result = ksg.calculate(&source, &target)?;
+
+// Step 3: For noisy data, use Symbolic TE (noise-robust)
+let ste = SymbolicTe::new(
+    pattern_length: 4,  // Ordinal pattern length
+    pattern_delay: 1,
+    te_lag: params.delay
+);
+
+let symbolic_result = ste.calculate(&noisy_source, &noisy_target)?;
+println!("Symbolic TE (noise-robust): {:.4} bits", symbolic_result.te_value);
+```
+
+**Best For**:
+- Noisy sensor data (works with 50%+ noise)
+- Short time series (<100 points)
+- Unknown optimal parameters
+- Adaptive systems that need automatic tuning
+
+---
+
+### Pattern 9: Multivariate Information Decomposition (Phase 3)
+
+**Use Case**: Understand unique vs redundant information from multiple predictors
+
+```rust
+use prism_ai::{PartialInfoDecomp, PidMethod};
+
+// Scenario: Two models (X1, X2) predicting target Y
+// Question: How much unique information does each provide?
+
+let pid = PartialInfoDecomp::new(10, PidMethod::MinMi);
+let result = pid.calculate(&model1_predictions, &model2_predictions, &actual_target)?;
+
+println!("Information Decomposition:");
+println!("  Total MI:      {:.4} bits", result.total_mi);
+println!("  Unique(M1):    {:.4} bits", result.unique_x1);
+println!("  Unique(M2):    {:.4} bits", result.unique_x2);
+println!("  Redundant:     {:.4} bits", result.redundant);
+println!("  Synergy:       {:.4} bits", result.synergy);
+
+// Interpret results
+if result.unique_x1 > result.unique_x2 {
+    println!("Model 1 provides more unique information");
+} else if result.synergy > result.redundant {
+    println!("Models work synergistically - ensemble recommended");
+} else {
+    println!("Models provide redundant information - single model sufficient");
+}
+```
+
+**Best For**:
+- LLM: Multi-model ensemble analysis
+- Feature selection (which features are truly unique?)
+- Sensor fusion (which sensors provide non-redundant information?)
+- Understanding multi-predictor systems
+
+---
+
+### Pattern 10: Multiple Testing Correction for Network Analysis (Phase 3)
+
+**Use Case**: Test many causal relationships while controlling false discoveries
+
+```rust
+use prism_ai::{KsgEstimator, MultipleTestingCorrection, CorrectionMethod};
+
+// Scenario: Test TE across N×N variable pairs
+let n_vars = 20;
+let mut p_values = Vec::new();
+let mut te_matrix = vec![vec![0.0; n_vars]; n_vars];
+
+// Step 1: Compute TE for all pairs
+for i in 0..n_vars {
+    for j in 0..n_vars {
+        if i != j {
+            let ksg = KsgEstimator::new(5, 3, 2, 1);
+            let result = ksg.calculate(&data[i], &data[j])?;
+            te_matrix[i][j] = result.te_value;
+            p_values.push(result.p_value);
+        }
+    }
+}
+
+// Step 2: Apply FDR correction (controls false discovery rate)
+let corrector = MultipleTestingCorrection::new(0.05, CorrectionMethod::BenjaminiHochberg);
+let corrected = corrector.correct(&p_values)?;
+
+println!("Discoveries: {} out of {} tests", corrected.n_discoveries(), p_values.len());
+println!("Discovery rate: {:.1}%", corrected.discovery_rate() * 100.0);
+
+// Step 3: Extract significant edges
+let discovery_indices = corrected.discovery_indices();
+for &idx in &discovery_indices {
+    let i = idx / (n_vars - 1);
+    let j = idx % (n_vars - 1);
+    println!("Significant edge: {} → {} (TE={:.4})", i, j, te_matrix[i][j]);
+}
+```
+
+**Best For**:
+- Network discovery (finding true causal edges)
+- Multi-lag analysis (testing many time lags)
+- Feature selection with many candidates
+- Any scenario with multiple hypothesis tests
 
 ---
 
