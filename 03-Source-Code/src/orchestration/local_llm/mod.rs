@@ -6,6 +6,7 @@ pub mod kv_cache;
 pub mod bpe_tokenizer;
 pub mod sampling;
 pub mod llm_metrics;
+pub mod attention_analyzer;
 
 pub use gpu_llm_inference::{
     GpuLocalLLMSystem,
@@ -49,4 +50,10 @@ pub use sampling::{
 pub use llm_metrics::{
     LLMMetrics,
     DistributionHealth,
+};
+
+pub use attention_analyzer::{
+    AttentionAnalyzer,
+    AttentionHealth,
+    AttentionStats,
 };
