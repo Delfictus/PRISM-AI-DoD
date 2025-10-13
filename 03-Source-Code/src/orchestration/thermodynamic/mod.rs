@@ -15,8 +15,10 @@ pub mod advanced_multi_objective;
 pub mod advanced_replica_exchange;
 pub mod gpu_schedule_kernels;
 pub mod adaptive_temperature_control;
+pub use adaptive_temperature_control as adaptive_control;  // Alias for convenience
 pub mod bayesian_hyperparameter_learning;
 pub mod meta_schedule_selector;
+pub mod forecast_integration;
 
 pub use hamiltonian::InformationHamiltonian;
 pub use quantum_consensus::{QuantumConsensusOptimizer, ConsensusState};
@@ -109,4 +111,12 @@ pub use meta_schedule_selector::{
     ScheduleStats,
     KNNRecommender,
     ContextualBandit,
+};
+
+pub use forecast_integration::{
+    CostAwareOrchestrator,
+    CostAwareConfig,
+    BudgetStatus,
+    BudgetRecommendation,
+    ModelSelection,
 };
