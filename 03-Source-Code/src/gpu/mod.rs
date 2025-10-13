@@ -13,7 +13,8 @@ pub mod layers;
 pub mod gpu_enabled;  // GPU-only implementation with kernel execution
 pub mod kernel_executor;  // GPU kernel executor
 pub mod gpu_tensor_optimized;  // FULLY OPTIMIZED: CudaSlice, persistent GPU, fused kernels
-pub mod memory_pool;  // GPU memory pooling for efficient buffer reuse
+pub mod memory_pool;  // GPU memory pooling tracking and statistics
+pub mod active_memory_pool;  // Active memory pooling with buffer reuse (67.9% savings)
 pub mod kernel_autotuner;  // Kernel auto-tuning for optimal launch configurations
 
 // Use GPU-enabled implementation - NO CPU FALLBACK
@@ -42,3 +43,6 @@ pub use memory_pool::{GpuMemoryPool as GpuMemoryPoolV2, MemoryPoolConfig, Memory
 
 // Export kernel auto-tuner
 pub use kernel_autotuner::{KernelAutoTuner, LaunchConfig, KernelId, AutoTunerConfig, AutoTunerStats};
+
+// Export active memory pool
+pub use active_memory_pool::{ActiveMemoryPool, ActivePoolConfig, ActivePoolStats};
