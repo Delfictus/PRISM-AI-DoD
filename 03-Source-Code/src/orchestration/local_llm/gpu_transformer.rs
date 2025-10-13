@@ -8,7 +8,10 @@ use std::sync::Arc;
 use std::path::Path;
 use cudarc::driver::{CudaContext, CudaSlice, LaunchConfig, PushKernelArg};
 use crate::gpu::GpuKernelExecutor;
-use crate::orchestration::local_llm::{TokenSampler, SamplingConfig, GgufGpuLoader, TransformerKVCache};
+use crate::orchestration::local_llm::{
+    TokenSampler, SamplingConfig, GgufGpuLoader, TransformerKVCache,
+    LLMMetrics, AttentionAnalyzer, TransferEntropyLLM,
+};
 
 /// GPU Transformer Layer - Complete Implementation
 pub struct GpuTransformerLayer {
@@ -409,6 +412,11 @@ pub struct GpuLLMInference {
     // KV-cache for efficient generation (Day 1 implementation, Day 4 integration)
     kv_cache: Option<TransformerKVCache>,
 
+    // Information-theoretic analysis tools (Phase 1-3 enhancements)
+    metrics: Option<LLMMetrics>,
+    attention_analyzer: Option<AttentionAnalyzer>,
+    transfer_entropy: Option<TransferEntropyLLM>,
+
     // Config
     vocab_size: usize,
     d_model: usize,
@@ -524,6 +532,9 @@ impl GpuLLMInference {
             output_proj,
             sampler,
             kv_cache,
+            metrics: None,
+            attention_analyzer: None,
+            transfer_entropy: None,
             vocab_size,
             d_model,
             n_layers,
@@ -604,6 +615,9 @@ impl GpuLLMInference {
             output_proj,
             sampler,
             kv_cache,
+            metrics: None,
+            attention_analyzer: None,
+            transfer_entropy: None,
             vocab_size,
             d_model,
             n_layers,
