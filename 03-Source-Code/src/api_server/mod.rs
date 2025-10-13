@@ -88,6 +88,8 @@ impl AppState {
 
 /// Build the API router with all routes
 pub fn build_router(state: AppState) -> Router {
+    let shared_state = Arc::new(state);
+
     Router::new()
         // Health check
         .route("/health", get(health_check))
@@ -105,15 +107,15 @@ pub fn build_router(state: AppState) -> Router {
         // WebSocket endpoint
         .route("/ws", get(websocket::ws_handler))
 
+        // Apply state
+        .with_state(shared_state)
+
         // Apply middleware
         .layer(
             ServiceBuilder::new()
                 .layer(TraceLayer::new_for_http())
-                .layer(Extension(Arc::new(state)))
+                .layer(CorsLayer::permissive())
         )
-
-        // Apply CORS if enabled
-        .layer(CorsLayer::permissive())
 }
 
 /// Health check endpoint

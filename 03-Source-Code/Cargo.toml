@@ -91,7 +91,7 @@ toml = "0.8"  # Configuration file support
 half = "2.4"  # F16 support for GGUF quantization
 
 # Worker 8: API Server dependencies
-axum = "0.7"  # Web framework
+axum = { version = "0.7", features = ["ws"] }  # Web framework with WebSocket support
 tower = "0.4"  # Service middleware
 tower-http = { version = "0.5", features = ["trace", "cors"] }  # HTTP middleware
 

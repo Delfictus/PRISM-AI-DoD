@@ -84,54 +84,17 @@ impl HybridRateLimiter {
     pub fn check_rate_limit(&self, client_id: &str) -> RateLimitDecision {
         let mut state = self.inner.lock().unwrap();
 
-        // 1. Check token bucket (fast burst handling)
-        let token_bucket = state
-            .token_buckets
-            .entry(client_id.to_string())
-            .or_insert_with(|| TokenBucket::new(state.config.max_burst, state.config.requests_per_second));
+        // Capture config values we'll need
+        let max_burst = state.config.max_burst;
+        let requests_per_second = state.config.requests_per_second;
+        let window_duration_secs = state.config.window_duration_secs;
+        let max_requests_per_window = state.config.max_requests_per_window;
+        let enable_backoff = state.config.enable_backoff;
 
-        if !token_bucket.try_consume() {
-            return state.handle_rate_limit_exceeded(client_id, RateLimitReason::BurstExceeded);
-        }
-
-        // 2. Check leaky bucket (sustained rate)
-        let leaky_bucket = state
-            .leaky_buckets
-            .entry(client_id.to_string())
-            .or_insert_with(|| LeakyBucket::new(state.config.requests_per_second));
-
-        if !leaky_bucket.try_add() {
-            // Refund token bucket since we're rejecting
-            token_bucket.refund();
-            return state.handle_rate_limit_exceeded(client_id, RateLimitReason::SustainedRateExceeded);
-        }
-
-        // 3. Check sliding window (precision over longer period)
-        let window = state
-            .windows
-            .entry(client_id.to_string())
-            .or_insert_with(|| {
-                SlidingWindow::new(
-                    Duration::from_secs(state.config.window_duration_secs),
-                    state.config.max_requests_per_window,
-                )
-            });
-
-        if !window.try_add() {
-            // Refund both buckets
-            token_bucket.refund();
-            leaky_bucket.leak_one();
-            return state.handle_rate_limit_exceeded(client_id, RateLimitReason::WindowExceeded);
-        }
-
-        // 4. Check backoff state (if client was previously rate-limited)
-        if state.config.enable_backoff {
+        // Check backoff state FIRST (before holding entry references)
+        if enable_backoff {
             if let Some(backoff) = state.backoff_states.get(client_id) {
                 if backoff.is_in_backoff() {
-                    // Refund all
-                    token_bucket.refund();
-                    leaky_bucket.leak_one();
-                    window.remove_last();
                     return RateLimitDecision::Denied {
                         reason: RateLimitReason::InBackoff,
                         retry_after_ms: backoff.retry_after_ms(),
@@ -140,15 +103,59 @@ impl HybridRateLimiter {
             }
         }
 
+        // 1. Check token bucket (fast burst handling)
+        if !state.token_buckets.contains_key(client_id) {
+            state.token_buckets.insert(client_id.to_string(), TokenBucket::new(max_burst, requests_per_second));
+        }
+        let token_bucket = state.token_buckets.get_mut(client_id).unwrap();
+
+        if !token_bucket.try_consume() {
+            return state.handle_rate_limit_exceeded(client_id, RateLimitReason::BurstExceeded);
+        }
+
+        // 2. Check leaky bucket (sustained rate)
+        if !state.leaky_buckets.contains_key(client_id) {
+            state.leaky_buckets.insert(client_id.to_string(), LeakyBucket::new(requests_per_second));
+        }
+        let leaky_bucket = state.leaky_buckets.get_mut(client_id).unwrap();
+
+        if !leaky_bucket.try_add() {
+            // Refund token bucket since we're rejecting
+            let token_bucket = state.token_buckets.get_mut(client_id).unwrap();
+            token_bucket.refund();
+            return state.handle_rate_limit_exceeded(client_id, RateLimitReason::SustainedRateExceeded);
+        }
+
+        // 3. Check sliding window (precision over longer period)
+        if !state.windows.contains_key(client_id) {
+            state.windows.insert(client_id.to_string(), SlidingWindow::new(
+                Duration::from_secs(window_duration_secs),
+                max_requests_per_window,
+            ));
+        }
+        let window = state.windows.get_mut(client_id).unwrap();
+
+        if !window.try_add() {
+            // Refund both buckets
+            state.token_buckets.get_mut(client_id).unwrap().refund();
+            state.leaky_buckets.get_mut(client_id).unwrap().leak_one();
+            return state.handle_rate_limit_exceeded(client_id, RateLimitReason::WindowExceeded);
+        }
+
         // All checks passed - allow request
+        // Capture values before clearing backoff
+        let token_bucket = state.token_buckets.get(client_id).unwrap();
+        let remaining = token_bucket.remaining();
+        let reset_after_ms = token_bucket.reset_time_ms();
+
         // Clear backoff if it existed
-        if state.config.enable_backoff {
+        if enable_backoff {
             state.backoff_states.remove(client_id);
         }
 
         RateLimitDecision::Allowed {
-            remaining: token_bucket.remaining(),
-            reset_after_ms: token_bucket.reset_time_ms(),
+            remaining,
+            reset_after_ms,
         }
     }
 

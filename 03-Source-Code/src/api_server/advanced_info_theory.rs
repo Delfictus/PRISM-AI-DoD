@@ -162,8 +162,8 @@ pub fn normalized_mutual_information(
     y_probs: &[f64],
     mutual_info: f64,
 ) -> f64 {
-    let h_x: f64 = -x_probs.iter().filter(|&&p| p > 0.0).map(|&p| p * p.log2()).sum();
-    let h_y: f64 = -y_probs.iter().filter(|&&p| p > 0.0).map(|&p| p * p.log2()).sum();
+    let h_x: f64 = -x_probs.iter().filter(|&&p| p > 0.0).map(|&p| p * p.log2()).sum::<f64>();
+    let h_y: f64 = -y_probs.iter().filter(|&&p| p > 0.0).map(|&p| p * p.log2()).sum::<f64>();
 
     let min_entropy = h_x.min(h_y);
 

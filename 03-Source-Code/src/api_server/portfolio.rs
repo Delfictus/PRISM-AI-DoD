@@ -262,9 +262,9 @@ impl PortfolioOptimizer {
             return 0.0;
         }
 
-        let mut cumulative_value = 1.0;
-        let mut peak = 1.0;
-        let mut max_dd = 0.0;
+        let mut cumulative_value: f64 = 1.0;
+        let mut peak: f64 = 1.0;
+        let mut max_dd: f64 = 0.0;
 
         for period_returns in historical_returns {
             // Calculate portfolio return for this period
