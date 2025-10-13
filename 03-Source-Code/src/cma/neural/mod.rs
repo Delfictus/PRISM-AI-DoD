@@ -21,6 +21,7 @@ pub mod diffusion;          // REAL diffusion model (Sprint 2.2)
 pub mod neural_quantum;     // REAL neural quantum states (Sprint 2.3)
 pub mod gnn_training;       // Worker 5: GNN training infrastructure (Week 6, Task 4.1)
 pub mod gnn_transfer_learning;  // Worker 5: Transfer learning (Week 6, Task 4.2)
+pub mod gnn_training_pipeline;  // Worker 5: End-to-end training pipeline (Week 6, Task 4.3)
 
 pub use gnn_integration::E3EquivariantGNN;
 pub use diffusion::ConsistencyDiffusion;
@@ -50,6 +51,21 @@ pub use gnn_transfer_learning::{
     DistillationMetrics,
     SyntheticGraphConfig,
     GraphType,
+};
+
+// Worker 5 exports - Training Pipeline
+pub use gnn_training_pipeline::{
+    GNNTrainingPipeline,
+    GNNDataset,
+    DataPreprocessor,
+    DataAugmenter,
+    DatasetSplitter,
+    CheckpointManager,
+    PreprocessingConfig,
+    AugmentationConfig,
+    SplitConfig,
+    CheckpointConfig,
+    Checkpoint,
 };
 
 /// Geometric manifold learner using REAL E(3)-equivariant GNN
