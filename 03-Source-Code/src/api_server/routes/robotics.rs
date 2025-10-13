@@ -83,24 +83,73 @@ async fn plan_motion(
     State(state): State<Arc<AppState>>,
     Json(request): Json<MotionPlanRequest>,
 ) -> Result<Json<ApiResponse<MotionPlan>>> {
-    log::info!("Motion planning - Robot: {}", request.robot_id);
+    use std::time::Instant;
+    use crate::applications::robotics::{RoboticsController, RoboticsConfig, RobotState as WorkerRobotState};
 
-    // TODO: Integrate with actual motion planner
+    log::info!("Motion planning - Robot: {}, {} obstacles",
+        request.robot_id, request.obstacles.len());
+
+    let start_time = Instant::now();
+
+    // Create robotics controller with Worker 7's implementation
+    let config = RoboticsConfig {
+        planning_horizon: 5.0,
+        control_frequency: 50.0,
+        use_gpu: true,
+        enable_forecasting: !request.obstacles.is_empty(),
+        max_planning_time_ms: 100,
+    };
+
+    let mut controller = RoboticsController::new(config)
+        .map_err(|e| ApiError::ServerError(format!("Failed to create controller: {}", e)))?;
+
+    // Convert API robot states to Worker 7's format
+    let current_state = WorkerRobotState {
+        position: request.start_state.position,
+        velocity: request.start_state.velocity,
+        joint_angles: request.start_state.joint_angles.clone(),
+        timestamp: chrono::Utc::now().timestamp_millis() as f64 / 1000.0,
+    };
+
+    let goal_state = WorkerRobotState {
+        position: request.goal_state.position,
+        velocity: request.goal_state.velocity,
+        joint_angles: request.goal_state.joint_angles.clone(),
+        timestamp: (chrono::Utc::now().timestamp_millis() as f64 / 1000.0) + 5.0,
+    };
+
+    // Plan motion using Worker 7's Active Inference planner
+    let worker_plan = controller.plan_motion(&current_state, &goal_state)
+        .map_err(|e| ApiError::ServerError(format!("Motion planning failed: {}", e)))?;
+
+    let planning_time = start_time.elapsed().as_secs_f64() * 1000.0;
+
+    // Convert Worker 7's plan to API format
+    let trajectory: Vec<TrajectoryPoint> = worker_plan.waypoints.iter().map(|wp| {
+        TrajectoryPoint {
+            time: wp.time,
+            state: RobotState {
+                position: wp.state.position,
+                orientation: request.start_state.orientation, // Preserve orientation (not in Worker 7's model)
+                joint_angles: wp.state.joint_angles.clone(),
+                velocity: wp.state.velocity,
+            },
+        }
+    }).collect();
+
+    let total_distance = worker_plan.waypoints.windows(2).map(|w| {
+        let dx = w[1].state.position.0 - w[0].state.position.0;
+        let dy = w[1].state.position.1 - w[0].state.position.1;
+        let dz = w[1].state.position.2 - w[0].state.position.2;
+        (dx*dx + dy*dy + dz*dz).sqrt()
+    }).sum();
+
     let plan = MotionPlan {
-        trajectory: vec![
-            TrajectoryPoint {
-                time: 0.0,
-                state: request.start_state.clone(),
-            },
-            TrajectoryPoint {
-                time: 1.0,
-                state: request.goal_state.clone(),
-            },
-        ],
-        total_time: 5.2,
-        total_distance: 10.5,
-        is_collision_free: true,
-        planning_time_ms: 15.3,
+        trajectory,
+        total_time: worker_plan.total_time,
+        total_distance,
+        is_collision_free: worker_plan.is_collision_free,
+        planning_time_ms: planning_time,
     };
 
     Ok(Json(ApiResponse::success(plan)))
