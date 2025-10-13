@@ -316,3 +316,342 @@ fn test_tensor_info_clone() {
     assert_eq!(tensor.dimensions, cloned.dimensions);
     assert_eq!(tensor.offset, cloned.offset);
 }
+
+// ===== Additional Error Scenario Tests for Day 5 =====
+
+use prism_ai::orchestration::local_llm::GgufLoader;
+use std::fs;
+use tempfile::TempDir;
+use anyhow::Result;
+
+#[test]
+fn test_gguf_load_nonexistent_file() {
+    let result = GgufLoader::load("/nonexistent/path/model.gguf");
+    assert!(result.is_err(), "Should fail for nonexistent file");
+
+    if let Err(e) = result {
+        let msg = e.to_string();
+        assert!(!msg.is_empty(), "Error message should not be empty");
+    }
+}
+
+#[test]
+fn test_gguf_load_empty_file() -> Result<()> {
+    let temp_dir = tempfile::tempdir()?;
+    let file_path = temp_dir.path().join("empty.gguf");
+    fs::File::create(&file_path)?;
+
+    let result = GgufLoader::load(&file_path);
+    assert!(result.is_err(), "Should fail for empty file");
+
+    Ok(())
+}
+
+#[test]
+fn test_gguf_load_invalid_magic_number() -> Result<()> {
+    use std::io::Write;
+
+    let temp_dir = tempfile::tempdir()?;
+    let file_path = temp_dir.path().join("invalid_magic.gguf");
+
+    let mut file = fs::File::create(&file_path)?;
+    // Write invalid magic number (not "GGUF")
+    file.write_all(b"ABCD")?;
+    file.write_all(&[0u8; 100])?;
+    drop(file);
+
+    let result = GgufLoader::load(&file_path);
+    assert!(result.is_err(), "Should fail for invalid magic number");
+
+    Ok(())
+}
+
+#[test]
+fn test_gguf_load_truncated_file() -> Result<()> {
+    use std::io::Write;
+
+    let temp_dir = tempfile::tempdir()?;
+    let file_path = temp_dir.path().join("truncated.gguf");
+
+    let mut file = fs::File::create(&file_path)?;
+    // Write valid magic but truncate rest
+    file.write_all(b"GGUF")?;
+    // Missing version, metadata, tensors
+    drop(file);
+
+    let result = GgufLoader::load(&file_path);
+    assert!(result.is_err(), "Should fail for truncated file");
+
+    Ok(())
+}
+
+#[test]
+fn test_gguf_load_directory() -> Result<()> {
+    let temp_dir = tempfile::tempdir()?;
+    let dir_path = temp_dir.path();
+
+    // Try to load a directory instead of file
+    let result = GgufLoader::load(dir_path);
+    assert!(result.is_err(), "Should fail when given a directory");
+
+    Ok(())
+}
+
+#[test]
+fn test_gguf_invalid_type_conversion() {
+    // Test type conversions that should fail
+    for invalid_type in [999, 1000, u32::MAX] {
+        let result = GgufType::from_u32(invalid_type);
+        assert!(result.is_err(), "Should fail for invalid type {}", invalid_type);
+    }
+}
+
+#[test]
+fn test_gguf_metadata_type_mismatches() {
+    // Test accessing wrong type from MetadataValue
+    let int_val = MetadataValue::U32(42);
+    assert_eq!(int_val.as_str(), None, "Should return None for wrong type");
+    assert_eq!(int_val.as_f32(), None, "Should return None for wrong type");
+
+    let str_val = MetadataValue::String("test".to_string());
+    assert_eq!(str_val.as_u64(), None, "Should return None for wrong type");
+    assert_eq!(str_val.as_f32(), None, "Should return None for wrong type");
+
+    let float_val = MetadataValue::F32(3.14);
+    assert_eq!(float_val.as_u64(), None, "Should return None for wrong type");
+    assert_eq!(float_val.as_str(), None, "Should return None for wrong type");
+}
+
+#[test]
+fn test_gguf_zero_dimension_tensor() {
+    let tensor = TensorInfo {
+        name: "zero_dim".to_string(),
+        dimensions: vec![0],
+        data_type: GgufType::F32,
+        offset: 0,
+    };
+
+    assert_eq!(tensor.element_count(), 0);
+    assert_eq!(tensor.size_bytes(), 0);
+}
+
+#[test]
+fn test_gguf_empty_dimension_tensor() {
+    let tensor = TensorInfo {
+        name: "no_dims".to_string(),
+        dimensions: vec![],
+        data_type: GgufType::F32,
+        offset: 0,
+    };
+
+    assert_eq!(tensor.element_count(), 1); // Product of empty array is 1
+    assert_eq!(tensor.size_bytes(), 4); // 1 element * 4 bytes
+}
+
+#[test]
+fn test_gguf_very_large_tensor() {
+    // Test with extremely large dimensions (might overflow if not handled)
+    let tensor = TensorInfo {
+        name: "huge".to_string(),
+        dimensions: vec![10000, 10000], // 100M elements
+        data_type: GgufType::F32,
+        offset: 0,
+    };
+
+    let elem_count = tensor.element_count();
+    assert_eq!(elem_count, 100_000_000);
+
+    let size = tensor.size_bytes();
+    assert_eq!(size, 100_000_000 * 4); // 400 MB
+}
+
+#[test]
+fn test_gguf_negative_signed_metadata() {
+    let val = MetadataValue::I32(-42);
+    match val {
+        MetadataValue::I32(v) => assert_eq!(v, -42),
+        _ => panic!("Expected I32"),
+    }
+
+    let val = MetadataValue::I64(-1000000);
+    match val {
+        MetadataValue::I64(v) => assert_eq!(v, -1000000),
+        _ => panic!("Expected I64"),
+    }
+}
+
+#[test]
+fn test_gguf_type_all_variants() {
+    // Ensure all GgufType variants can be created
+    let types = vec![
+        GgufType::F32,
+        GgufType::F16,
+        GgufType::Q4_0,
+        GgufType::Q4_1,
+        GgufType::Q5_0,
+        GgufType::Q5_1,
+        GgufType::Q8_0,
+        GgufType::Q8_1,
+        GgufType::Q2_K,
+        GgufType::Q3_K,
+        GgufType::Q4_K,
+        GgufType::Q5_K,
+        GgufType::Q6_K,
+        GgufType::Q8_K,
+    ];
+
+    for typ in types {
+        assert!(typ.size_bytes() > 0, "Size should be positive");
+    }
+}
+
+#[test]
+fn test_gguf_metadata_nested_arrays() {
+    let nested = MetadataValue::Array(vec![
+        MetadataValue::Array(vec![
+            MetadataValue::U32(1),
+            MetadataValue::U32(2),
+        ]),
+        MetadataValue::Array(vec![
+            MetadataValue::U32(3),
+            MetadataValue::U32(4),
+        ]),
+    ]);
+
+    match nested {
+        MetadataValue::Array(ref outer) => {
+            assert_eq!(outer.len(), 2);
+            match &outer[0] {
+                MetadataValue::Array(inner) => {
+                    assert_eq!(inner.len(), 2);
+                }
+                _ => panic!("Expected nested array"),
+            }
+        }
+        _ => panic!("Expected array"),
+    }
+}
+
+#[test]
+fn test_gguf_empty_array_metadata() {
+    let empty_array = MetadataValue::Array(vec![]);
+
+    match empty_array {
+        MetadataValue::Array(ref values) => {
+            assert_eq!(values.len(), 0);
+        }
+        _ => panic!("Expected array"),
+    }
+}
+
+#[test]
+fn test_gguf_empty_path() {
+    let result = GgufLoader::load("");
+    assert!(result.is_err(), "Should fail for empty path");
+}
+
+#[test]
+fn test_gguf_unicode_in_metadata() {
+    let unicode_str = MetadataValue::String("Hello 世界 🌍".to_string());
+
+    match unicode_str {
+        MetadataValue::String(ref s) => {
+            assert_eq!(s, "Hello 世界 🌍");
+            assert!(s.contains("世界"));
+            assert!(s.contains("🌍"));
+        }
+        _ => panic!("Expected string"),
+    }
+}
+
+#[test]
+fn test_gguf_tensor_name_validation() {
+    // Test that tensor names can contain various characters
+    let names = vec![
+        "simple_name",
+        "name.with.dots",
+        "name-with-dashes",
+        "name_123",
+        "CamelCaseName",
+    ];
+
+    for name in names {
+        let tensor = TensorInfo {
+            name: name.to_string(),
+            dimensions: vec![10, 10],
+            data_type: GgufType::F32,
+            offset: 0,
+        };
+
+        assert_eq!(tensor.name, name);
+    }
+}
+
+#[test]
+fn test_gguf_quantization_block_alignment() {
+    // Q4_0 has 32 elements per block
+    let sizes = vec![32, 64, 128, 256, 512];
+
+    for size in sizes {
+        let tensor = TensorInfo {
+            name: "aligned".to_string(),
+            dimensions: vec![size],
+            data_type: GgufType::Q4_0,
+            offset: 0,
+        };
+
+        let expected_blocks = size / 32;
+        let expected_size = expected_blocks * 18;
+        assert_eq!(tensor.size_bytes(), expected_size);
+    }
+}
+
+#[test]
+fn test_gguf_quantization_unaligned_sizes() {
+    // Test with sizes not aligned to block boundaries
+    let sizes = vec![33, 65, 100, 250];
+
+    for size in sizes {
+        let tensor = TensorInfo {
+            name: "unaligned".to_string(),
+            dimensions: vec![size],
+            data_type: GgufType::Q4_0,
+            offset: 0,
+        };
+
+        let expected_blocks = (size + 31) / 32; // Round up
+        let expected_size = expected_blocks * 18;
+        assert_eq!(tensor.size_bytes(), expected_size);
+    }
+}
+
+#[test]
+fn test_gguf_f64_metadata_precision() {
+    let val = MetadataValue::F64(std::f64::consts::PI);
+
+    match val {
+        MetadataValue::F64(v) => {
+            assert!((v - std::f64::consts::PI).abs() < 1e-10);
+        }
+        _ => panic!("Expected F64"),
+    }
+}
+
+#[test]
+fn test_gguf_max_values() {
+    // Test edge cases with maximum values
+    let max_u64 = MetadataValue::U64(u64::MAX);
+    assert_eq!(max_u64.as_u64(), Some(u64::MAX));
+
+    let max_i64 = MetadataValue::I64(i64::MAX);
+    match max_i64 {
+        MetadataValue::I64(v) => assert_eq!(v, i64::MAX),
+        _ => panic!("Expected I64"),
+    }
+
+    let min_i64 = MetadataValue::I64(i64::MIN);
+    match min_i64 {
+        MetadataValue::I64(v) => assert_eq!(v, i64::MIN),
+        _ => panic!("Expected I64"),
+    }
+}
