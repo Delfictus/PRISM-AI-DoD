@@ -90,6 +90,11 @@ zstd = "0.13"  # Kolmogorov complexity estimation
 toml = "0.8"  # Configuration file support
 half = "2.4"  # F16 support for GGUF quantization
 
+# Worker 8: API Server dependencies
+axum = "0.7"  # Web framework
+tower = "0.4"  # Service middleware
+tower-http = { version = "0.5", features = ["trace", "cors"] }  # HTTP middleware
+
 [[example]]
 name = "platform_demo"
 path = "examples/platform_demo.rs"
@@ -217,6 +222,10 @@ path = "src/bin/benchmark_pwsa_gpu.rs"
 [[bin]]
 name = "test_gpu_real"
 path = "src/bin/test_gpu_real.rs"
+
+[[bin]]
+name = "api_server"
+path = "src/bin/api_server.rs"
 
 [[test]]
 name = "transfer_entropy"

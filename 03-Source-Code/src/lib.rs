@@ -68,6 +68,15 @@ pub mod cma;
 // Worker 7: Domain-Specific Applications (Robotics, Scientific Discovery, Drug Discovery)
 pub mod applications;
 
+// Worker 1: Time Series Forecasting (ARIMA, LSTM, Uncertainty Quantification)
+pub mod time_series;
+
+// Worker 3: Finance - Portfolio Optimization
+pub mod finance;
+
+// Worker 8: API Server
+pub mod api_server;
+
 // Re-export key components
 pub use mathematics::{
     MathematicalStatement, ProofResult, Assumption,

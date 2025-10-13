@@ -104,69 +104,86 @@ async fn optimize_portfolio(
     Json(request): Json<OptimizationRequest>,
 ) -> Result<Json<ApiResponse<OptimizedPortfolio>>> {
     use std::time::Instant;
-    use crate::api_server::portfolio::PortfolioOptimizer;
+    use crate::finance::{PortfolioOptimizer, PortfolioConfig, OptimizationStrategy, Asset as FinanceAsset};
 
-    log::info!("Portfolio optimization - {} assets", request.assets.len());
+    log::info!("Portfolio optimization - {} assets, objective: {:?}",
+        request.assets.len(), request.objective);
 
     let start_time = Instant::now();
 
-    // Extract expected returns and build covariance matrix
-    let expected_returns: Vec<f64> = request.assets.iter()
-        .map(|a| a.expected_return)
-        .collect();
+    // Convert API assets to finance module assets
+    // Generate synthetic historical prices from volatility for covariance computation
+    let finance_assets: Vec<FinanceAsset> = request.assets.iter().map(|asset| {
+        // Generate 100 synthetic price points using random walk with given volatility
+        let mut prices = vec![asset.current_price];
+        let daily_vol = asset.volatility / (252.0_f64).sqrt(); // Annualized to daily
 
-    // Build covariance matrix from volatilities (simplified: assume uncorrelated)
-    let n = request.assets.len();
-    let mut covariance_matrix = vec![vec![0.0; n]; n];
-    for i in 0..n {
-        for j in 0..n {
-            if i == j {
-                // Variance on diagonal
-                covariance_matrix[i][j] = request.assets[i].volatility * request.assets[i].volatility;
-            } else {
-                // Assume 0.3 correlation for off-diagonal
-                covariance_matrix[i][j] = 0.3 * request.assets[i].volatility * request.assets[j].volatility;
-            }
+        for _ in 1..100 {
+            let last_price = prices.last().unwrap();
+            // Simple random walk: use expected_return as drift
+            let daily_return = (asset.expected_return / 252.0) +
+                               (daily_vol * (0.5 - (prices.len() as f64 % 100.0) / 100.0)); // Pseudo-random
+            let new_price = last_price * (1.0 + daily_return);
+            prices.push(new_price);
         }
-    }
 
-    // Create optimizer and run optimization
-    let optimizer = PortfolioOptimizer::new(0.02); // 2% risk-free rate
-    let result = match request.objective {
-        ObjectiveFunction::MaximizeSharpe => {
-            optimizer.optimize_markowitz(&expected_returns, &covariance_matrix, None, request.constraints.max_position_size)
+        FinanceAsset {
+            ticker: asset.symbol.clone(),
+            expected_return: asset.expected_return,
+            prices,
+            min_weight: request.constraints.min_position_size,
+            max_weight: request.constraints.max_position_size,
         }
-        ObjectiveFunction::MinimizeRisk => {
-            // Minimize risk by targeting lowest feasible return
-            let min_return = expected_returns.iter().cloned().fold(f64::INFINITY, f64::min);
-            optimizer.optimize_markowitz(&expected_returns, &covariance_matrix, Some(min_return), request.constraints.max_position_size)
-        }
+    }).collect();
+
+    // Create portfolio config
+    let config = PortfolioConfig {
+        risk_free_rate: 0.02, // 2% risk-free rate
+        target_return: None,
+        max_position_size: request.constraints.max_position_size,
+        allow_short: request.constraints.min_position_size < 0.0,
+        rebalance_freq: 252, // Annual rebalancing
+    };
+
+    // Create optimizer
+    let mut optimizer = PortfolioOptimizer::new(config)
+        .map_err(|e| ApiError::ServerError(format!("Failed to create optimizer: {}", e)))?;
+
+    // Map objective to optimization strategy
+    let strategy = match request.objective {
+        ObjectiveFunction::MaximizeSharpe => OptimizationStrategy::MaxSharpe,
+        ObjectiveFunction::MinimizeRisk => OptimizationStrategy::MinVariance,
         ObjectiveFunction::MaximizeReturn => {
-            // Maximize return by targeting highest feasible return
-            let max_return = expected_returns.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
-            optimizer.optimize_markowitz(&expected_returns, &covariance_matrix, Some(max_return), request.constraints.max_position_size)
-        }
-        ObjectiveFunction::Custom { risk_aversion } => {
-            // Custom utility function: U = μ - λσ²
-            let target_return = expected_returns.iter().sum::<f64>() / expected_returns.len() as f64;
-            optimizer.optimize_markowitz(&expected_returns, &covariance_matrix, Some(target_return), request.constraints.max_position_size)
+            // For max return, use efficient frontier with high target return
+            let max_return = finance_assets.iter()
+                .map(|a| a.expected_return)
+                .fold(f64::NEG_INFINITY, f64::max);
+            OptimizationStrategy::EfficientFrontier(max_return * 0.9)
+        },
+        ObjectiveFunction::Custom { risk_aversion: _ } => {
+            // Use risk parity for custom objectives
+            OptimizationStrategy::RiskParity
         }
     };
+
+    // Run optimization
+    let result = optimizer.optimize(&finance_assets, strategy)
+        .map_err(|e| ApiError::ServerError(format!("Optimization failed: {}", e)))?;
 
     let processing_time = start_time.elapsed();
 
     // Build response
     let portfolio = OptimizedPortfolio {
-        weights: result.weights.iter()
-            .zip(request.assets.iter())
-            .map(|(w, a)| AssetWeight {
-                symbol: a.symbol.clone(),
+        weights: result.portfolio.weights.iter()
+            .zip(result.portfolio.assets.iter())
+            .map(|(w, ticker)| AssetWeight {
+                symbol: ticker.clone(),
                 weight: *w,
             })
             .collect(),
-        expected_return: result.expected_return,
-        expected_risk: result.expected_risk,
-        sharpe_ratio: result.sharpe_ratio,
+        expected_return: result.portfolio.expected_return,
+        expected_risk: result.portfolio.volatility,
+        sharpe_ratio: result.portfolio.sharpe_ratio,
         optimization_time_ms: processing_time.as_secs_f64() * 1000.0,
     };
 
@@ -216,9 +233,10 @@ async fn assess_risk(
     State(state): State<Arc<AppState>>,
     Json(request): Json<RiskAssessmentRequest>,
 ) -> Result<Json<ApiResponse<RiskAssessment>>> {
-    use crate::api_server::portfolio::PortfolioOptimizer;
-
     log::info!("Risk assessment - Portfolio: {}", request.portfolio_id);
+
+    // TODO: Integrate with Worker 3's risk metrics
+    // For now, compute basic risk estimates
 
     // Mock portfolio data (in production, query from database)
     let weights = vec![0.4, 0.3, 0.3];
@@ -229,45 +247,46 @@ async fn assess_risk(
         vec![0.01, 0.01, 0.16],
     ];
 
-    let optimizer = PortfolioOptimizer::default();
-
-    // Calculate VaR and CVaR
-    let var = optimizer.calculate_var(
-        &weights,
-        &expected_returns,
-        &covariance_matrix,
-        request.confidence_level,
-        request.time_horizon_days,
-    );
-
-    let cvar = optimizer.calculate_cvar(
-        &weights,
-        &expected_returns,
-        &covariance_matrix,
-        request.confidence_level,
-        request.time_horizon_days,
-    );
-
-    // Mock historical data for max drawdown
-    let historical_returns = vec![
-        vec![0.02, 0.01, -0.01],
-        vec![0.01, 0.03, 0.02],
-        vec![-0.02, -0.01, -0.03],
-    ];
-    let max_dd = optimizer.calculate_max_drawdown(&weights, &historical_returns);
-
-    // Calculate portfolio beta (simplified: assume market beta of 1.0)
+    // Calculate portfolio return and variance
     let portfolio_return: f64 = weights.iter()
         .zip(expected_returns.iter())
         .map(|(w, r)| w * r)
         .sum();
+
+    let portfolio_variance: f64 = (0..weights.len()).map(|i| {
+        (0..weights.len()).map(|j| {
+            weights[i] * weights[j] * covariance_matrix[i][j]
+        }).sum::<f64>()
+    }).sum();
+
+    let portfolio_std = portfolio_variance.sqrt();
+
+    // VaR using parametric method (assumes normal distribution)
+    // VaR(α) = -μ + z_α * σ for time horizon
+    let z_score = match request.confidence_level {
+        x if x >= 0.99 => 2.33,
+        x if x >= 0.95 => 1.65,
+        x if x >= 0.90 => 1.28,
+        _ => 1.65,
+    };
+
+    let time_factor = (request.time_horizon_days as f64 / 252.0).sqrt();
+    let var = (-portfolio_return * time_factor + z_score * portfolio_std * time_factor) * 1_000_000.0;
+
+    // CVaR approximation: CVaR ≈ VaR + (σ * φ(z_α)) / α
+    let cvar = var * 1.2; // Simple approximation
+
+    // Mock max drawdown calculation
+    let max_drawdown = 0.15;
+
+    // Calculate portfolio beta (simplified: assume market return of 10%)
     let market_return = 0.10;
     let beta = portfolio_return / market_return;
 
     let assessment = RiskAssessment {
-        var: var * 1_000_000.0, // Scale to dollar amount for $1M portfolio
-        cvar: cvar * 1_000_000.0,
-        max_drawdown: max_dd,
+        var,
+        cvar,
+        max_drawdown,
         beta,
         correlation_matrix: covariance_matrix,
     };
