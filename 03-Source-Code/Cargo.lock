@@ -2734,6 +2734,7 @@ dependencies = [
  "fastrand",
  "futures",
  "governor",
+ "half",
  "kdtree",
  "log",
  "mathematics",
