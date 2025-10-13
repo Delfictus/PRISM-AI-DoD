@@ -1,0 +1,124 @@
+{
+  "test_cases": [
+    {
+      "name": "Health Check Query",
+      "query": "query { health { status version uptimeSeconds } }"
+    },
+    {
+      "name": "GPU Status Query",
+      "query": "query { gpuStatus { available deviceCount totalMemoryMb freeMemoryMb utilizationPercent } }"
+    },
+    {
+      "name": "Time Series Forecast (ARIMA)",
+      "query": "query ForecastTimeSeries($input: TimeSeriesForecastInput!) { forecastTimeSeries(input: $input) { predictions method horizon } }",
+      "variables": {
+        "input": {
+          "historicalData": [100.0, 102.0, 101.0, 105.0, 108.0, 107.0, 110.0],
+          "horizon": 5,
+          "method": "ARIMA"
+        }
+      }
+    },
+    {
+      "name": "Portfolio Optimization (Max Sharpe)",
+      "query": "query OptimizePortfolio($input: PortfolioOptimizationInput!) { optimizePortfolio(input: $input) { weights { symbol weight } expectedReturn portfolioRisk sharpeRatio } }",
+      "variables": {
+        "input": {
+          "assets": [
+            {
+              "symbol": "AAPL",
+              "expectedReturn": 0.12,
+              "volatility": 0.20
+            },
+            {
+              "symbol": "GOOGL",
+              "expectedReturn": 0.15,
+              "volatility": 0.25
+            },
+            {
+              "symbol": "MSFT",
+              "expectedReturn": 0.10,
+              "volatility": 0.18
+            }
+          ],
+          "objective": "MaximizeSharpe"
+        }
+      }
+    },
+    {
+      "name": "Robot Motion Planning",
+      "query": "query PlanRobotMotion($input: MotionPlanInput!) { planRobotMotion(input: $input) { waypoints { time position { x y z } velocity { x y z } } totalTime totalDistance isCollisionFree } }",
+      "variables": {
+        "input": {
+          "robotId": "robot-1",
+          "start": { "x": 0.0, "y": 0.0, "z": 0.0 },
+          "goal": { "x": 5.0, "y": 3.0, "z": 0.0 }
+        }
+      }
+    },
+    {
+      "name": "Performance Metrics Query",
+      "query": "query { performanceMetrics { endpoint avgResponseTimeMs p95ResponseTimeMs requestsPerSecond errorRate } }"
+    },
+    {
+      "name": "Dashboard Combined Query",
+      "query": "query Dashboard { health { status version } gpuStatus { available utilizationPercent freeMemoryMb } performanceMetrics { endpoint avgResponseTimeMs requestsPerSecond } }"
+    },
+    {
+      "name": "Submit Forecast Mutation",
+      "query": "mutation SubmitForecast($input: TimeSeriesForecastInput!) { submitForecast(input: $input) { predictions method horizon } }",
+      "variables": {
+        "input": {
+          "historicalData": [100.0, 102.0, 104.0, 106.0, 108.0],
+          "horizon": 3,
+          "method": "LSTM"
+        }
+      }
+    },
+    {
+      "name": "Submit Portfolio Optimization Mutation",
+      "query": "mutation SubmitPortfolio($input: PortfolioOptimizationInput!) { submitPortfolioOptimization(input: $input) { weights { symbol weight } expectedReturn sharpeRatio } }",
+      "variables": {
+        "input": {
+          "assets": [
+            {
+              "symbol": "AAPL",
+              "expectedReturn": 0.12,
+              "volatility": 0.20
+            },
+            {
+              "symbol": "GOOGL",
+              "expectedReturn": 0.15,
+              "volatility": 0.25
+            }
+          ],
+          "objective": "MinVariance"
+        }
+      }
+    },
+    {
+      "name": "Submit Motion Plan Mutation",
+      "query": "mutation SubmitMotionPlan($input: MotionPlanInput!) { submitMotionPlan(input: $input) { waypoints { time position { x y z } } totalTime isCollisionFree } }",
+      "variables": {
+        "input": {
+          "robotId": "robot-1",
+          "start": { "x": 0.0, "y": 0.0, "z": 0.0 },
+          "goal": { "x": 10.0, "y": 5.0, "z": 2.0 }
+        }
+      }
+    }
+  ],
+  "test_instructions": {
+    "description": "GraphQL API Test Suite for PRISM-AI Worker 8",
+    "usage": {
+      "curl": "curl -X POST http://localhost:8080/graphql -H 'Content-Type: application/json' -d @graphql_test_queries.json",
+      "playground": "Visit http://localhost:8080/graphql in browser to test interactively"
+    },
+    "notes": [
+      "These tests require the API server to be running",
+      "Start server with: cargo run --bin api_server",
+      "Some tests depend on Worker 1, 3, 7 implementations",
+      "GraphQL playground provides auto-completion and documentation"
+    ]
+  }
+}
