@@ -538,7 +538,79 @@ impl CheckpointManager {
     }
 }
 
-/// Complete GNN training pipeline
+/// Complete GNN training pipeline orchestrating all training stages.
+///
+/// Provides end-to-end training workflow including data preprocessing, augmentation,
+/// train/val/test splitting, training loop execution, and model checkpointing.
+///
+/// # Pipeline Stages
+///
+/// 1. **Preprocessing**: Normalize features, filter edges, remove self-loops
+/// 2. **Splitting**: Divide data into train/validation/test sets
+/// 3. **Training**: Execute full training loop with validation
+/// 4. **Checkpointing**: Save best models, prune old checkpoints
+/// 5. **Evaluation**: Assess final model on test set
+///
+/// # Features
+///
+/// - **Modular**: Each stage can be configured independently
+/// - **Reproducible**: Random seeds for deterministic splits
+/// - **Efficient**: GPU-accelerated where available
+/// - **Production-Ready**: Automatic checkpointing and model management
+///
+/// # Examples
+///
+/// ```rust
+/// use prism_ai::cma::neural::{
+///     GNNTrainingPipeline, GNNDataset, E3EquivariantGNN,
+///     PreprocessingConfig, AugmentationConfig, SplitConfig, CheckpointConfig,
+///     TrainingConfig, LossFunction, Device,
+/// };
+/// # use prism_ai::cma::{Ensemble, CausalManifold};
+///
+/// # let ensembles: Vec<Ensemble> = vec![];
+/// # let manifolds: Vec<CausalManifold> = vec![];
+/// // Create dataset
+/// let dataset = GNNDataset::new(ensembles, manifolds, None)?;
+///
+/// // Configure pipeline stages
+/// let preprocess_cfg = PreprocessingConfig::default();
+/// let augment_cfg = Some(AugmentationConfig::default());
+/// let split_cfg = SplitConfig::default();
+/// let checkpoint_cfg = CheckpointConfig::default();
+///
+/// // Create pipeline
+/// let mut pipeline = GNNTrainingPipeline::new(
+///     preprocess_cfg,
+///     augment_cfg,
+///     split_cfg,
+///     checkpoint_cfg,
+/// )?;
+///
+/// // Create model
+/// let device = Device::cuda_if_available(0)?;
+/// let model = E3EquivariantGNN::new(8, 4, 128, 4, device)?;
+///
+/// // Configure training
+/// let train_cfg = TrainingConfig::default();
+/// let loss_fn = LossFunction::Combined {
+///     supervised_weight: 0.7,
+///     unsupervised_weight: 0.3,
+///     edge_weight: 1.0,
+///     te_weight: 1.0,
+///     reconstruction_weight: 1.0,
+///     sparsity_weight: 0.01,
+/// };
+///
+/// // Run complete pipeline
+/// let (trained_model, metrics) = pipeline.run(dataset, model, train_cfg, loss_fn)?;
+///
+/// println!("Training complete!");
+/// println!("Final val loss: {:.4}", metrics.last().unwrap().val_loss);
+/// println!("Best checkpoint: epoch {}",
+///          pipeline.checkpoint_manager().get_best_checkpoint().unwrap().epoch);
+/// # Ok::<(), anyhow::Error>(())
+/// ```
 pub struct GNNTrainingPipeline {
     preprocessor: DataPreprocessor,
     augmenter: Option<DataAugmenter>,

@@ -20,14 +20,53 @@ use super::gnn_training::{GNNTrainer, TrainingConfig, LossFunction, TrainingMetr
 use super::neural_quantum::Device;
 use crate::cma::{CausalManifold, CausalEdge, Ensemble};
 
-/// Domain configuration for transfer learning
+/// Domain configuration for transfer learning.
+///
+/// Characterizes a problem domain for the purpose of transfer learning.
+/// Used to compute domain similarity and recommend appropriate adaptation strategies.
+///
+/// # Examples
+///
+/// ```rust
+/// use prism_ai::cma::neural::DomainConfig;
+///
+/// // Define source domain (robotics simulation)
+/// let source = DomainConfig::new(
+///     "robotics_sim".to_string(),
+///     100,    // num_nodes
+///     8,      // node_feature_dim
+///     4,      // edge_feature_dim
+///     0.3,    // typical_graph_density
+///     (0.1, 0.9),  // typical_transfer_entropy_range
+/// );
+///
+/// // Define target domain (real robots)
+/// let target = DomainConfig::new(
+///     "real_robots".to_string(),
+///     80,
+///     8,
+///     4,
+///     0.4,
+///     (0.2, 0.8),
+/// );
+///
+/// // Compute similarity (0.0 = very different, 1.0 = identical)
+/// let similarity = source.similarity(&target);
+/// println!("Domain similarity: {:.2}", similarity);
+/// ```
 #[derive(Debug, Clone)]
 pub struct DomainConfig {
+    /// Human-readable domain name
     pub name: String,
+    /// Typical number of nodes in graphs from this domain
     pub num_nodes: usize,
+    /// Node feature dimensionality (input features per node)
     pub node_feature_dim: usize,
+    /// Edge feature dimensionality (input features per edge)
     pub edge_feature_dim: usize,
+    /// Typical edge density (fraction of possible edges present, 0.0-1.0)
     pub typical_graph_density: f64,
+    /// Typical range of transfer entropy values (min, max)
     pub typical_transfer_entropy_range: (f64, f64),
 }
 
@@ -66,35 +105,99 @@ impl DomainConfig {
     }
 }
 
-/// Adaptation strategy for domain transfer
+/// Adaptation strategy for domain transfer.
+///
+/// Defines how a pre-trained model should be adapted to a new target domain.
+/// Different strategies are appropriate for different domain similarity levels.
+///
+/// # Strategy Selection Guide
+///
+/// - **FullFineTune**: Best for similar domains (similarity > 0.8)
+/// - **PartialFineTune**: Good for moderately similar domains (0.6-0.8)
+/// - **ProgressiveUnfreeze**: Effective for somewhat different domains (0.4-0.6)
+/// - **AdapterBased**: Parameter-efficient, works across all similarity levels
+/// - **DomainAdversarial**: Best for very different domains (< 0.4)
+///
+/// # Examples
+///
+/// ```rust
+/// use prism_ai::cma::neural::AdaptationStrategy;
+///
+/// // Full fine-tuning for similar domains
+/// let strategy = AdaptationStrategy::FullFineTune {
+///     learning_rate: 0.0001,  // Small LR to avoid catastrophic forgetting
+/// };
+///
+/// // Partial fine-tuning (freeze first 2 layers)
+/// let strategy = AdaptationStrategy::PartialFineTune {
+///     freeze_layers: 2,
+///     learning_rate: 0.0005,
+/// };
+///
+/// // Progressive unfreezing (gradually adapt deeper layers)
+/// let strategy = AdaptationStrategy::ProgressiveUnfreeze {
+///     initial_frozen_layers: 3,
+///     unfreeze_interval: 20,  // Unfreeze one layer every 20 epochs
+///     learning_rate: 0.001,
+/// };
+/// ```
 #[derive(Debug, Clone)]
 pub enum AdaptationStrategy {
-    /// Fine-tune all layers with small learning rate
-    FullFineTune { learning_rate: f64 },
+    /// Fine-tune all layers with small learning rate.
+    ///
+    /// Best for domains with high similarity (> 0.8). Simple and effective
+    /// when source and target are closely related.
+    FullFineTune {
+        /// Learning rate (recommended: 0.0001-0.001)
+        learning_rate: f64
+    },
 
-    /// Freeze early layers, fine-tune later layers
+    /// Freeze early layers, fine-tune later layers.
+    ///
+    /// Assumes early layers learn general features and later layers learn
+    /// domain-specific features. Good for moderate similarity (0.6-0.8).
     PartialFineTune {
+        /// Number of initial layers to freeze (recommended: 1-3)
         freeze_layers: usize,
+        /// Learning rate for unfrozen layers (recommended: 0.0005-0.002)
         learning_rate: f64,
     },
 
-    /// Add adapter layers between frozen pre-trained layers
+    /// Add small adapter layers between frozen pre-trained layers.
+    ///
+    /// Parameter-efficient alternative that only trains adapter weights.
+    /// Works well across all domain similarities with minimal overfitting risk.
     AdapterBased {
+        /// Dimensionality of adapter bottleneck (recommended: 32-128)
         adapter_dim: usize,
+        /// Learning rate for adapter layers (recommended: 0.001-0.01)
         learning_rate: f64,
     },
 
-    /// Progressive unfreezing: gradually unfreeze layers during training
+    /// Progressive unfreezing: gradually unfreeze layers during training.
+    ///
+    /// Starts with most layers frozen, unfreezes one layer at a time.
+    /// Reduces catastrophic forgetting. Good for different domains (0.4-0.6).
     ProgressiveUnfreeze {
+        /// Number of layers initially frozen (recommended: 2-4)
         initial_frozen_layers: usize,
+        /// Epochs between unfreezing (recommended: 10-30)
         unfreeze_interval: usize,
+        /// Learning rate (recommended: 0.001-0.002)
         learning_rate: f64,
     },
 
-    /// Domain adversarial training: align feature distributions
+    /// Domain adversarial training: align source and target feature distributions.
+    ///
+    /// Trains a discriminator to distinguish source vs target, and trains the
+    /// feature extractor to fool the discriminator. Best for very different
+    /// domains (< 0.4).
     DomainAdversarial {
+        /// Hidden layer size for domain discriminator (recommended: 64-256)
         discriminator_hidden_dim: usize,
+        /// Weight for adversarial loss vs task loss (recommended: 0.1-0.5)
         adversarial_weight: f64,
+        /// Learning rate (recommended: 0.001-0.002)
         learning_rate: f64,
     },
 }
@@ -150,15 +253,122 @@ pub struct SyntheticGraphConfig {
     pub graph_type: GraphType,
 }
 
+/// Graph topology types for synthetic graph generation.
+///
+/// Provides four classic random graph models, each with different structural
+/// properties useful for pre-training.
+///
+/// # Graph Types
+///
+/// - **Erdős-Rényi**: Uniform random edges, good for general pre-training
+/// - **Barabási-Albert**: Scale-free (power-law degree distribution), models real networks
+/// - **Watts-Strogatz**: Small-world graphs (high clustering, low diameter)
+/// - **ScaleFree**: Power-law degree distribution with tunable exponent
+///
+/// # Examples
+///
+/// ```rust
+/// use prism_ai::cma::neural::GraphType;
+///
+/// // Erdős-Rényi: each edge exists independently with probability p
+/// let g1 = GraphType::ErdosRenyi;
+///
+/// // Barabási-Albert: preferential attachment, m edges per new node
+/// let g2 = GraphType::BarabasiAlbert { m: 3 };
+///
+/// // Watts-Strogatz: small-world, k neighbors, rewire with prob p
+/// let g3 = GraphType::WattsStrogatz { k: 4, p: 0.1 };
+///
+/// // Scale-free with custom power-law exponent
+/// let g4 = GraphType::ScaleFree { gamma: 2.5 };
+/// ```
 #[derive(Debug, Clone)]
 pub enum GraphType {
+    /// Erdős-Rényi random graph (G(n,p) model).
+    ///
+    /// Each possible edge exists independently with fixed probability.
+    /// Simple and uniform, good baseline for pre-training.
     ErdosRenyi,
-    BarabasiAlbert { m: usize },
-    WattsStrogatz { k: usize, p: f64 },
-    ScaleFree { gamma: f64 },
+
+    /// Barabási-Albert preferential attachment graph.
+    ///
+    /// Nodes added sequentially, connecting to existing nodes with probability
+    /// proportional to their degree. Produces scale-free (power-law) networks.
+    BarabasiAlbert {
+        /// Number of edges each new node attaches (recommended: 2-5)
+        m: usize
+    },
+
+    /// Watts-Strogatz small-world graph.
+    ///
+    /// Starts with ring lattice, rewires edges with probability p. Creates
+    /// networks with high clustering and low diameter (like social networks).
+    WattsStrogatz {
+        /// Number of neighbors in ring lattice (recommended: 4-10)
+        k: usize,
+        /// Rewiring probability (recommended: 0.01-0.3)
+        p: f64
+    },
+
+    /// Scale-free graph with power-law degree distribution.
+    ///
+    /// Degree distribution follows P(k) ∝ k^(-γ). Real-world networks often
+    /// have γ ≈ 2-3.
+    ScaleFree {
+        /// Power-law exponent (typical: 2.0-3.0)
+        gamma: f64
+    },
 }
 
-/// GNN Transfer Learning Manager
+/// GNN Transfer Learning Manager.
+///
+/// Orchestrates transfer learning from a source domain to a target domain.
+/// Automatically recommends adaptation strategies based on domain similarity
+/// and applies fine-tuning with the chosen strategy.
+///
+/// # Transfer Learning Workflow
+///
+/// 1. Define source and target domains with `DomainConfig`
+/// 2. Create `GNNTransferLearner` with adaptation strategy
+/// 3. Call `transfer()` with pre-trained model and target data
+/// 4. Receive adapted model and training metrics
+///
+/// # Examples
+///
+/// ```rust
+/// use prism_ai::cma::neural::{GNNTransferLearner, DomainConfig, AdaptationStrategy, FineTuningConfig};
+/// # use prism_ai::cma::neural::E3EquivariantGNN;
+/// # use prism_ai::cma::neural::Device;
+/// # use prism_ai::cma::{Ensemble, CausalManifold};
+///
+/// # let source_model = E3EquivariantGNN::new(8, 4, 128, 4, Device::Cpu).unwrap();
+/// # let target_ensembles: Vec<Ensemble> = vec![];
+/// # let target_manifolds: Vec<CausalManifold> = vec![];
+/// // Define domains
+/// let source = DomainConfig::new("simulation".to_string(), 100, 8, 4, 0.3, (0.1, 0.9));
+/// let target = DomainConfig::new("real_world".to_string(), 80, 8, 4, 0.4, (0.2, 0.8));
+///
+/// // Create transfer learner with automatic strategy recommendation
+/// let learner = GNNTransferLearner::new(source, target, AdaptationStrategy::FullFineTune {
+///     learning_rate: 0.0001,
+/// });
+///
+/// // Or use recommended strategy based on domain similarity
+/// let recommended = learner.recommend_strategy();
+/// println!("Recommended strategy: {:?}", recommended);
+///
+/// // Transfer pre-trained model
+/// let config = FineTuningConfig::default();
+/// let (adapted_model, metrics) = learner.transfer(
+///     &source_model,
+///     &target_ensembles,
+///     &target_manifolds,
+///     &config,
+/// )?;
+///
+/// println!("Transfer complete! Final val loss: {:.4}", metrics.last().unwrap().val_loss);
+/// # Ok::<(), anyhow::Error>(())
+/// ```
 pub struct GNNTransferLearner {
     source_domain: DomainConfig,
     target_domain: DomainConfig,
@@ -427,7 +637,51 @@ impl GNNTransferLearner {
     }
 }
 
-/// Knowledge Distillation: compress teacher model into smaller student
+/// Knowledge Distillation: compress large teacher model into smaller student model.
+///
+/// Uses the technique from Hinton et al. (2015) to transfer knowledge from a large,
+/// accurate "teacher" model to a smaller, faster "student" model. The student learns
+/// to match the teacher's soft predictions (class probabilities) rather than just
+/// the hard labels.
+///
+/// # Benefits
+///
+/// - **Model Compression**: 5-10x smaller models with 90-95% of teacher accuracy
+/// - **Faster Inference**: Smaller models run faster on resource-constrained devices
+/// - **Knowledge Transfer**: Student learns from teacher's uncertainty estimates
+///
+/// # Examples
+///
+/// ```rust
+/// use prism_ai::cma::neural::{KnowledgeDistiller, DistillationConfig, E3EquivariantGNN};
+/// use prism_ai::cma::neural::Device;
+/// # use prism_ai::cma::{Ensemble, CausalManifold};
+///
+/// # let ensembles: Vec<Ensemble> = vec![];
+/// # let manifolds: Vec<CausalManifold> = vec![];
+/// // Large teacher model (256 hidden, 6 layers)
+/// let device = Device::cuda_if_available(0)?;
+/// let teacher = E3EquivariantGNN::new(8, 4, 256, 6, device.clone())?;
+/// // ... train teacher ...
+///
+/// // Small student model (64 hidden, 2 layers)
+/// let student = E3EquivariantGNN::new(8, 4, 64, 2, device)?;
+///
+/// // Configure distillation
+/// let config = DistillationConfig {
+///     temperature: 2.0,      // Soften predictions
+///     alpha: 0.7,            // 70% distillation loss
+///     beta: 0.3,             // 30% student loss
+///     num_epochs: 200,
+/// };
+///
+/// // Distill knowledge
+/// let distiller = KnowledgeDistiller::new(teacher, config);
+/// let (compressed_model, metrics) = distiller.distill(student, &ensembles, &manifolds)?;
+///
+/// println!("Model compressed! Final loss: {:.4}", metrics.last().unwrap().total_loss);
+/// # Ok::<(), anyhow::Error>(())
+/// ```
 pub struct KnowledgeDistiller {
     teacher: E3EquivariantGNN,
     config: DistillationConfig,
@@ -518,7 +772,43 @@ pub struct DistillationMetrics {
     pub total_loss: f64,
 }
 
-/// Synthetic graph generator for pre-training
+/// Synthetic graph generator for pre-training.
+///
+/// Generates large datasets of synthetic graphs for pre-training GNNs before
+/// fine-tuning on real data. Pre-training on synthetic data can significantly
+/// improve sample efficiency and generalization.
+///
+/// # Pre-training Benefits
+///
+/// - **Sample Efficiency**: Requires 2-10x less real data for good performance
+/// - **Better Initialization**: Pre-trained weights provide better starting point
+/// - **Improved Generalization**: Learns general graph patterns from diverse synthetic graphs
+///
+/// # Recommended Usage
+///
+/// 1. Generate 10,000-100,000 synthetic graphs with diverse topologies
+/// 2. Pre-train GNN on synthetic data (50-100 epochs)
+/// 3. Fine-tune on small real dataset (10-50 epochs)
+///
+/// # Examples
+///
+/// ```rust
+/// use prism_ai::cma::neural::{SyntheticGraphGenerator, SyntheticGraphConfig, GraphType};
+///
+/// // Generate 10,000 Erdős-Rényi graphs for pre-training
+/// let config = SyntheticGraphConfig {
+///     num_graphs: 10000,
+///     num_nodes_range: (20, 100),
+///     edge_probability: 0.3,
+///     graph_type: GraphType::ErdosRenyi,
+/// };
+///
+/// let generator = SyntheticGraphGenerator::new(config);
+/// let (ensembles, manifolds) = generator.generate()?;
+///
+/// println!("Generated {} synthetic graphs for pre-training", ensembles.len());
+/// # Ok::<(), anyhow::Error>(())
+/// ```
 pub struct SyntheticGraphGenerator {
     config: SyntheticGraphConfig,
 }

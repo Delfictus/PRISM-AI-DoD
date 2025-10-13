@@ -21,16 +21,48 @@ use super::gnn_integration::E3EquivariantGNN;
 use super::neural_quantum::Device;
 use crate::cma::{CausalManifold, CausalEdge, Ensemble, Solution};
 
-/// Training configuration for GNN
+/// Training configuration for GNN training loops.
+///
+/// Controls all hyperparameters for the training process including learning rate,
+/// batch size, early stopping, and regularization.
+///
+/// # Examples
+///
+/// ```rust
+/// use prism_ai::cma::neural::TrainingConfig;
+///
+/// // Use default configuration
+/// let config = TrainingConfig::default();
+///
+/// // Or customize
+/// let config = TrainingConfig {
+///     learning_rate: 0.0001,
+///     batch_size: 64,
+///     num_epochs: 500,
+///     validation_split: 0.15,
+///     early_stopping_patience: 30,
+///     gradient_clip_norm: Some(5.0),
+///     weight_decay: 0.001,
+///     warmup_epochs: 5,
+/// };
+/// ```
 #[derive(Debug, Clone)]
 pub struct TrainingConfig {
+    /// Learning rate for optimizer (default: 0.001)
     pub learning_rate: f64,
+    /// Number of samples per batch (default: 32)
     pub batch_size: usize,
+    /// Total number of training epochs (default: 1000)
     pub num_epochs: usize,
+    /// Fraction of data used for validation (default: 0.2)
     pub validation_split: f64,
+    /// Number of epochs without improvement before early stopping (default: 50)
     pub early_stopping_patience: usize,
+    /// Optional gradient clipping norm (default: Some(1.0))
     pub gradient_clip_norm: Option<f64>,
+    /// L2 regularization weight decay (default: 0.0001)
     pub weight_decay: f64,
+    /// Number of warmup epochs with linear LR increase (default: 10)
     pub warmup_epochs: usize,
 }
 
@@ -49,35 +81,93 @@ impl Default for TrainingConfig {
     }
 }
 
-/// Loss function types for GNN training
+/// Loss function types for GNN training.
+///
+/// Provides four distinct loss function strategies optimized for different
+/// training scenarios and data availability.
+///
+/// # Variants
+///
+/// - **Supervised**: Requires labeled causal graphs. Uses binary cross-entropy for
+///   edge prediction and MSE for transfer entropy values.
+/// - **Unsupervised**: No labels required. Optimizes for graph reconstruction quality
+///   and structural sparsity.
+/// - **Combined**: Hybrid approach balancing supervised and unsupervised objectives.
+///   Best when you have some labeled data but want to leverage unlabeled data too.
+/// - **Contrastive**: InfoNCE-style contrastive learning for representation quality.
+///   Encourages similar graphs to have similar embeddings.
+///
+/// # Examples
+///
+/// ```rust
+/// use prism_ai::cma::neural::LossFunction;
+///
+/// // Supervised learning with balanced edge and TE weights
+/// let loss = LossFunction::Supervised {
+///     edge_weight: 1.0,
+///     te_weight: 1.0,
+/// };
+///
+/// // Unsupervised with sparsity regularization
+/// let loss = LossFunction::Unsupervised {
+///     reconstruction_weight: 1.0,
+///     sparsity_weight: 0.01,
+/// };
+///
+/// // Combined approach (70% supervised, 30% unsupervised)
+/// let loss = LossFunction::Combined {
+///     supervised_weight: 0.7,
+///     unsupervised_weight: 0.3,
+///     edge_weight: 1.0,
+///     te_weight: 1.0,
+///     reconstruction_weight: 1.0,
+///     sparsity_weight: 0.01,
+/// };
+/// ```
 #[derive(Debug, Clone)]
 pub enum LossFunction {
-    /// Supervised loss: minimize difference between predicted and true causal edges
+    /// Supervised loss: minimize difference between predicted and true causal edges.
+    ///
+    /// Uses binary cross-entropy for edge existence and MSE for transfer entropy values.
     Supervised {
-        /// Weight for edge prediction loss
+        /// Weight for edge prediction loss (recommended: 1.0)
         edge_weight: f64,
-        /// Weight for transfer entropy prediction loss
+        /// Weight for transfer entropy prediction loss (recommended: 1.0)
         te_weight: f64,
     },
-    /// Unsupervised loss: maximize graph reconstruction quality
+    /// Unsupervised loss: maximize graph reconstruction quality.
+    ///
+    /// Optimizes metric tensor consistency (well-conditioned) and graph sparsity.
     Unsupervised {
-        /// Weight for reconstruction loss
+        /// Weight for reconstruction loss (recommended: 1.0)
         reconstruction_weight: f64,
-        /// Weight for regularization (graph sparsity)
+        /// Weight for sparsity regularization (recommended: 0.01-0.1)
         sparsity_weight: f64,
     },
-    /// Combined supervised + unsupervised
+    /// Combined supervised + unsupervised loss.
+    ///
+    /// Best approach when you have partial labels and want to leverage both.
     Combined {
+        /// Weight for supervised component (recommended: 0.5-0.8)
         supervised_weight: f64,
+        /// Weight for unsupervised component (recommended: 0.2-0.5)
         unsupervised_weight: f64,
+        /// Weight for edge prediction in supervised component
         edge_weight: f64,
+        /// Weight for TE prediction in supervised component
         te_weight: f64,
+        /// Weight for reconstruction in unsupervised component
         reconstruction_weight: f64,
+        /// Weight for sparsity in unsupervised component
         sparsity_weight: f64,
     },
-    /// Contrastive loss for graph representation learning
+    /// Contrastive loss for graph representation learning (InfoNCE).
+    ///
+    /// Encourages similar graphs to have similar learned representations.
     Contrastive {
+        /// Temperature parameter for contrastive loss (recommended: 0.1-0.5)
         temperature: f64,
+        /// Number of negative samples per positive (recommended: 10-50)
         negative_samples: usize,
     },
 }
@@ -242,15 +332,35 @@ impl LossFunction {
     }
 }
 
-/// Training metrics for monitoring
+/// Training metrics for monitoring training progress.
+///
+/// Captures comprehensive training statistics per epoch including loss values,
+/// accuracy metrics, and timing information.
+///
+/// # Fields
+///
+/// - `epoch`: Current epoch number (0-indexed)
+/// - `train_loss`: Average training loss for this epoch
+/// - `val_loss`: Validation loss on held-out data
+/// - `learning_rate`: Current learning rate (may vary with schedules)
+/// - `duration`: Wall-clock time for this epoch
+/// - `edge_accuracy`: Jaccard similarity between predicted and true edges (0.0-1.0)
+/// - `te_rmse`: Root mean square error for transfer entropy prediction
 #[derive(Debug, Clone)]
 pub struct TrainingMetrics {
+    /// Current epoch number (0-indexed)
     pub epoch: usize,
+    /// Average training loss for this epoch
     pub train_loss: f64,
+    /// Validation loss on held-out data
     pub val_loss: f64,
+    /// Current learning rate
     pub learning_rate: f64,
+    /// Wall-clock time for this epoch
     pub duration: Duration,
+    /// Edge prediction accuracy (Jaccard similarity, 0.0-1.0)
     pub edge_accuracy: f64,
+    /// Transfer entropy prediction RMSE
     pub te_rmse: f64,
 }
 
@@ -268,10 +378,31 @@ impl TrainingMetrics {
     }
 }
 
-/// Training batch sampled from causal graphs
+/// Training batch sampled from causal graphs.
+///
+/// Uses lifetime parameter `'a` to borrow references to ensembles and manifolds
+/// without cloning large data structures. Provides efficient batch sampling
+/// with optional shuffling.
+///
+/// # Examples
+///
+/// ```rust
+/// use prism_ai::cma::neural::TrainingBatch;
+/// # use prism_ai::cma::{Ensemble, CausalManifold};
+///
+/// # let ensembles: Vec<Ensemble> = vec![];
+/// # let manifolds: Vec<CausalManifold> = vec![];
+/// // Sample a shuffled batch of 32 graphs
+/// let batch = TrainingBatch::sample(&ensembles, &manifolds, 32, true)?;
+/// assert_eq!(batch.batch_size, 32);
+/// # Ok::<(), anyhow::Error>(())
+/// ```
 pub struct TrainingBatch<'a> {
+    /// References to ensemble samples in this batch
     pub ensembles: Vec<&'a Ensemble>,
+    /// References to target causal manifolds in this batch
     pub target_manifolds: Vec<&'a CausalManifold>,
+    /// Actual batch size (may be less than requested if dataset is small)
     pub batch_size: usize,
 }
 
@@ -345,13 +476,58 @@ impl<'a> TrainingBatch<'a> {
     }
 }
 
-/// Learning rate schedule
+/// Learning rate schedule strategies.
+///
+/// Provides four learning rate scheduling strategies commonly used in deep learning.
+/// All schedules are computed dynamically based on the current epoch.
+///
+/// # Variants
+///
+/// - **Constant**: No learning rate decay (baseline)
+/// - **StepDecay**: Multiplicative decay every N epochs
+/// - **CosineAnnealing**: Smooth cosine decay to minimum LR
+/// - **OneCycleLR**: Fast.ai one-cycle policy (warmup → peak → decay)
+///
+/// # Examples
+///
+/// ```rust
+/// use prism_ai::cma::neural::LRSchedule;
+///
+/// // Cosine annealing from base_lr to eta_min over 1000 epochs
+/// let schedule = LRSchedule::CosineAnnealing {
+///     t_max: 1000,
+///     eta_min: 0.00001,
+/// };
+///
+/// let lr_epoch_0 = schedule.get_lr(0, 0.001);    // ~0.001
+/// let lr_epoch_500 = schedule.get_lr(500, 0.001); // ~0.0005
+/// let lr_epoch_1000 = schedule.get_lr(1000, 0.001); // ~0.00001
+/// ```
 #[derive(Debug, Clone)]
 pub enum LRSchedule {
+    /// No learning rate decay
     Constant,
-    StepDecay { step_size: usize, gamma: f64 },
-    CosineAnnealing { t_max: usize, eta_min: f64 },
-    OneCycleLR { max_lr: f64, total_steps: usize },
+    /// Multiplicative decay every `step_size` epochs
+    StepDecay {
+        /// Number of epochs between LR decay steps
+        step_size: usize,
+        /// Multiplicative decay factor (e.g., 0.1 = 10x reduction)
+        gamma: f64
+    },
+    /// Cosine annealing schedule (smooth decay)
+    CosineAnnealing {
+        /// Total number of epochs for annealing
+        t_max: usize,
+        /// Minimum learning rate at end of annealing
+        eta_min: f64
+    },
+    /// One-cycle learning rate policy (Fast.ai)
+    OneCycleLR {
+        /// Maximum learning rate at peak (midpoint)
+        max_lr: f64,
+        /// Total number of training steps
+        total_steps: usize
+    },
 }
 
 impl LRSchedule {
@@ -379,12 +555,59 @@ impl LRSchedule {
     }
 }
 
-/// Optimizer for GNN training
+/// Optimizer algorithms for GNN training.
+///
+/// Provides three popular optimization algorithms. AdamW is the recommended
+/// default for most use cases.
+///
+/// # Variants
+///
+/// - **SGD**: Stochastic gradient descent with momentum
+/// - **Adam**: Adaptive moment estimation (Kingma & Ba, 2014)
+/// - **AdamW**: Adam with decoupled weight decay (Loshchilov & Hutter, 2017)
+///
+/// # Examples
+///
+/// ```rust
+/// use prism_ai::cma::neural::Optimizer;
+///
+/// // Use default AdamW
+/// let opt = Optimizer::default();
+///
+/// // Or customize
+/// let opt = Optimizer::Adam {
+///     beta1: 0.9,
+///     beta2: 0.999,
+///     epsilon: 1e-8,
+/// };
+/// ```
 #[derive(Debug, Clone)]
 pub enum Optimizer {
-    SGD { momentum: f64 },
-    Adam { beta1: f64, beta2: f64, epsilon: f64 },
-    AdamW { beta1: f64, beta2: f64, epsilon: f64, weight_decay: f64 },
+    /// Stochastic gradient descent with momentum
+    SGD {
+        /// Momentum coefficient (typical: 0.9)
+        momentum: f64
+    },
+    /// Adam optimizer (adaptive moment estimation)
+    Adam {
+        /// First moment decay rate (typical: 0.9)
+        beta1: f64,
+        /// Second moment decay rate (typical: 0.999)
+        beta2: f64,
+        /// Numerical stability constant (typical: 1e-8)
+        epsilon: f64
+    },
+    /// AdamW optimizer (Adam with decoupled weight decay)
+    AdamW {
+        /// First moment decay rate (typical: 0.9)
+        beta1: f64,
+        /// Second moment decay rate (typical: 0.999)
+        beta2: f64,
+        /// Numerical stability constant (typical: 1e-8)
+        epsilon: f64,
+        /// Weight decay coefficient (typical: 0.01)
+        weight_decay: f64
+    },
 }
 
 impl Default for Optimizer {
@@ -398,7 +621,45 @@ impl Default for Optimizer {
     }
 }
 
-/// GNN Trainer - main training infrastructure
+/// GNN Trainer - main training infrastructure for E(3)-equivariant GNNs.
+///
+/// Provides a complete training loop with:
+/// - Batch sampling and data loading
+/// - Forward/backward passes (simplified for now)
+/// - Validation and early stopping
+/// - Learning rate scheduling
+/// - Training metrics tracking
+///
+/// # Examples
+///
+/// ```rust
+/// use prism_ai::cma::neural::{GNNTrainer, TrainingConfig, LossFunction, E3EquivariantGNN};
+/// use prism_ai::cma::neural::Device;
+/// # use prism_ai::cma::{Ensemble, CausalManifold};
+///
+/// # let train_ensembles: Vec<Ensemble> = vec![];
+/// # let train_manifolds: Vec<CausalManifold> = vec![];
+/// # let val_ensembles: Vec<Ensemble> = vec![];
+/// # let val_manifolds: Vec<CausalManifold> = vec![];
+/// // Create model and trainer
+/// let device = Device::cuda_if_available(0)?;
+/// let model = E3EquivariantGNN::new(8, 4, 128, 4, device)?;
+/// let loss_fn = LossFunction::Supervised { edge_weight: 1.0, te_weight: 1.0 };
+/// let config = TrainingConfig::default();
+///
+/// let mut trainer = GNNTrainer::new(model, loss_fn, config);
+///
+/// // Train the model
+/// let metrics = trainer.train(
+///     &train_ensembles,
+///     &train_manifolds,
+///     &val_ensembles,
+///     &val_manifolds,
+/// )?;
+///
+/// println!("Training complete! {} epochs", metrics.len());
+/// # Ok::<(), anyhow::Error>(())
+/// ```
 pub struct GNNTrainer {
     model: E3EquivariantGNN,
     optimizer: Optimizer,
@@ -613,7 +874,49 @@ impl GNNTrainer {
     }
 }
 
-/// GPU batch trainer for parallel training of multiple GNNs
+/// GPU batch trainer for parallel training of multiple GNNs.
+///
+/// Enables training multiple GNN models in parallel on GPU hardware,
+/// maximizing GPU utilization through batch parallelism.
+///
+/// # Use Cases
+///
+/// - Ensemble training (train multiple models, average predictions)
+/// - Hyperparameter search (train with different configs in parallel)
+/// - Multi-task learning (different models for different objectives)
+///
+/// # Examples
+///
+/// ```rust
+/// use prism_ai::cma::neural::{GpuBatchGNNTrainer, E3EquivariantGNN, LossFunction, TrainingConfig};
+/// use prism_ai::cma::neural::Device;
+/// # use prism_ai::cma::{Ensemble, CausalManifold};
+///
+/// # let train_ensembles: Vec<Ensemble> = vec![];
+/// # let train_manifolds: Vec<CausalManifold> = vec![];
+/// # let val_ensembles: Vec<Ensemble> = vec![];
+/// # let val_manifolds: Vec<CausalManifold> = vec![];
+/// // Create multiple models for ensemble training
+/// let device = Device::cuda_if_available(0)?;
+/// let models = vec![
+///     E3EquivariantGNN::new(8, 4, 128, 4, device.clone())?,
+///     E3EquivariantGNN::new(8, 4, 128, 4, device.clone())?,
+///     E3EquivariantGNN::new(8, 4, 256, 6, device.clone())?,  // Larger model
+/// ];
+///
+/// let loss_fn = LossFunction::Supervised { edge_weight: 1.0, te_weight: 1.0 };
+/// let config = TrainingConfig::default();
+/// let mut batch_trainer = GpuBatchGNNTrainer::new(models, loss_fn, config);
+///
+/// // Train all models in parallel
+/// let all_metrics = batch_trainer.train_parallel(
+///     &train_ensembles, &train_manifolds,
+///     &val_ensembles, &val_manifolds,
+/// )?;
+///
+/// println!("Trained {} models", all_metrics.len());
+/// # Ok::<(), anyhow::Error>(())
+/// ```
 pub struct GpuBatchGNNTrainer {
     trainers: Vec<GNNTrainer>,
     device: Device,
