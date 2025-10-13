@@ -27,6 +27,10 @@ pub use advanced_transfer_entropy::{
 pub mod gpu_transfer_entropy;
 pub use gpu_transfer_entropy::{GpuTransferEntropy, TransferEntropyGpuExt};
 
+// GPU-accelerated entropy and divergence (Phase 3)
+pub mod gpu_entropy;
+pub use gpu_entropy::{GpuEntropyCalculator, GpuKLDivergence};
+
 // Worker 4 Enhancements: Advanced Information-Theoretic Estimators
 pub mod kdtree;
 pub mod ksg_estimator;

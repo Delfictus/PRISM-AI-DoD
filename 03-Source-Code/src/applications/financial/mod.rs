@@ -29,6 +29,8 @@ pub mod interior_point_qp;
 pub mod gpu_covariance;
 pub mod gpu_forecasting;
 pub mod gpu_context;
+pub mod gpu_linalg;
+pub mod gpu_risk;
 
 pub use market_regime::{MarketRegime, MarketRegimeDetector};
 pub use forecasting::{PortfolioForecaster, ForecastOptimizationConfig};
@@ -45,6 +47,8 @@ pub use interior_point_qp::{
 pub use gpu_covariance::GpuCovarianceCalculator;
 pub use gpu_forecasting::{GpuTimeSeriesForecaster, ForecastMethod, ForecastResult};
 pub use gpu_context::{GpuContext, get_gpu_context};
+pub use gpu_linalg::{GpuVectorOps, GpuMatrixOps};
+pub use gpu_risk::{GpuRiskAnalyzer, RiskMetrics, PortfolioUncertainty};
 
 /// Represents a financial asset
 #[derive(Debug, Clone, Serialize, Deserialize)]

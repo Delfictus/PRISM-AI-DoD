@@ -259,9 +259,8 @@ impl GpuTimeSeriesForecaster {
             }
 
             ForecastMethod::Kalman => {
-                // Simple Kalman filter for univariate time series
-                // For production, this would use Worker 2's kalman_filter_step kernel
-                self.forecast_kalman_cpu(&historical_f32, self.horizon)
+                // Use Worker 2's kalman_filter_step kernel for GPU acceleration
+                self.forecast_kalman_gpu(&historical_f32, self.horizon, &executor)?
             }
         };
 
@@ -326,6 +325,78 @@ impl GpuTimeSeriesForecaster {
         }
 
         coefficients
+    }
+
+    /// GPU Kalman filter implementation using Worker 2's kalman_filter_step kernel
+    #[cfg(feature = "cuda")]
+    fn forecast_kalman_gpu(&self, data: &[f32], horizon: usize, executor: &std::sync::MutexGuard<crate::gpu::kernel_executor::GpuKernelExecutor>) -> Result<Vec<f32>> {
+        // Univariate Kalman filter for time series forecasting
+        // State: x_t (current value)
+        // Measurement: y_t (observed value)
+
+        let state_dim = 1;
+
+        // Initialize state and covariance
+        let mut state = vec![data.last().copied().unwrap_or(0.0)];
+        let mut covariance = vec![0.1f32]; // Initial uncertainty
+
+        // Transition matrix (random walk: x_{t+1} = x_t)
+        let transition = vec![1.0f32];
+
+        // Measurement matrix (direct observation: y_t = x_t)
+        let measurement_matrix = vec![1.0f32];
+
+        // Process noise (how much state changes)
+        let process_noise = vec![0.01f32];
+
+        // Measurement noise (observation uncertainty)
+        let measurement_noise = vec![0.05f32];
+
+        // Filter historical data to update state estimate
+        for &observation in data.iter().rev().take(20).rev() {
+            let measurement = vec![observation];
+
+            // Use Worker 2's kalman_filter_step kernel
+            let (new_state, new_cov) = executor.kalman_filter_step(
+                &state,
+                &covariance,
+                &measurement,
+                &transition,
+                &measurement_matrix,
+                &process_noise,
+                &measurement_noise,
+                state_dim,
+            ).context("GPU kalman_filter_step failed")?;
+
+            state = new_state;
+            covariance = new_cov;
+        }
+
+        // Generate forecast
+        let mut forecasts = Vec::new();
+        for _ in 0..horizon {
+            // Predict next state (for random walk, stays same)
+            forecasts.push(state[0]);
+
+            // Update state covariance (uncertainty grows over time)
+            let measurement = vec![state[0]]; // Use prediction as pseudo-measurement
+
+            let (new_state, new_cov) = executor.kalman_filter_step(
+                &state,
+                &covariance,
+                &measurement,
+                &transition,
+                &measurement_matrix,
+                &process_noise,
+                &measurement_noise,
+                state_dim,
+            ).context("GPU kalman_filter_step failed")?;
+
+            state = new_state;
+            covariance = new_cov;
+        }
+
+        Ok(forecasts)
     }
 
     /// Kalman filter CPU implementation
