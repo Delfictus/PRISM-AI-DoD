@@ -394,7 +394,7 @@ mod tests {
 
     #[test]
     fn test_arima_gpu_optimized_creation() {
-        let config = ArimaConfig { p: 2, d: 1, q: 1 };
+        let config = ArimaConfig { p: 2, d: 1, q: 1, include_constant: true };
 
         let result = ArimaGpuOptimized::new(config);
 
@@ -408,7 +408,7 @@ mod tests {
 
     #[test]
     fn test_tensor_core_ar_fitting() {
-        let config = ArimaConfig { p: 3, d: 0, q: 0 };
+        let config = ArimaConfig { p: 3, d: 0, q: 0, include_constant: false };
 
         let result = ArimaGpuOptimized::new(config);
 
@@ -434,7 +434,7 @@ mod tests {
 
     #[test]
     fn test_gpu_optimized_arima_forecast() {
-        let config = ArimaConfig { p: 2, d: 1, q: 1 };
+        let config = ArimaConfig { p: 2, d: 1, q: 1, include_constant: true };
 
         let result = ArimaGpuOptimized::new(config);
 
