@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: prism-ai
+  labels:
+    name: prism-ai
+    environment: production

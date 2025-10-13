@@ -1,10 +1,10 @@
-# Worker 7 Quick Reference
+# Worker 8 Quick Reference
 
 ## Your Worktree
-`/home/diddy/Desktop/PRISM-Worker-7`
+`/home/diddy/Desktop/PRISM-Worker-8`
 
 ## Your Branch
-`worker-7-[branch-name]`
+`worker-8-[branch-name]`
 
 ## Your Time
 ~254 hours (7 weeks)
@@ -13,8 +13,8 @@
 
 **Pull latest**:
 ```bash
-cd /home/diddy/Desktop/PRISM-Worker-7
-git pull origin worker-7-*
+cd /home/diddy/Desktop/PRISM-Worker-8
+git pull origin worker-8-*
 git merge parallel-development
 ```
 
@@ -28,7 +28,7 @@ cargo test --lib [your_module]
 ```bash
 git add -A
 git commit -m "feat: [description]"
-git push origin worker-7-*
+git push origin worker-8-*
 ```
 
 ## Your Documentation

@@ -1,0 +1,45 @@
+# Kustomization for PRISM-AI API Server
+# Provides a simple way to deploy all resources
+
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: prism-ai
+
+resources:
+  - namespace.yaml
+  - configmap.yaml
+  - secret.yaml
+  - deployment.yaml
+  - service.yaml
+  - ingress.yaml
+  - hpa.yaml
+  - pdb.yaml
+  - rbac.yaml
+  - servicemonitor.yaml
+
+# Common labels applied to all resources
+commonLabels:
+  app.kubernetes.io/name: prism-ai
+  app.kubernetes.io/component: api-server
+  app.kubernetes.io/part-of: prism-platform
+  app.kubernetes.io/managed-by: kustomize
+
+# Images
+images:
+  - name: prism-ai/api-server
+    newTag: latest
+
+# ConfigMap generator for non-secret config
+configMapGenerator:
+  - name: prism-api-config
+    behavior: merge
+    literals:
+      - API_HOST=0.0.0.0
+      - API_PORT=8080
+      - RUST_LOG=info
+
+# Patches for different environments
+patchesStrategicMerge:
+  # - overlays/production/deployment-patch.yaml
+  # - overlays/staging/deployment-patch.yaml

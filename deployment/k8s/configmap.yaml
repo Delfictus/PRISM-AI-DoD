@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prism-api-config
+  namespace: prism-ai
+data:
+  API_HOST: "0.0.0.0"
+  API_PORT: "8080"
+  RUST_LOG: "info"
+  TOKIO_WORKER_THREADS: "8"
+  MAX_BLOCKING_THREADS: "512"
