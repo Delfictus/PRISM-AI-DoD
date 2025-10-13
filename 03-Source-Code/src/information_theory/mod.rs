@@ -11,6 +11,12 @@ pub mod conditional_te;
 pub mod bootstrap_ci;
 pub mod transfer_entropy_gpu;
 
+// Phase 2 Enhancements: Performance Optimizations
+pub mod incremental_te;
+pub mod memory_efficient;
+pub mod adaptive_embedding;
+pub mod symbolic_te;
+
 pub use transfer_entropy::{
     TransferEntropy,
     TransferEntropyResult,
@@ -36,6 +42,12 @@ pub use ksg_estimator::KsgEstimator;
 pub use conditional_te::ConditionalTe;
 pub use bootstrap_ci::{BootstrapResampler, BootstrapCi, BootstrapMethod};
 pub use transfer_entropy_gpu::TransferEntropyGpu;
+
+// Phase 2 exports
+pub use incremental_te::IncrementalTe;
+pub use memory_efficient::{SparseHistogram, CountMinSketch, CompressedKey, CompressedHistogram};
+pub use adaptive_embedding::{AdaptiveEmbedding, EmbeddingParams};
+pub use symbolic_te::SymbolicTe;
 
 // GPU-accelerated transfer entropy
 pub mod gpu_transfer_entropy;

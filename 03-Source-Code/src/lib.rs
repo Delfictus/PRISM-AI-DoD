@@ -80,6 +80,9 @@ pub use information_theory::{
     KdTree, Neighbor, KsgEstimator, ConditionalTe,
     BootstrapResampler, BootstrapCi, BootstrapMethod,
     TransferEntropyGpu,
+    // Phase 2 enhancements
+    IncrementalTe, SparseHistogram, CountMinSketch, CompressedKey, CompressedHistogram,
+    AdaptiveEmbedding, EmbeddingParams, SymbolicTe,
 };
 
 pub use statistical_mechanics::{
