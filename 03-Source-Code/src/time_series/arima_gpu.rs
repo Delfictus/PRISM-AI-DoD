@@ -389,8 +389,13 @@ impl ArimaGpu {
     fn forecast_differenced(&self, data: &[f64], horizon: usize) -> Result<Vec<f64>> {
         let p = self.config.p;
         let q = self.config.q;
-        let n = data.len();
 
+        // If pure AR model and GPU available, use GPU acceleration
+        if self.gpu_available && q == 0 && p > 0 {
+            return self.forecast_ar_gpu(data, horizon);
+        }
+
+        // Fallback to CPU for MA components or GPU unavailable
         let mut forecast = Vec::with_capacity(horizon);
         let mut history = data.to_vec();
         let mut residual_history = self.residuals.clone();
@@ -419,6 +424,32 @@ impl ArimaGpu {
         }
 
         Ok(forecast)
+    }
+
+    /// Forecast AR model using GPU kernel (Worker 2 integration)
+    fn forecast_ar_gpu(&self, data: &[f64], horizon: usize) -> Result<Vec<f64>> {
+        let executor_arc = crate::gpu::kernel_executor::get_global_executor()
+            .context("GPU executor not available")?;
+        let executor = executor_arc.lock()
+            .map_err(|e| anyhow::anyhow!("Failed to lock GPU executor: {}", e))?;
+
+        // Convert f64 to f32 for GPU
+        let historical_f32: Vec<f32> = data.iter().map(|&x| x as f32).collect();
+        let coefficients_f32: Vec<f32> = self.ar_coefficients.iter().map(|&x| x as f32).collect();
+
+        // Call Worker 2's ar_forecast kernel
+        let forecast_f32 = executor.ar_forecast(
+            &historical_f32,
+            &coefficients_f32,
+            horizon
+        ).context("GPU ar_forecast kernel failed")?;
+
+        // Convert back to f64 and add constant if needed
+        let mut forecast_f64: Vec<f64> = forecast_f32.iter()
+            .map(|&x| x as f64 + self.constant)
+            .collect();
+
+        Ok(forecast_f64)
     }
 
     /// Forecast with GPU acceleration (batch processing)
