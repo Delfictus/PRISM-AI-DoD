@@ -331,7 +331,7 @@ impl TokenSampler {
         Ok(indices[sampled_idx] as i32)
     }
 
-    /// Softmax function
+    /// Softmax function (numerically stable)
     fn softmax(&self, logits: &[f32]) -> Vec<f32> {
         // Find max for numerical stability
         let max_logit = logits.iter().cloned().fold(f32::NEG_INFINITY, f32::max);
@@ -344,6 +344,41 @@ impl TokenSampler {
         // Normalize
         let sum: f32 = exps.iter().sum();
         exps.iter().map(|&x| x / sum).collect()
+    }
+
+    /// Log-softmax: numerically stable version for log probabilities
+    ///
+    /// Computes log(softmax(x_i)) = x_i - max(x) - log(Σ exp(x_j - max(x)))
+    /// More stable than log(softmax(x)) for extreme logit values
+    ///
+    /// Used for perplexity calculation and information-theoretic metrics
+    pub fn log_softmax(&self, logits: &[f32]) -> Vec<f32> {
+        // Subtract max for numerical stability
+        let max_logit = logits.iter().cloned().fold(f32::NEG_INFINITY, f32::max);
+
+        // Compute log(sum(exp(x - max)))
+        let log_sum_exp = logits.iter()
+            .map(|&x| (x - max_logit).exp())
+            .sum::<f32>()
+            .ln();
+
+        // log_softmax(x_i) = x_i - max - log_sum_exp
+        logits.iter()
+            .map(|&x| x - max_logit - log_sum_exp)
+            .collect()
+    }
+
+    /// Sample from log probabilities (more numerically stable)
+    ///
+    /// Used when working in log-space to avoid underflow
+    pub fn sample_from_log_probs(&self, log_probs: &[f32]) -> Result<i32> {
+        // Convert log probs to probabilities for sampling
+        // This is safe because log_softmax already handles numerical stability
+        let probs: Vec<f32> = log_probs.iter()
+            .map(|&lp| lp.exp())
+            .collect();
+
+        self.sample_multinomial(&probs)
     }
 
     /// Get current config

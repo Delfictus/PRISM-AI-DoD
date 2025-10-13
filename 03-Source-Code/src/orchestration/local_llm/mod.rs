@@ -5,6 +5,7 @@ pub mod gguf_gpu_loader;
 pub mod kv_cache;
 pub mod bpe_tokenizer;
 pub mod sampling;
+pub mod llm_metrics;
 
 pub use gpu_llm_inference::{
     GpuLocalLLMSystem,
@@ -43,4 +44,9 @@ pub use bpe_tokenizer::{
 pub use sampling::{
     TokenSampler,
     SamplingConfig,
+};
+
+pub use llm_metrics::{
+    LLMMetrics,
+    DistributionHealth,
 };
