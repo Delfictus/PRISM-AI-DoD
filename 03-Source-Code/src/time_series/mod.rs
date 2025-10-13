@@ -14,12 +14,18 @@
 pub mod arima_gpu;
 pub mod lstm_forecaster;
 pub mod uncertainty;
+pub mod kalman_filter;
+pub mod optimizations;
 
 pub use arima_gpu::{ArimaGpu, ArimaConfig, ArimaCoefficients, auto_arima};
 pub use lstm_forecaster::{LstmForecaster, LstmConfig, CellType};
 pub use uncertainty::{
     UncertaintyQuantifier, UncertaintyConfig, UncertaintyMethod,
     ForecastWithUncertainty
+};
+pub use kalman_filter::{KalmanFilter, KalmanConfig, ArimaKalmanFusion};
+pub use optimizations::{
+    OptimizedGruCell, ArimaCoefficientCache, BatchForecaster, CacheStats
 };
 
 use anyhow::Result;
@@ -30,6 +36,8 @@ pub struct TimeSeriesForecaster {
     arima: Option<ArimaGpu>,
     /// LSTM model
     lstm: Option<LstmForecaster>,
+    /// Kalman filter
+    kalman: Option<KalmanFilter>,
     /// Uncertainty quantifier
     uncertainty: UncertaintyQuantifier,
 }
@@ -40,6 +48,7 @@ impl TimeSeriesForecaster {
         Self {
             arima: None,
             lstm: None,
+            kalman: None,
             uncertainty: UncertaintyQuantifier::new(UncertaintyConfig::default()),
         }
     }
@@ -99,6 +108,56 @@ impl TimeSeriesForecaster {
 
         self.fit_lstm(data, config)?;
         self.forecast_lstm(data, horizon)
+    }
+
+    /// Filter noisy data using Kalman filter
+    pub fn kalman_filter(&mut self, data: &[f64], config: KalmanConfig) -> Result<Vec<f64>> {
+        let mut kalman = KalmanFilter::new(config)?;
+        let filtered = kalman.filter_sequence(data)?;
+        self.kalman = Some(kalman);
+        Ok(filtered)
+    }
+
+    /// Smooth data using Kalman smoother (forward-backward pass)
+    pub fn kalman_smooth(&mut self, data: &[f64], config: KalmanConfig) -> Result<Vec<f64>> {
+        let mut kalman = KalmanFilter::new(config)?;
+        let smoothed = kalman.smooth_sequence(data)?;
+        self.kalman = Some(kalman);
+        Ok(smoothed)
+    }
+
+    /// ARIMA-Kalman fusion: combine ARIMA model prediction with Kalman filtering
+    pub fn arima_kalman_fusion(&mut self, data: &[f64], horizon: usize) -> Result<Vec<f64>> {
+        // Fit ARIMA model
+        let arima_config = ArimaConfig {
+            p: 2,
+            d: 1,
+            q: 1,
+            include_constant: true,
+        };
+
+        let mut arima = ArimaGpu::new(arima_config)?;
+        arima.fit(data)?;
+
+        // Get AR coefficients for Kalman transition matrix
+        let ar_coeffs = arima.get_ar_coefficients();
+
+        // Create ARIMA-Kalman fusion
+        let mut fusion = ArimaKalmanFusion::new(
+            ar_coeffs.to_vec(),
+            0.01,  // process_noise
+            0.1    // measurement_noise
+        )?;
+
+        // Filter historical data
+        let filtered = fusion.filter(data)?;
+
+        // Use ARIMA for forecasting (filtered data gives better coefficients)
+        arima.fit(&filtered)?;
+        let forecast = arima.forecast(horizon)?;
+
+        self.arima = Some(arima);
+        Ok(forecast)
     }
 }
 

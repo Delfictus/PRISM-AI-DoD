@@ -439,6 +439,21 @@ impl ArimaGpu {
         }
     }
 
+    /// Get AR coefficients (for Kalman filter integration)
+    pub fn get_ar_coefficients(&self) -> &[f64] {
+        &self.ar_coefficients
+    }
+
+    /// Get MA coefficients
+    pub fn get_ma_coefficients(&self) -> &[f64] {
+        &self.ma_coefficients
+    }
+
+    /// Get constant term
+    pub fn get_constant(&self) -> f64 {
+        self.constant
+    }
+
     /// Compute AIC (Akaike Information Criterion)
     pub fn aic(&self) -> Result<f64> {
         let n = self.residuals.len() as f64;

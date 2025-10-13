@@ -118,6 +118,8 @@ pub use time_series::{
     ArimaGpu, ArimaConfig, LstmForecaster, LstmConfig, CellType,
     UncertaintyQuantifier, UncertaintyConfig, ForecastWithUncertainty,
     TimeSeriesForecaster,
+    KalmanFilter, KalmanConfig, ArimaKalmanFusion,
+    OptimizedGruCell, ArimaCoefficientCache, BatchForecaster, CacheStats,
 };
 
 /// Platform version information
