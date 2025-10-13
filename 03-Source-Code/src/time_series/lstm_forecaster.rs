@@ -342,6 +342,15 @@ impl LstmForecaster {
         c_prev: &Array1<f64>,
         weights: &LstmWeights,
     ) -> Result<(Array1<f64>, Array1<f64>)> {
+        // Try GPU acceleration if available
+        if self.gpu_available {
+            if let Ok((h_new, c_new)) = self.lstm_cell_gpu(x, h_prev, c_prev, weights) {
+                return Ok((h_new, c_new));
+            }
+            // Fall through to CPU if GPU fails
+        }
+
+        // CPU implementation
         let hidden_size = h_prev.len();
 
         // Concatenate input and previous hidden state
@@ -370,6 +379,53 @@ impl LstmForecaster {
         Ok((h_new, c_new))
     }
 
+    /// LSTM cell computation on GPU (Worker 2 integration)
+    fn lstm_cell_gpu(
+        &self,
+        x: &Array1<f64>,
+        h_prev: &Array1<f64>,
+        c_prev: &Array1<f64>,
+        weights: &LstmWeights,
+    ) -> Result<(Array1<f64>, Array1<f64>)> {
+        let executor_arc = crate::gpu::kernel_executor::get_global_executor()
+            .context("GPU executor not available")?;
+        let executor = executor_arc.lock()
+            .map_err(|e| anyhow::anyhow!("Failed to lock GPU executor: {}", e))?;
+
+        let batch_size = 1;
+        let input_dim = x.len();
+        let hidden_dim = h_prev.len();
+
+        // Convert f64 to f32 for GPU
+        let input_f32: Vec<f32> = x.iter().map(|&v| v as f32).collect();
+        let hidden_f32: Vec<f32> = h_prev.iter().map(|&v| v as f32).collect();
+        let cell_f32: Vec<f32> = c_prev.iter().map(|&v| v as f32).collect();
+
+        // Flatten weights for GPU (4 gates: forget, input, cell, output)
+        let weights_ih_f32: Vec<f32> = weights.w_ih.iter().map(|&v| v as f32).collect();
+        let weights_hh_f32: Vec<f32> = weights.w_hh.iter().map(|&v| v as f32).collect();
+        let bias_f32: Vec<f32> = weights.bias.iter().map(|&v| v as f32).collect();
+
+        // Call Worker 2's LSTM kernel
+        let (output_hidden_f32, output_cell_f32) = executor.lstm_cell_forward(
+            &input_f32,
+            &hidden_f32,
+            &cell_f32,
+            &weights_ih_f32,
+            &weights_hh_f32,
+            &bias_f32,
+            batch_size,
+            input_dim,
+            hidden_dim,
+        ).context("GPU lstm_cell_forward failed")?;
+
+        // Convert back to f64
+        let h_new = Array1::from(output_hidden_f32.iter().map(|&v| v as f64).collect::<Vec<_>>());
+        let c_new = Array1::from(output_cell_f32.iter().map(|&v| v as f64).collect::<Vec<_>>());
+
+        Ok((h_new, c_new))
+    }
+
     /// GRU cell computation
     fn gru_cell(
         &self,
@@ -377,6 +433,15 @@ impl LstmForecaster {
         h_prev: &Array1<f64>,
         weights: &LstmWeights,
     ) -> Result<Array1<f64>> {
+        // Try GPU acceleration if available
+        if self.gpu_available {
+            if let Ok(h_new) = self.gru_cell_gpu(x, h_prev, weights) {
+                return Ok(h_new);
+            }
+            // Fall through to CPU if GPU fails
+        }
+
+        // CPU implementation
         let hidden_size = h_prev.len();
 
         // Compute gates
@@ -396,6 +461,49 @@ impl LstmForecaster {
         // Update hidden state: h_t = (1 - z_t) ⊙ h_{t-1} + z_t ⊙ h̃_t
         let one_minus_z = update_gate.mapv(|z| 1.0 - z);
         let h_new = &one_minus_z * h_prev + &update_gate * &candidate;
+
+        Ok(h_new)
+    }
+
+    /// GRU cell computation on GPU (Worker 2 integration)
+    fn gru_cell_gpu(
+        &self,
+        x: &Array1<f64>,
+        h_prev: &Array1<f64>,
+        weights: &LstmWeights,
+    ) -> Result<Array1<f64>> {
+        let executor_arc = crate::gpu::kernel_executor::get_global_executor()
+            .context("GPU executor not available")?;
+        let executor = executor_arc.lock()
+            .map_err(|e| anyhow::anyhow!("Failed to lock GPU executor: {}", e))?;
+
+        let batch_size = 1;
+        let input_dim = x.len();
+        let hidden_dim = h_prev.len();
+
+        // Convert f64 to f32 for GPU
+        let input_f32: Vec<f32> = x.iter().map(|&v| v as f32).collect();
+        let hidden_f32: Vec<f32> = h_prev.iter().map(|&v| v as f32).collect();
+
+        // Flatten weights for GPU (3 gates: reset, update, candidate)
+        let weights_ih_f32: Vec<f32> = weights.w_ih.iter().map(|&v| v as f32).collect();
+        let weights_hh_f32: Vec<f32> = weights.w_hh.iter().map(|&v| v as f32).collect();
+        let bias_f32: Vec<f32> = weights.bias.iter().map(|&v| v as f32).collect();
+
+        // Call Worker 2's GRU kernel
+        let output_hidden_f32 = executor.gru_cell_forward(
+            &input_f32,
+            &hidden_f32,
+            &weights_ih_f32,
+            &weights_hh_f32,
+            &bias_f32,
+            batch_size,
+            input_dim,
+            hidden_dim,
+        ).context("GPU gru_cell_forward failed")?;
+
+        // Convert back to f64
+        let h_new = Array1::from(output_hidden_f32.iter().map(|&v| v as f64).collect::<Vec<_>>());
 
         Ok(h_new)
     }
