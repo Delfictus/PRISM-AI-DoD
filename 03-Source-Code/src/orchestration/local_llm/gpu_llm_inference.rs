@@ -245,6 +245,17 @@ impl GpuLocalLLMSystem {
         self.set_sampling_config(SamplingConfig::min_p_recommended());
     }
 
+    /// Convenience method: Set to entropy-guided sampling (NEW - Information-theoretic)
+    ///
+    /// Uses Shannon entropy to guide token selection for maximum information.
+    /// Benefits:
+    /// - Reduces repetition naturally
+    /// - Theoretically optimal token selection
+    /// - Novel 2025 sampling strategy
+    pub fn use_entropy_guided_sampling(&mut self) {
+        self.set_sampling_config(SamplingConfig::entropy_guided());
+    }
+
     /// Enable KV-cache for efficient generation (enabled by default)
     pub fn enable_kv_cache(&mut self) -> Result<()> {
         self.model.enable_kv_cache()

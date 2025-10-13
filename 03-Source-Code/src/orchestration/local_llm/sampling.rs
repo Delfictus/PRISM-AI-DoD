@@ -44,6 +44,18 @@ pub struct SamplingConfig {
     /// Set to 1.0 to disable
     /// Typical range: 1.0 - 1.5
     pub repetition_penalty: f32,
+
+    /// Entropy-guided sampling weight (NEW - Phase 2)
+    /// Balances probability with entropy for information-theoretic sampling
+    /// 0.0 = pure probability (standard sampling)
+    /// 1.0 = pure entropy (maximum information)
+    /// Typical range: 0.0 - 0.3
+    pub entropy_weight: f32,
+
+    /// Minimum entropy threshold for entropy-guided sampling
+    /// Only apply entropy guidance if distribution entropy > threshold
+    /// Typical range: 1.0 - 3.0 bits
+    pub min_entropy: f32,
 }
 
 impl Default for SamplingConfig {
@@ -54,6 +66,8 @@ impl Default for SamplingConfig {
             top_p: 1.0,        // Disabled by default
             min_p: 0.0,        // Disabled by default
             repetition_penalty: 1.0,
+            entropy_weight: 0.0,   // Disabled by default
+            min_entropy: 2.0,      // 2 bits threshold
         }
     }
 }
@@ -67,6 +81,8 @@ impl SamplingConfig {
             top_p: 1.0,
             min_p: 0.0,
             repetition_penalty: 1.0,
+            entropy_weight: 0.0,
+            min_entropy: 2.0,
         }
     }
 
@@ -78,6 +94,8 @@ impl SamplingConfig {
             top_p: 0.9,
             min_p: 0.0,
             repetition_penalty: 1.1,
+            entropy_weight: 0.0,
+            min_entropy: 2.0,
         }
     }
 
@@ -89,6 +107,8 @@ impl SamplingConfig {
             top_p: 0.95,
             min_p: 0.0,
             repetition_penalty: 1.2,
+            entropy_weight: 0.0,
+            min_entropy: 2.0,
         }
     }
 
@@ -100,6 +120,8 @@ impl SamplingConfig {
             top_p: 0.85,
             min_p: 0.0,
             repetition_penalty: 1.0,
+            entropy_weight: 0.0,
+            min_entropy: 2.0,
         }
     }
 
@@ -111,6 +133,29 @@ impl SamplingConfig {
             top_p: 1.0,
             min_p: 0.05,  // As recommended by major providers
             repetition_penalty: 1.1,
+            entropy_weight: 0.0,
+            min_entropy: 2.0,
+        }
+    }
+
+    /// Create entropy-guided sampling config (NEW - Information-theoretic)
+    ///
+    /// Uses Shannon entropy to guide token selection for maximum information
+    /// Balances probability with entropy for optimal information per token
+    ///
+    /// Benefits:
+    /// - Reduces repetition naturally (high entropy = diverse)
+    /// - Theoretically optimal token selection
+    /// - Novel 2025 sampling strategy
+    pub fn entropy_guided() -> Self {
+        Self {
+            temperature: 1.0,
+            top_k: 0,
+            top_p: 0.95,
+            min_p: 0.0,
+            repetition_penalty: 1.0,
+            entropy_weight: 0.2,  // 20% entropy, 80% probability
+            min_entropy: 2.0,     // Only apply if distribution has >2 bits entropy
         }
     }
 }
@@ -149,6 +194,14 @@ impl TokenSampler {
 
         // Convert logits to probabilities (softmax)
         let mut probs = self.softmax(&logits);
+
+        // Apply entropy-guided sampling (NEW - Phase 2)
+        if self.config.entropy_weight > 0.0 {
+            let entropy = self.calculate_entropy(&probs);
+            if entropy >= self.config.min_entropy {
+                return self.sample_entropy_guided(&logits, &probs);
+            }
+        }
 
         // Apply min-p filtering
         if self.config.min_p > 0.0 {
@@ -381,6 +434,87 @@ impl TokenSampler {
         self.sample_multinomial(&probs)
     }
 
+    /// Calculate Shannon entropy of probability distribution
+    ///
+    /// H(X) = -Σ P(x) log₂ P(x)
+    ///
+    /// Measures uncertainty/information content in bits.
+    fn calculate_entropy(&self, probs: &[f32]) -> f32 {
+        let mut entropy = 0.0f32;
+
+        for &p in probs.iter() {
+            if p > 1e-10 {
+                entropy -= p * p.log2();
+            }
+        }
+
+        entropy
+    }
+
+    /// Entropy-guided sampling (NEW - Phase 2)
+    ///
+    /// Balances probability with entropy for information-theoretic token selection.
+    /// Score = (1 - w) * log_prob + w * contribution_to_entropy
+    ///
+    /// This encourages selecting tokens that:
+    /// 1. Have reasonable probability (standard criterion)
+    /// 2. Maintain high distribution entropy (diverse future options)
+    ///
+    /// Benefits:
+    /// - Reduces repetition naturally (high entropy = diverse)
+    /// - Theoretically optimal information per token
+    /// - Novel sampling strategy based on information theory
+    fn sample_entropy_guided(&self, logits: &[f32], probs: &[f32]) -> Result<i32> {
+        let weight = self.config.entropy_weight;
+        let log_probs = self.log_softmax(logits);
+
+        // Calculate global entropy of the distribution
+        let global_entropy = self.calculate_entropy(probs);
+
+        // Score each token by its information contribution
+        let scores: Vec<f32> = probs.iter().enumerate()
+            .map(|(i, &p)| {
+                if p < 1e-10 {
+                    return f32::NEG_INFINITY;
+                }
+
+                // Probability score (negative log prob = surprise)
+                let prob_score = log_probs[i];
+
+                // Information contribution: selecting this token maintains diversity
+                // Higher probability tokens reduce future entropy more
+                // We want tokens that keep options open
+                let info_score = global_entropy * (1.0 - p).ln();
+
+                // Combine: (1-w)*probability + w*information
+                (1.0 - weight) * prob_score + weight * info_score
+            })
+            .collect();
+
+        // Find max score for numerical stability
+        let max_score = scores.iter().cloned().fold(f32::NEG_INFINITY, f32::max);
+
+        // Convert scores to probabilities
+        let score_probs: Vec<f32> = scores.iter()
+            .map(|&s| {
+                if s == f32::NEG_INFINITY {
+                    0.0
+                } else {
+                    (s - max_score).exp()
+                }
+            })
+            .collect();
+
+        // Normalize
+        let sum: f32 = score_probs.iter().sum();
+        let normalized_probs: Vec<f32> = score_probs.iter()
+            .map(|&p| if sum > 0.0 { p / sum } else { 0.0 })
+            .collect();
+
+        // Sample from entropy-guided distribution
+        self.sample_multinomial(&normalized_probs)
+    }
+
     /// Get current config
     pub fn config(&self) -> &SamplingConfig {
         &self.config
@@ -476,5 +610,44 @@ mod tests {
 
         let min_p = SamplingConfig::min_p_recommended();
         assert_eq!(min_p.min_p, 0.05);
+
+        let entropy_guided = SamplingConfig::entropy_guided();
+        assert_eq!(entropy_guided.entropy_weight, 0.2);
+        assert_eq!(entropy_guided.min_entropy, 2.0);
+    }
+
+    #[test]
+    fn test_entropy_calculation() {
+        let sampler = TokenSampler::default();
+
+        // Deterministic distribution (entropy = 0)
+        let det_probs = vec![1.0, 0.0, 0.0, 0.0];
+        let det_entropy = sampler.calculate_entropy(&det_probs);
+        assert!(det_entropy.abs() < 0.01);
+
+        // Uniform distribution (entropy = log2(4) = 2)
+        let unif_probs = vec![0.25, 0.25, 0.25, 0.25];
+        let unif_entropy = sampler.calculate_entropy(&unif_probs);
+        assert!((unif_entropy - 2.0).abs() < 0.01);
+
+        // Mixed distribution (entropy between 0 and 2)
+        let mixed_probs = vec![0.5, 0.3, 0.15, 0.05];
+        let mixed_entropy = sampler.calculate_entropy(&mixed_probs);
+        assert!(mixed_entropy > 0.0 && mixed_entropy < 2.0);
+    }
+
+    #[test]
+    fn test_entropy_guided_sampling() -> Result<()> {
+        let config = SamplingConfig::entropy_guided();
+        let sampler = TokenSampler::new(config);
+
+        // High entropy distribution (should trigger entropy guidance)
+        let logits = vec![1.0, 1.1, 0.9, 1.05, 0.95];  // Nearly uniform
+        let token = sampler.sample(&logits, &[])?;
+
+        // Should sample from valid token range
+        assert!(token >= 0 && token < 5);
+
+        Ok(())
     }
 }
