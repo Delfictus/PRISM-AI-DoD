@@ -17,6 +17,11 @@ pub mod uncertainty;
 pub mod kalman_filter;
 pub mod optimizations;
 
+// GPU-Optimized modules (Phase 2: Full GPU utilization)
+pub mod arima_gpu_optimized;
+pub mod lstm_gpu_optimized;
+pub mod uncertainty_gpu_optimized;
+
 pub use arima_gpu::{ArimaGpu, ArimaConfig, ArimaCoefficients, auto_arima};
 pub use lstm_forecaster::{LstmForecaster, LstmConfig, CellType};
 pub use uncertainty::{
@@ -27,6 +32,11 @@ pub use kalman_filter::{KalmanFilter, KalmanConfig, ArimaKalmanFusion};
 pub use optimizations::{
     OptimizedGruCell, ArimaCoefficientCache, BatchForecaster, CacheStats
 };
+
+// Re-export GPU-optimized modules
+pub use arima_gpu_optimized::ArimaGpuOptimized;
+pub use lstm_gpu_optimized::LstmGpuOptimized;
+pub use uncertainty_gpu_optimized::UncertaintyGpuOptimized;
 
 use anyhow::Result;
 
