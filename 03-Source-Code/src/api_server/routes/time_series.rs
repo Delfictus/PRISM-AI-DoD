@@ -147,7 +147,7 @@ async fn forecast_series(
                 num_layers,
                 sequence_length: 10.min(request.historical_data.len() / 2),
                 epochs: 50,
-                cell_type: CellType::Lstm,
+                cell_type: CellType::LSTM,
                 ..Default::default()
             };
             forecaster.fit_lstm(&request.historical_data, config)
@@ -160,7 +160,7 @@ async fn forecast_series(
                 hidden_size: hidden_dim,
                 sequence_length: 10.min(request.historical_data.len() / 2),
                 epochs: 50,
-                cell_type: CellType::Gru,
+                cell_type: CellType::GRU,
                 ..Default::default()
             };
             forecaster.fit_lstm(&request.historical_data, config)
