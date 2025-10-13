@@ -16,6 +16,7 @@ pub mod advanced_replica_exchange;
 pub mod gpu_schedule_kernels;
 pub mod adaptive_temperature_control;
 pub mod bayesian_hyperparameter_learning;
+pub mod meta_schedule_selector;
 
 pub use hamiltonian::InformationHamiltonian;
 pub use quantum_consensus::{QuantumConsensusOptimizer, ConsensusState};
@@ -98,4 +99,14 @@ pub use bayesian_hyperparameter_learning::{
     ThompsonSampler,
     PriorDistribution,
     PerformanceObservation,
+};
+
+pub use meta_schedule_selector::{
+    MetaScheduleSelector,
+    ProblemFeatures,
+    ScheduleType,
+    SchedulePerformanceRecord,
+    ScheduleStats,
+    KNNRecommender,
+    ContextualBandit,
 };
