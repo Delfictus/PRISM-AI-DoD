@@ -17,6 +17,10 @@ pub mod memory_efficient;
 pub mod adaptive_embedding;
 pub mod symbolic_te;
 
+// Phase 3 Enhancements: Research Extensions
+pub mod pid;
+pub mod multiple_testing;
+
 pub use transfer_entropy::{
     TransferEntropy,
     TransferEntropyResult,
@@ -48,6 +52,10 @@ pub use incremental_te::IncrementalTe;
 pub use memory_efficient::{SparseHistogram, CountMinSketch, CompressedKey, CompressedHistogram};
 pub use adaptive_embedding::{AdaptiveEmbedding, EmbeddingParams};
 pub use symbolic_te::SymbolicTe;
+
+// Phase 3 exports
+pub use pid::{PartialInfoDecomp, PidResult, PidMethod};
+pub use multiple_testing::{MultipleTestingCorrection, CorrectedPValues, CorrectionMethod};
 
 // GPU-accelerated transfer entropy
 pub mod gpu_transfer_entropy;
