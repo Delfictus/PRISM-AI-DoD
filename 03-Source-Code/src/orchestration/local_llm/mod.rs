@@ -8,6 +8,7 @@ pub mod sampling;
 pub mod llm_metrics;
 pub mod attention_analyzer;
 pub mod transfer_entropy_llm;
+pub mod speculative_decoding;
 
 pub use gpu_llm_inference::{
     GpuLocalLLMSystem,
@@ -62,4 +63,10 @@ pub use attention_analyzer::{
 pub use transfer_entropy_llm::{
     TransferEntropyLLM,
     TransferEntropyStats,
+};
+
+pub use speculative_decoding::{
+    SpeculativeDecoder,
+    SelfSpeculativeDecoder,
+    SpeculativeStats,
 };
