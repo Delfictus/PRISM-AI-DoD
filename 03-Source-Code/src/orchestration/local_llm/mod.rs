@@ -12,6 +12,8 @@ pub mod speculative_decoding;
 pub mod llm_analysis;
 pub mod phase6_adapters;
 pub mod phase6_llm_adapters;
+pub mod gpu_neural_enhancements;
+pub mod gpu_visual_embeddings;
 
 pub use gpu_llm_inference::{
     GpuLocalLLMSystem,
@@ -104,4 +106,23 @@ pub use phase6_llm_adapters::{
     LlmTdaAdapter,
     LlmMetaLearningAdapter,
     LlmGnnAdapter,
+};
+
+pub use gpu_neural_enhancements::{
+    // GPU-accelerated neural enhancements
+    GpuCnnAttentionProcessor,
+    GpuEmbeddingTransformer,
+    MultiModalFusionProcessor,
+    GpuAttentionAnalyzer,
+    AttentionVisualFeatures,
+    AttentionPattern,
+    ComprehensiveAttentionAnalysis,
+};
+
+pub use gpu_visual_embeddings::{
+    // CNN-style visual processing
+    GpuResNetVisual,
+    VisionTransformerPatches,
+    VisualTextAligner,
+    AttentionToImageConverter,
 };
