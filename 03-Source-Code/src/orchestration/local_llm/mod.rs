@@ -7,6 +7,7 @@ pub mod bpe_tokenizer;
 pub mod sampling;
 pub mod llm_metrics;
 pub mod attention_analyzer;
+pub mod transfer_entropy_llm;
 
 pub use gpu_llm_inference::{
     GpuLocalLLMSystem,
@@ -56,4 +57,9 @@ pub use attention_analyzer::{
     AttentionAnalyzer,
     AttentionHealth,
     AttentionStats,
+};
+
+pub use transfer_entropy_llm::{
+    TransferEntropyLLM,
+    TransferEntropyStats,
 };
