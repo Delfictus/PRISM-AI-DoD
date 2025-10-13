@@ -15,12 +15,22 @@ pub mod arima_gpu;
 pub mod lstm_forecaster;
 pub mod uncertainty;
 
+// GPU-Optimized modules (Phase 2: Full GPU utilization)
+pub mod arima_gpu_optimized;
+pub mod lstm_gpu_optimized;
+pub mod uncertainty_gpu_optimized;
+
 pub use arima_gpu::{ArimaGpu, ArimaConfig, ArimaCoefficients, auto_arima};
 pub use lstm_forecaster::{LstmForecaster, LstmConfig, CellType};
 pub use uncertainty::{
     UncertaintyQuantifier, UncertaintyConfig, UncertaintyMethod,
     ForecastWithUncertainty
 };
+
+// Re-export GPU-optimized modules
+pub use arima_gpu_optimized::ArimaGpuOptimized;
+pub use lstm_gpu_optimized::LstmGpuOptimized;
+pub use uncertainty_gpu_optimized::UncertaintyGpuOptimized;
 
 use anyhow::Result;
 
