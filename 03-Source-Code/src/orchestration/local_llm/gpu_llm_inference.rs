@@ -76,7 +76,8 @@ pub struct ModelConfig {
 }
 
 // Re-export Day 1 implementations
-pub use crate::orchestration::local_llm::{BPETokenizer, TokenSampler, SamplingConfig};
+pub use crate::orchestration::local_llm::{BPETokenizer, TokenSampler, SamplingConfig, GgufLoader};
+use std::path::Path;
 
 /// Complete GPU LLM System
 pub struct GpuLocalLLMSystem {
@@ -86,7 +87,64 @@ pub struct GpuLocalLLMSystem {
 }
 
 impl GpuLocalLLMSystem {
-    /// Create new GPU LLM system
+    /// Create new GPU LLM system from GGUF file
+    ///
+    /// Loads a real model from GGUF format (Llama, Mistral, GPT-2, etc.)
+    ///
+    /// # Example
+    /// ```no_run
+    /// let mut system = GpuLocalLLMSystem::from_gguf_file("path/to/llama-7b-q4.gguf")?;
+    /// let output = system.generate_text("Hello", 20)?;
+    /// ```
+    pub fn from_gguf_file<P: AsRef<Path>>(path: P) -> Result<Self> {
+        println!("╔══════════════════════════════════════════╗");
+        println!("║  GPU LOCAL LLM SYSTEM                     ║");
+        println!("║  Loading from GGUF file                   ║");
+        println!("╚══════════════════════════════════════════╝\n");
+
+        // Load GGUF metadata first
+        let gguf_loader = GgufLoader::load(path.as_ref())?;
+        gguf_loader.print_info();
+
+        let vocab_size = gguf_loader.vocab_size()
+            .ok_or_else(|| anyhow::anyhow!("vocab_size not found"))? as usize;
+        let d_model = gguf_loader.embedding_dim()
+            .ok_or_else(|| anyhow::anyhow!("embedding_dim not found"))? as usize;
+        let n_layers = gguf_loader.layer_count()
+            .ok_or_else(|| anyhow::anyhow!("layer_count not found"))? as usize;
+        let n_heads = gguf_loader.head_count()
+            .ok_or_else(|| anyhow::anyhow!("head_count not found"))? as usize;
+        let max_seq_len = gguf_loader.context_length().unwrap_or(2048) as usize;
+
+        let config = ModelConfig {
+            vocab_size,
+            d_model,
+            n_layers,
+            n_heads,
+            max_seq_len,
+        };
+
+        println!("\nCreating transformer with GGUF weights...\n");
+
+        // Load model with GGUF weights
+        let model = GpuLLMInference::from_gguf_file(path)?;
+
+        // Create tokenizer with matching vocab size
+        let tokenizer = BPETokenizer::new(vocab_size);
+
+        println!("\n✅ GPU LLM System Ready");
+        println!("   {} layers on GPU", config.n_layers);
+        println!("   Loaded from GGUF file");
+        println!("   Ready for inference\n");
+
+        Ok(Self {
+            model,
+            tokenizer,
+            config,
+        })
+    }
+
+    /// Create new GPU LLM system with random weights
     pub fn new(architecture: LLMArchitecture) -> Result<Self> {
         let config = architecture.config();
 
