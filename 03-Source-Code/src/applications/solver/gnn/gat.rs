@@ -25,6 +25,7 @@ use ndarray::{Array1, Array2};
 use std::f64;
 
 use super::super::problem_embedding::EMBEDDING_DIM;
+use super::gpu_activations::GpuActivations;
 
 /// Number of attention heads
 pub const NUM_HEADS: usize = 8;
@@ -149,7 +150,7 @@ impl AttentionHead {
     /// Apply attention to aggregate neighbor features
     pub fn aggregate(
         &self,
-        node_features: &Array1<f64>,
+        _node_features: &Array1<f64>,
         neighbor_features: &[Array1<f64>],
         attention_weights: &[f64],
     ) -> Array1<f64> {
@@ -161,7 +162,8 @@ impl AttentionHead {
             aggregated = aggregated + transformed * weight;
         }
 
-        // Apply non-linearity (ELU activation)
+        // Apply non-linearity (ELU activation - CPU only for now)
+        // TODO: Add GPU-accelerated ELU when available from Worker 2
         aggregated.mapv(|x: f64| if x >= 0.0 { x } else { x.exp() - 1.0 })
     }
 }
@@ -176,6 +178,9 @@ pub struct GraphAttentionLayer {
 
     /// Configuration
     config: GatConfig,
+
+    /// GPU activations handler
+    gpu_activations: GpuActivations,
 }
 
 impl GraphAttentionLayer {
@@ -198,6 +203,7 @@ impl GraphAttentionLayer {
             heads,
             output_projection,
             config,
+            gpu_activations: GpuActivations::new(),
         }
     }
 
@@ -225,8 +231,8 @@ impl GraphAttentionLayer {
             // Add self-attention
             attention_scores.push(head.compute_attention(node_features, node_features));
 
-            // Softmax normalization
-            let attention_weights = self.softmax(&attention_scores);
+            // Softmax normalization (GPU-accelerated)
+            let attention_weights = self.softmax_gpu(&attention_scores)?;
 
             // Create neighbor list including self
             let mut all_neighbors = neighbor_features.to_vec();
@@ -274,7 +280,22 @@ impl GraphAttentionLayer {
         Ok(output)
     }
 
-    /// Softmax normalization
+    /// GPU-accelerated softmax normalization
+    fn softmax_gpu(&self, scores: &[f64]) -> Result<Vec<f64>> {
+        if scores.is_empty() {
+            return Ok(Vec::new());
+        }
+
+        let scores_array = Array1::from_vec(scores.to_vec());
+
+        // Use GPU accelerated softmax
+        let result_array = self.gpu_activations.softmax(&scores_array)?;
+
+        Ok(result_array.to_vec())
+    }
+
+    /// Softmax normalization (CPU fallback)
+    #[allow(dead_code)]
     fn softmax(&self, scores: &[f64]) -> Vec<f64> {
         if scores.is_empty() {
             return Vec::new();
@@ -378,7 +399,7 @@ mod tests {
         let layer = GraphAttentionLayer::new(config, 42);
 
         let scores = vec![1.0, 2.0, 3.0];
-        let weights = layer.softmax(&scores);
+        let weights = layer.softmax_gpu(&scores).unwrap();
 
         // Should sum to 1.0
         let sum: f64 = weights.iter().sum();
@@ -396,7 +417,7 @@ mod tests {
 
         // Large scores that could cause overflow
         let scores = vec![1000.0, 1001.0, 1002.0];
-        let weights = layer.softmax(&scores);
+        let weights = layer.softmax_gpu(&scores).unwrap();
 
         let sum: f64 = weights.iter().sum();
         assert!((sum - 1.0).abs() < 1e-6);
