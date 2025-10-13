@@ -8,6 +8,7 @@
 //! - Energy grid: Power grid optimization and renewable integration
 //! - Manufacturing: Production scheduling and predictive maintenance
 //! - Cybersecurity: Network intrusion detection and threat response
+//! - Agriculture: Precision agriculture and crop optimization
 
 pub mod drug_discovery;
 pub mod telecom;
@@ -16,3 +17,4 @@ pub mod supply_chain;
 pub mod energy_grid;
 pub mod manufacturing;
 pub mod cybersecurity;
+pub mod agriculture;
