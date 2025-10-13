@@ -244,6 +244,31 @@ impl GpuLocalLLMSystem {
     pub fn use_min_p_sampling(&mut self) {
         self.set_sampling_config(SamplingConfig::min_p_recommended());
     }
+
+    /// Enable KV-cache for efficient generation (enabled by default)
+    pub fn enable_kv_cache(&mut self) -> Result<()> {
+        self.model.enable_kv_cache()
+    }
+
+    /// Disable KV-cache (slower, but useful for testing)
+    pub fn disable_kv_cache(&mut self) {
+        self.model.disable_kv_cache();
+    }
+
+    /// Check if KV-cache is enabled
+    pub fn is_kv_cache_enabled(&self) -> bool {
+        self.model.is_kv_cache_enabled()
+    }
+
+    /// Clear KV-cache (call before starting new generation)
+    pub fn clear_kv_cache(&mut self) {
+        self.model.clear_kv_cache();
+    }
+
+    /// Get KV-cache statistics
+    pub fn kv_cache_stats(&self) -> Option<String> {
+        self.model.kv_cache_stats()
+    }
 }
 
 #[cfg(test)]

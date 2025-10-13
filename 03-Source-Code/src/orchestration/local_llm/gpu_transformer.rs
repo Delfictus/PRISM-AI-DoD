@@ -8,7 +8,7 @@ use std::sync::Arc;
 use std::path::Path;
 use cudarc::driver::{CudaContext, CudaSlice, LaunchConfig, PushKernelArg};
 use crate::gpu::GpuKernelExecutor;
-use crate::orchestration::local_llm::{TokenSampler, SamplingConfig, GgufGpuLoader};
+use crate::orchestration::local_llm::{TokenSampler, SamplingConfig, GgufGpuLoader, TransformerKVCache};
 
 /// GPU Transformer Layer - Complete Implementation
 pub struct GpuTransformerLayer {
@@ -257,6 +257,9 @@ pub struct GpuLLMInference {
     // Sampling strategy (Day 1 implementation)
     sampler: TokenSampler,
 
+    // KV-cache for efficient generation (Day 1 implementation, Day 4 integration)
+    kv_cache: Option<TransformerKVCache>,
+
     // Config
     vocab_size: usize,
     d_model: usize,
@@ -349,6 +352,15 @@ impl GpuLLMInference {
 
         let sampler = TokenSampler::new(SamplingConfig::standard());
 
+        // Initialize KV-cache (optional, enabled by default for efficiency)
+        let kv_cache = Some(TransformerKVCache::new(
+            n_layers,
+            1, // batch_size = 1
+            max_seq_len,
+            d_model,
+            context.clone(),
+        )?);
+
         Ok(Self {
             executor,
             context,
@@ -356,6 +368,7 @@ impl GpuLLMInference {
             token_embeddings,
             output_proj,
             sampler,
+            kv_cache,
             vocab_size,
             d_model,
             n_layers,
@@ -419,6 +432,15 @@ impl GpuLLMInference {
         // Initialize sampler with standard config (can be updated at runtime)
         let sampler = TokenSampler::new(SamplingConfig::standard());
 
+        // Initialize KV-cache for efficient generation
+        let kv_cache = Some(TransformerKVCache::new(
+            n_layers,
+            1, // batch_size = 1
+            max_seq_len,
+            d_model,
+            context.clone(),
+        )?);
+
         Ok(Self {
             executor,
             context,
@@ -426,6 +448,7 @@ impl GpuLLMInference {
             token_embeddings,
             output_proj,
             sampler,
+            kv_cache,
             vocab_size,
             d_model,
             n_layers,
@@ -538,6 +561,53 @@ impl GpuLLMInference {
     /// Get current sampling configuration
     pub fn sampling_config(&self) -> &SamplingConfig {
         self.sampler.config()
+    }
+
+    /// Enable KV-cache for efficient generation
+    pub fn enable_kv_cache(&mut self) -> Result<()> {
+        if self.kv_cache.is_none() {
+            self.kv_cache = Some(TransformerKVCache::new(
+                self.n_layers,
+                1, // batch_size = 1
+                self.max_seq_len,
+                self.d_model,
+                self.context.clone(),
+            )?);
+            println!("✅ KV-cache enabled");
+        }
+        Ok(())
+    }
+
+    /// Disable KV-cache (will recompute everything)
+    pub fn disable_kv_cache(&mut self) {
+        self.kv_cache = None;
+        println!("⚠️  KV-cache disabled (performance will be slower)");
+    }
+
+    /// Check if KV-cache is enabled
+    pub fn is_kv_cache_enabled(&self) -> bool {
+        self.kv_cache.is_some()
+    }
+
+    /// Clear KV-cache (useful when starting a new generation)
+    pub fn clear_kv_cache(&mut self) {
+        if let Some(ref mut cache) = self.kv_cache {
+            cache.clear_all();
+        }
+    }
+
+    /// Get KV-cache statistics
+    pub fn kv_cache_stats(&self) -> Option<String> {
+        self.kv_cache.as_ref().map(|cache| {
+            let stats = cache.stats();
+            format!(
+                "KV-Cache: {}/{} tokens ({:.1}% full), {:.2} MB",
+                stats.seq_len,
+                stats.max_seq_len,
+                stats.utilization * 100.0,
+                stats.memory_bytes as f64 / 1024.0 / 1024.0
+            )
+        })
     }
 }
 
