@@ -500,8 +500,9 @@ mod tests {
         assert!(latency < 1.0); // Should be very fast
 
         // Check threshold behavior
+        let spike_threshold = 0.5;
         for (i, &val) in input.iter().enumerate() {
-            assert_eq!(spikes[i], val > platform.spike_threshold);
+            assert_eq!(spikes[i], val > spike_threshold);
         }
     }
 
@@ -532,8 +533,9 @@ mod tests {
         platform.initialize();
 
         // Run a few steps
+        let coupling = Array2::eye(20);
         for _ in 0..5 {
-            let _ = platform.thermodynamic_evolution(0.01);
+            let _ = platform.thermodynamic_evolution(&coupling, 0.01);
         }
 
         let consistency = platform.verify_thermodynamic_consistency();
