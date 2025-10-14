@@ -15,7 +15,10 @@ pub mod drug_discovery;
 pub mod information_metrics;
 pub mod information_metrics_optimized;
 
-pub use robotics::{RoboticsController, RoboticsConfig, MotionPlanner, MotionPlan};
+pub use robotics::{
+    RoboticsController, RoboticsConfig, MotionPlanner, MotionPlan,
+    AdvancedTrajectoryForecaster, TrajectoryForecastConfig,
+};
 pub use scientific::{ScientificDiscovery, ScientificConfig};
 pub use drug_discovery::{DrugDiscoveryController, DrugDiscoveryConfig};
 pub use information_metrics::{
