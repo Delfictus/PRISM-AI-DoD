@@ -27,7 +27,8 @@ fn compile_cuda_kernels() {
     println!("cargo:rustc-link-search=native={}/lib64", cuda_path);
     println!("cargo:rustc-link-lib=cudart");
     println!("cargo:rustc-link-lib=cublas");
-    println!("cargo:rustc-link-lib=cudnn");
+    // cuDNN is optional - only needed for training
+    // println!("cargo:rustc-link-lib=cudnn");
 
     let out_dir = PathBuf::from(env::var("OUT_DIR").unwrap());
 
