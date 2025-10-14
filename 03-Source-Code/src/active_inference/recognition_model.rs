@@ -60,6 +60,9 @@ impl RecognitionModelValidator {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::active_inference::observation_model::ObservationModel;
+    use crate::active_inference::transition_model::TransitionModel;
+    use crate::active_inference::hierarchical_model::constants;
 
     fn create_test_inference() -> (VariationalInference, HierarchicalModel) {
         let model = HierarchicalModel::new();
