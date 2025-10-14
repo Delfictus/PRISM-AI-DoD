@@ -9,6 +9,7 @@
 //! - Article IV: Active Inference for dynamic rebalancing
 
 pub mod portfolio_optimizer;
+pub mod portfolio_forecaster;
 
 // Re-export main types
 pub use portfolio_optimizer::{
@@ -18,4 +19,11 @@ pub use portfolio_optimizer::{
     Asset,
     PortfolioConfig,
     OptimizationResult,
+};
+
+pub use portfolio_forecaster::{
+    PortfolioForecaster,
+    ForecastConfig,
+    ForecastedPortfolio,
+    RebalanceAction,
 };
