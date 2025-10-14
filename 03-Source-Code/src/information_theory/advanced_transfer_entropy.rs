@@ -6,6 +6,7 @@ use ndarray::{Array1, Array2};
 use std::collections::HashMap;
 use rustfft::{FftPlanner, num_complex::Complex};
 use rand::prelude::*;
+use rand_distr::Normal;
 use kdtree::KdTree;
 use kdtree::distance::squared_euclidean;
 
