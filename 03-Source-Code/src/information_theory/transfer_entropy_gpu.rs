@@ -4,10 +4,10 @@
 //! Provides Rust bindings and high-level API for GPU-accelerated
 //! information-theoretic causal inference.
 
-use anyhow::{Result, Context};
+use anyhow::Result;
 use ndarray::Array1;
 
-use super::{TransferEntropyResult, CausalDirection};
+use super::TransferEntropyResult;
 
 /// GPU-accelerated Transfer Entropy calculator
 ///

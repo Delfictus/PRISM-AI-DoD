@@ -494,7 +494,7 @@ mod tests {
         let estimator = KsgEstimator::default();
 
         let x = Array1::linspace(0.0, 10.0, 100);
-        let y = x.mapv(|v| (v - 0.5).sin());
+        let y = x.mapv(|v: f64| (v - 0.5).sin());
 
         let results = estimator.calculate_multiscale(&x, &y, 5).unwrap();
         assert_eq!(results.len(), 5);

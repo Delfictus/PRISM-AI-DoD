@@ -22,7 +22,7 @@
 //! - Kalman filter fuses with noisy measurements (zₖ)
 //! - Result: optimal state estimate with uncertainty quantification
 
-use anyhow::{Result, Context, bail};
+use anyhow::{Result, bail};
 use ndarray::{Array1, Array2};
 
 /// Kalman Filter configuration

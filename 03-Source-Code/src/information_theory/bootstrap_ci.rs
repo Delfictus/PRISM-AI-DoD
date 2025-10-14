@@ -19,7 +19,6 @@ use ndarray::Array1;
 use rand::{Rng, SeedableRng};
 use rand::rngs::StdRng;
 
-use super::TransferEntropyResult;
 
 /// Bootstrap confidence interval result
 #[derive(Debug, Clone)]
@@ -402,7 +401,7 @@ impl BootstrapResampler {
         let s = (-r.ln()).sqrt();
         let t = s - C[4];
 
-        let num = ((((((((C[8] * t + C[7]) * t + C[6]) * t + C[5]) * t + C[4]) * t + C[3]) * t + C[2]) * t + C[1]) * t + C[0]);
+        let num = (((((((C[8] * t + C[7]) * t + C[6]) * t + C[5]) * t + C[4]) * t + C[3]) * t + C[2]) * t + C[1]) * t + C[0];
 
         if y < 0.0 { -num } else { num }
     }

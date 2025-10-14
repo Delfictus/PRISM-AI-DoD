@@ -11,7 +11,7 @@
 use anyhow::{Result, Context, bail};
 use std::collections::VecDeque;
 
-use super::uncertainty::{UncertaintyConfig, UncertaintyMethod, ForecastWithUncertainty};
+use super::uncertainty::{UncertaintyConfig, ForecastWithUncertainty};
 
 /// GPU-optimized uncertainty quantifier
 pub struct UncertaintyGpuOptimized {

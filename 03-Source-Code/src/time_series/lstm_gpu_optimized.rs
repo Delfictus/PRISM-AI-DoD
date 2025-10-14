@@ -15,7 +15,6 @@
 //! - Uses FP16 Tensor Cores with FP32 accumulation
 
 use anyhow::{Result, Context, bail};
-use ndarray::{Array1, Array2};
 
 use super::lstm_forecaster::{LstmConfig, CellType};
 

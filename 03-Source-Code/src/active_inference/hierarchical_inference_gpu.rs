@@ -16,11 +16,11 @@
 //! - Message passing: bottom-up errors + top-down predictions
 //! - Update: ∂μ/∂t = -∂F/∂μ = prediction error from below - prediction error from above
 
-use anyhow::{Result, Context};
-use ndarray::{Array1, Array2};
+use anyhow::Result;
+use ndarray::Array1;
 
 use crate::gpu::kernel_executor::get_global_executor;
-use super::hierarchical_model::{GaussianBelief, HierarchicalModel};
+use super::hierarchical_model::HierarchicalModel;
 
 /// Configuration for hierarchical inference
 #[derive(Debug, Clone)]

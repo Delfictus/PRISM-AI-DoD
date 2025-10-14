@@ -9,17 +9,15 @@
 //! - /api/v1/* - REST endpoints (existing)
 
 use axum::{
-    extract::State,
-    response::{Html, IntoResponse, Response},
-    routing::{get, post},
-    Extension,
+    response::{Html, IntoResponse},
+    routing::get,
     Json, Router,
 };
 use async_graphql::{
     http::{playground_source, GraphQLPlaygroundConfig},
     EmptySubscription, Schema,
 };
-use async_graphql_axum::{GraphQL, GraphQLRequest, GraphQLResponse};
+use async_graphql_axum::GraphQL;
 use std::sync::Arc;
 
 use crate::api_server::{graphql_schema, AppState};

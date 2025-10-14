@@ -4,7 +4,6 @@
 //! based on workload characteristics and GPU architecture. Uses empirical tuning
 //! to find best-performing configurations.
 
-use anyhow::{Result, anyhow};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};

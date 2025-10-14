@@ -16,7 +16,7 @@
 //! - Batch processing for multiple series
 
 use anyhow::{Result, Context, bail};
-use ndarray::{Array1, Array2, Axis};
+use ndarray::{Array1, Array2};
 
 /// ARIMA model configuration
 #[derive(Debug, Clone)]

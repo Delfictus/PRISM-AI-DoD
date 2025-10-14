@@ -17,7 +17,7 @@
 //! - Large datasets (n > 500): 10-20x speedup
 
 use anyhow::Result;
-use ndarray::{Array1, Array2};
+use ndarray::Array2;
 use kdtree::KdTree;
 use kdtree::distance::squared_euclidean;
 use rayon::prelude::*;

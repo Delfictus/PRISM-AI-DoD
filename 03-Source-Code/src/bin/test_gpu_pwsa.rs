@@ -3,7 +3,7 @@
 //! Verifies that GPU operations work correctly (using GPU kernels)
 
 use anyhow::Result;
-use prism_ai::gpu::gpu_enabled::{SimpleGpuContext, SimpleGpuTensor, SimpleGpuLinear};
+use prism_ai::gpu::gpu_enabled::{SimpleGpuTensor, SimpleGpuLinear};
 use std::time::Instant;
 
 fn main() -> Result<()> {

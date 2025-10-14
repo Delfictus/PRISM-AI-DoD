@@ -9,12 +9,12 @@
 //! 3. Batch Processing: Parallel forecasting for multiple series
 //! 4. Memory Pooling: Reuse allocations across forecasts
 
-use anyhow::{Result, Context};
+use anyhow::Result;
 use ndarray::{Array1, Array2};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
-use super::{ArimaGpu, ArimaConfig, LstmForecaster, LstmConfig};
+use super::{ArimaGpu, ArimaConfig};
 
 /// Optimized GRU cell with fused operations
 ///
@@ -162,7 +162,7 @@ impl ArimaCoefficientCache {
                 cached.last_used = std::time::Instant::now();
 
                 // Reconstruct model from cached coefficients
-                let mut model = ArimaGpu::new(config)?;
+                let model = ArimaGpu::new(config)?;
                 // Note: Would need to expose a way to set coefficients directly
                 // For now, this demonstrates the caching concept
                 return Ok(model);
@@ -215,7 +215,7 @@ impl ArimaCoefficientCache {
         // Hash data (sample for large datasets)
         let sample_size = data.len().min(100);
         for &val in data.iter().step_by((data.len() / sample_size).max(1)) {
-            let hashed_val = ((val * 1e6).round() as i64);
+            let hashed_val = (val * 1e6).round() as i64;
             hashed_val.hash(&mut hasher);
         }
 

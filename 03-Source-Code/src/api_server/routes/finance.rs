@@ -3,7 +3,7 @@
 //! Portfolio optimization, risk assessment, market analysis
 
 use axum::{
-    extract::{Path, Query, State},
+    extract::{Path, State},
     routing::{get, post},
     Router, Json,
 };

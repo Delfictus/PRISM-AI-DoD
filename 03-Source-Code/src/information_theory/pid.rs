@@ -20,7 +20,7 @@
 //! - Williams & Beer (2010). "Nonnegative decomposition of multivariate information"
 //! - Bertschinger et al. (2014). "Quantifying unique information"
 
-use anyhow::{Result, Context};
+use anyhow::Result;
 use ndarray::Array1;
 use std::collections::HashMap;
 

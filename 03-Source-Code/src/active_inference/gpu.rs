@@ -16,7 +16,7 @@ use ndarray::{Array1, Array2};
 use anyhow::{Result, anyhow, Context};
 use cudarc::driver::{CudaContext, CudaFunction, CudaSlice, LaunchConfig, PushKernelArg};
 
-use super::{HierarchicalModel, VariationalInference, ObservationModel};
+use super::{HierarchicalModel, VariationalInference};
 
 /// GPU-accelerated variational inference engine
 ///

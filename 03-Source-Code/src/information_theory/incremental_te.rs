@@ -15,7 +15,7 @@
 //! 3. Efficient TE computation from updated histograms
 //! 4. Optional exponential decay for non-stationary processes
 
-use anyhow::{Result, Context};
+use anyhow::Result;
 use ndarray::Array1;
 use std::collections::HashMap;
 

@@ -16,7 +16,7 @@
 //! - Finance: Asset X → Y | Market index
 //! - PWSA: Missile A → Target | External forces
 
-use anyhow::{Result, Context};
+use anyhow::Result;
 use ndarray::Array1;
 
 use super::kdtree::KdTree;

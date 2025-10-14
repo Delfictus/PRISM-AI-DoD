@@ -27,12 +27,10 @@ pub mod dual_api;
 
 use axum::{
     Router,
-    routing::{get, post},
-    Extension,
+    routing::get,
     http::StatusCode,
 };
 use std::sync::Arc;
-use tokio::sync::RwLock;
 use tower::ServiceBuilder;
 use tower_http::{
     trace::TraceLayer,

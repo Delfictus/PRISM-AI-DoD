@@ -16,10 +16,10 @@
 //! - Optimal policy: π* = argmin_π G(π)
 
 use anyhow::{Result, Context};
-use ndarray::{Array1, Array2};
+use ndarray::Array1;
 
-use super::hierarchical_model::{HierarchicalModel, GaussianBelief};
-use super::policy_selection::{Policy, ExpectedFreeEnergyComponents};
+use super::hierarchical_model::HierarchicalModel;
+use super::policy_selection::Policy;
 use super::transition_model::{TransitionModel, ControlAction};
 
 /// Configuration for GPU policy search

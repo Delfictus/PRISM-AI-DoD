@@ -7,14 +7,13 @@
 
 use axum::{
     Router,
-    routing::{get, post},
+    routing::post,
     extract::{State, Json},
-    http::StatusCode,
 };
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 
-use crate::api_server::{AppState, Result, ApiError};
+use crate::api_server::{AppState, Result};
 
 // ============================================================================
 // Robotics Types

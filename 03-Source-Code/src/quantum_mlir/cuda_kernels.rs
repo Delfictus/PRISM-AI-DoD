@@ -4,7 +4,6 @@
 //! This solves ALL linking issues - kernels loaded at runtime from PTX files
 
 use cudarc::driver::*;
-use cudarc::nvrtc::compile_ptx_with_opts;
 use std::sync::Arc;
 use std::collections::HashMap;
 use anyhow::{Result, Context};

@@ -8,9 +8,8 @@
 //! - GPU acceleration for bound computation (Article II)
 //! - 10^-30 precision for critical calculations (Article III)
 
-use std::f64::consts::{E, PI};
 use ndarray::{Array1, Array2};
-use anyhow::{Result, anyhow};
+use anyhow::Result;
 
 /// PAC-Bayes bound configuration
 #[derive(Clone, Debug)]

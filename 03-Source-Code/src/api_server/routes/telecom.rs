@@ -10,7 +10,7 @@ use axum::{
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 
-use crate::api_server::{ApiError, Result, AppState, models::ApiResponse};
+use crate::api_server::{Result, AppState, models::ApiResponse};
 
 /// Network topology
 #[derive(Debug, Clone, Serialize, Deserialize)]

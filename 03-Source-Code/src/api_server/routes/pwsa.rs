@@ -3,14 +3,14 @@
 //! Provides threat detection, sensor fusion, and tracking capabilities
 
 use axum::{
-    extract::{Path, Query, State},
+    extract::{Path, State},
     routing::{get, post},
     Router, Json,
 };
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 
-use crate::api_server::{ApiError, Result, AppState, models::ApiResponse, info_theory::InfoTheoryMetrics};
+use crate::api_server::{Result, AppState, models::ApiResponse, info_theory::InfoTheoryMetrics};
 
 /// PWSA sensor data input
 #[derive(Debug, Clone, Serialize, Deserialize)]

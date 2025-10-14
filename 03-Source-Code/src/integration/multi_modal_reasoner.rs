@@ -6,8 +6,8 @@
 use anyhow::Result;
 use std::sync::Arc;
 use cudarc::driver::{CudaContext, CudaSlice};
-use crate::gpu::{GpuKernelExecutor, GpuTensorOpt};
-use ndarray::{Array1, Array2};
+use crate::gpu::GpuKernelExecutor;
+use ndarray::Array2;
 
 /// Reasoning mode
 #[derive(Debug, Clone, Copy)]

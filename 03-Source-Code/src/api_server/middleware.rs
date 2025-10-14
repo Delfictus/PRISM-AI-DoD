@@ -1,13 +1,12 @@
 //! API middleware for logging, rate limiting, etc.
 
 use axum::{
-    body::Body,
     extract::Request,
     http::StatusCode,
     middleware::Next,
     response::Response,
 };
-use std::time::{Duration, Instant};
+use std::time::Instant;
 
 /// Request ID middleware - adds unique ID to each request
 pub async fn request_id_middleware(

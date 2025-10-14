@@ -1,9 +1,8 @@
 // GPU Integration for Thermodynamic Network
 // Provides extension trait for automatic GPU acceleration
 
-use anyhow::Result;
 
-use super::{ThermodynamicNetwork, ThermodynamicState, NetworkConfig, EvolutionResult, ThermodynamicMetrics};
+use super::{ThermodynamicNetwork, EvolutionResult};
 
 /// Extension trait to add GPU acceleration to ThermodynamicNetwork
 pub trait ThermodynamicNetworkGpuExt {

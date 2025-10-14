@@ -7,9 +7,8 @@
 //! - Type-safe API contracts
 
 use async_graphql::{
-    Context, EmptySubscription, Object, Schema, SimpleObject, Union, ID,
+    EmptySubscription, Object, Schema, SimpleObject,
 };
-use serde::{Deserialize, Serialize};
 
 /// Root Query type
 pub struct QueryRoot;

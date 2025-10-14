@@ -19,8 +19,8 @@
 //! - Candidate: h̃ₜ = tanh(W·[rₜ ⊙ hₜ₋₁, xₜ] + b)
 //! - Hidden state: hₜ = (1 - zₜ) ⊙ hₜ₋₁ + zₜ ⊙ h̃ₜ
 
-use anyhow::{Result, Context, bail};
-use ndarray::{Array1, Array2, Array3, Axis};
+use anyhow::{Result, bail};
+use ndarray::{Array1, Array2};
 use rand::Rng;
 
 /// RNN cell type

@@ -7,7 +7,7 @@
 //! - Risk trajectory prediction
 
 use ndarray::Array1;
-use anyhow::{Result, Context};
+use anyhow::Result;
 use crate::time_series::{
     TimeSeriesForecaster, ArimaConfig, LstmConfig, UncertaintyConfig,
     ArimaGpuOptimized, LstmGpuOptimized  // GPU-optimized modules (Phase 3)
@@ -145,7 +145,7 @@ impl PortfolioForecaster {
             .collect();
 
         // Step 3: Create updated assets with forecasted returns
-        let mut updated_assets: Vec<Asset> = assets.iter()
+        let updated_assets: Vec<Asset> = assets.iter()
             .zip(expected_returns.iter())
             .map(|(asset, &forecasted_return)| {
                 let mut updated = asset.clone();

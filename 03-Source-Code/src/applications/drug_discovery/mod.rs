@@ -8,7 +8,6 @@
 //! GPU-accelerated via Worker 2's kernels
 
 use anyhow::Result;
-use ndarray::{Array1, Array2};
 use crate::active_inference::GenerativeModel;
 
 pub mod molecular;

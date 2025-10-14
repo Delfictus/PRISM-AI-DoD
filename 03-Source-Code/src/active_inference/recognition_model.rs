@@ -12,9 +12,7 @@
 
 use ndarray::Array1;
 use super::variational_inference::VariationalInference;
-use super::hierarchical_model::{HierarchicalModel, GaussianBelief, constants};
-use super::observation_model::ObservationModel;
-use super::transition_model::TransitionModel;
+use super::hierarchical_model::{HierarchicalModel, GaussianBelief};
 
 /// Test utilities for recognition model validation
 pub struct RecognitionModelValidator {

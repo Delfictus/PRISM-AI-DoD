@@ -19,7 +19,7 @@ use axum::{
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 
-use crate::api_server::{AppState, ApiError, Result};
+use crate::api_server::{AppState, Result};
 use crate::api_server::models::ApiResponse;
 
 /// GPU status information

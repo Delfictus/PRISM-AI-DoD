@@ -15,7 +15,7 @@
 //! - Short biomedical signals (EEG, ECG)
 //! - Real-time monitoring with limited data
 
-use anyhow::{Result, Context};
+use anyhow::Result;
 use ndarray::Array1;
 use std::collections::HashMap;
 

@@ -7,7 +7,7 @@
 //!
 //! Integration point with Worker 1's time series module (when available)
 
-use anyhow::{Result, Context};
+use anyhow::Result;
 use ndarray::Array1;
 
 use super::environment_model::ObstacleModel;

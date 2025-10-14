@@ -5,7 +5,7 @@
 use anyhow::{Result, Context as AnyhowContext};
 use std::sync::{Arc, Mutex, OnceLock};
 use cudarc::driver::CudaContext;
-use super::kernel_executor::{GpuKernelExecutor, get_global_executor};
+use super::kernel_executor::GpuKernelExecutor;
 
 /// Global GPU context and executor (shared across all tensors)
 static GPU_STATE: OnceLock<Arc<GpuState>> = OnceLock::new();

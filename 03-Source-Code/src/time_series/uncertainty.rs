@@ -14,8 +14,7 @@
 //! - Confidence Level: P(y ∈ [ŷ - ε, ŷ + ε]) ≥ 1 - α
 //! - Quantile Regression: Estimate conditional quantiles directly
 
-use anyhow::{Result, Context, bail};
-use ndarray::{Array1, Array2};
+use anyhow::{Result, bail};
 use std::collections::VecDeque;
 
 /// Uncertainty quantification method

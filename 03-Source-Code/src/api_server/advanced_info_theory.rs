@@ -7,7 +7,6 @@
 //! - Rényi entropy family
 //! - Numerically stable computations
 
-use std::collections::HashMap;
 
 /// Advanced information-theoretic metrics
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
