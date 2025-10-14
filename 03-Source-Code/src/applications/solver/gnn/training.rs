@@ -361,7 +361,7 @@ mod tests {
     use ndarray::Array1;
 
     fn create_test_samples(n: usize) -> Vec<TrainingSample> {
-        use super::super::ProblemType;
+        use crate::applications::solver::ProblemType;
 
         (0..n)
             .map(|i| {
@@ -409,7 +409,7 @@ mod tests {
 
     #[test]
     fn test_prediction() {
-        use super::super::ProblemType;
+        use crate::applications::solver::ProblemType;
 
         let config = TrainingConfig::default();
         let trainer = GnnTrainer::new(config);
@@ -463,7 +463,7 @@ mod tests {
 
     #[test]
     fn test_early_stopping() {
-        use super::super::ProblemType;
+        use crate::applications::solver::ProblemType;
 
         let mut config = TrainingConfig::default();
         config.max_epochs = 100;

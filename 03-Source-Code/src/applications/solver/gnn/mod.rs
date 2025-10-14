@@ -36,7 +36,9 @@
 pub mod gat;
 pub mod training;
 pub mod predictor;
+pub mod gpu_activations;
 
 pub use gat::{AttentionHead, GraphAttentionLayer, GatConfig, NUM_HEADS, HEAD_DIM};
 pub use training::{GnnTrainer, TrainingConfig, TrainingSample, TrainingHistory};
 pub use predictor::{GnnPredictor, PredictorConfig, PredictionResult, HybridStats, DEFAULT_CONFIDENCE_THRESHOLD};
+pub use gpu_activations::{GpuActivations, ActivationType};
