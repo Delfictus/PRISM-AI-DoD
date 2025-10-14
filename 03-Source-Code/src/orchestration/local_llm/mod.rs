@@ -14,6 +14,7 @@ pub mod phase6_adapters;
 pub mod phase6_llm_adapters;
 pub mod gpu_neural_enhancements;
 pub mod gpu_visual_embeddings;
+pub mod gpu_inference_optimization;
 
 pub use gpu_llm_inference::{
     GpuLocalLLMSystem,
@@ -125,4 +126,19 @@ pub use gpu_visual_embeddings::{
     VisionTransformerPatches,
     VisualTextAligner,
     AttentionToImageConverter,
+};
+
+pub use gpu_inference_optimization::{
+    // GPU-accelerated inference optimization
+    FlashAttention,
+    DynamicQuantizer,
+    KVCacheCompressor,
+    TokenVisualGrounding,
+    QuantizedTensor,
+    QuantizationParams,
+    CompressedKVCache,
+    GroundingResult,
+    BoundingBox,
+    MemoryStats,
+    CompressionStats,
 };
