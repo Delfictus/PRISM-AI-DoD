@@ -482,6 +482,7 @@ mod tests {
 
         let environment = EnvironmentState {
             obstacles: vec![obstacle],
+            free_space_radius: 1.0,
             timestamp: 0.0,
         };
 
@@ -495,7 +496,7 @@ mod tests {
         );
 
         // Check that policy deviates from straight line due to obstacle
-        let mut max_deviation = 0.0;
+        let mut max_deviation: f64 = 0.0;
         for t in 0..n_steps {
             let straight_y = 0.0; // Straight path has y=0
             let curved_y = curved_policy[[t, 1]];
@@ -527,6 +528,7 @@ mod tests {
 
         let environment = EnvironmentState {
             obstacles: vec![obstacle],
+            free_space_radius: 1.0,
             timestamp: 0.0,
         };
 
@@ -578,6 +580,7 @@ mod tests {
 
         let environment = EnvironmentState {
             obstacles: vec![],
+            free_space_radius: 1.0,
             timestamp: 0.0,
         };
 
@@ -619,6 +622,7 @@ mod tests {
             position: Array1::from_vec(vec![0.0, 0.0]),
             velocity: Array1::from_vec(vec![1.0, 2.0]),
             orientation: 0.0,
+            angular_velocity: 0.0,
             timestamp: 0.0,
         };
 
@@ -658,6 +662,7 @@ mod tests {
             position: Array1::from_vec(vec![5.0, 5.0]),
             velocity: Array1::from_vec(vec![0.0, 0.0]),
             orientation: 0.0,
+            angular_velocity: 0.0,
             timestamp: 0.0,
         };
 
@@ -707,6 +712,7 @@ mod tests {
             position: Array1::from_vec(vec![0.0, 0.0]),
             velocity: Array1::from_vec(vec![0.0, 0.0]),
             orientation: 0.0,
+            angular_velocity: 0.0,
             timestamp: 0.0,
         };
 
@@ -714,6 +720,7 @@ mod tests {
             position: Array1::from_vec(vec![10.0, 0.0]),
             velocity: Array1::from_vec(vec![0.0, 0.0]),
             orientation: 0.0,
+            angular_velocity: 0.0,
             timestamp: 2.0,
         };
 
@@ -728,6 +735,7 @@ mod tests {
 
         let environment = EnvironmentState {
             obstacles: vec![obstacle],
+            free_space_radius: 1.0,
             timestamp: 0.0,
         };
 
