@@ -17,6 +17,7 @@ pub mod gpu_visual_embeddings;
 pub mod gpu_inference_optimization;
 pub mod gpu_protein_folding;
 pub mod gpu_deep_graph_protein;
+pub mod gpu_protein_training;
 
 pub use gpu_llm_inference::{
     GpuLocalLLMSystem,
@@ -168,4 +169,15 @@ pub use gpu_deep_graph_protein::{
     DeepProteinPrediction,
     DeepGraphConfig,
     AccuracyMetrics,
+};
+
+pub use gpu_protein_training::{
+    // Full GPU acceleration + training capability for protein folding
+    FullGpuProteinSystem,
+    TrainingConfig,
+    TrainingMetrics,
+    ProteinDataset,
+    LossFunction,
+    OptimizerType,
+    TrainableParameters,
 };
