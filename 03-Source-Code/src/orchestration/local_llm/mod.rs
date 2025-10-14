@@ -18,6 +18,8 @@ pub mod gpu_inference_optimization;
 pub mod gpu_protein_folding;
 pub mod gpu_deep_graph_protein;
 pub mod gpu_protein_training;
+pub mod gpu_cutlass_kernels;
+pub mod pdb_dataset;
 
 pub use gpu_llm_inference::{
     GpuLocalLLMSystem,
@@ -176,8 +178,22 @@ pub use gpu_protein_training::{
     FullGpuProteinSystem,
     TrainingConfig,
     TrainingMetrics,
-    ProteinDataset,
     LossFunction,
-    OptimizerType,
-    TrainableParameters,
+};
+
+pub use gpu_cutlass_kernels::{
+    // CUTLASS 3.8 + FlashAttention-3 for cutting-edge GPU acceleration
+    CutlassKernels,
+    TensorOps,
+    TensorCoreArch,
+    ReductionOp,
+    ElementwiseOp,
+};
+
+pub use pdb_dataset::{
+    // PDB dataset loading for supervised training
+    ProteinDataset,
+    SecondaryStructure,
+    ProteinMetadata,
+    Batch,
 };
