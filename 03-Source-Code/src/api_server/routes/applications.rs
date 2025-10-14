@@ -171,6 +171,122 @@ pub struct CybersecurityThreatResponse {
     pub confidence: f64,
 }
 
+/// Climate forecast request
+#[derive(Debug, Deserialize, Serialize)]
+pub struct ClimateForecastRequest {
+    /// Historical climate data (temperature, rainfall, etc.)
+    pub historical_data: Vec<f64>,
+    /// Location identifier
+    pub location: String,
+    /// Forecast horizon (days)
+    pub horizon: usize,
+}
+
+/// Climate forecast response
+#[derive(Debug, Deserialize, Serialize)]
+pub struct ClimateForecastResponse {
+    /// Forecasted climate values
+    pub forecasted_values: Vec<f64>,
+    /// Extreme weather alerts
+    pub alerts: Vec<String>,
+    /// Confidence score
+    pub confidence: f64,
+}
+
+/// Smart city optimization request
+#[derive(Debug, Deserialize, Serialize)]
+pub struct SmartCityOptimizationRequest {
+    /// Resource type (energy, traffic, water, etc.)
+    pub resource_type: String,
+    /// Current resource levels
+    pub current_levels: Vec<f64>,
+    /// Optimization horizon (hours)
+    pub horizon: usize,
+}
+
+/// Smart city optimization response
+#[derive(Debug, Deserialize, Serialize)]
+pub struct SmartCityOptimizationResponse {
+    /// Optimized resource allocation
+    pub optimized_allocation: Vec<f64>,
+    /// Expected savings (%)
+    pub savings_percent: f64,
+    /// Recommendations
+    pub recommendations: Vec<String>,
+}
+
+/// Education performance prediction request
+#[derive(Debug, Deserialize, Serialize)]
+pub struct EducationPerformanceRequest {
+    /// Student historical performance
+    pub historical_performance: Vec<f64>,
+    /// Student ID
+    pub student_id: String,
+    /// Prediction horizon (weeks)
+    pub horizon: usize,
+}
+
+/// Education performance prediction response
+#[derive(Debug, Deserialize, Serialize)]
+pub struct EducationPerformanceResponse {
+    /// Predicted performance trajectory
+    pub performance_trajectory: Vec<f64>,
+    /// Risk level
+    pub risk_level: String,
+    /// Intervention recommendations
+    pub interventions: Vec<String>,
+}
+
+/// Retail inventory optimization request
+#[derive(Debug, Deserialize, Serialize)]
+pub struct RetailInventoryRequest {
+    /// Historical sales data
+    pub historical_sales: Vec<f64>,
+    /// Product ID
+    pub product_id: String,
+    /// Current inventory level
+    pub current_inventory: f64,
+    /// Forecast horizon (days)
+    pub horizon: usize,
+}
+
+/// Retail inventory optimization response
+#[derive(Debug, Deserialize, Serialize)]
+pub struct RetailInventoryResponse {
+    /// Optimal reorder quantity
+    pub reorder_quantity: f64,
+    /// Reorder timing (days)
+    pub reorder_timing: usize,
+    /// Expected stockout probability
+    pub stockout_probability: f64,
+}
+
+/// Construction project forecast request
+#[derive(Debug, Deserialize, Serialize)]
+pub struct ConstructionForecastRequest {
+    /// Project ID
+    pub project_id: String,
+    /// Historical progress data (% complete)
+    pub historical_progress: Vec<f64>,
+    /// Resource availability
+    pub resources: Option<Vec<f64>>,
+    /// Forecast horizon (days)
+    pub horizon: usize,
+}
+
+/// Construction project forecast response
+#[derive(Debug, Deserialize, Serialize)]
+pub struct ConstructionForecastResponse {
+    /// Predicted completion date (days from now)
+    pub estimated_completion: usize,
+    /// Progress trajectory
+    pub progress_trajectory: Vec<f64>,
+    /// Risk factors
+    pub risk_factors: Vec<String>,
+    /// Confidence score
+    pub confidence: f64,
+}
+
 // ============================================================================
 // Route Handlers
 // ============================================================================
@@ -293,6 +409,90 @@ async fn cybersecurity_predict_threats(
     }))
 }
 
+/// Climate forecasting endpoint
+async fn climate_forecast(
+    State(_state): State<Arc<AppState>>,
+    Json(req): Json<ClimateForecastRequest>,
+) -> Result<Json<ClimateForecastResponse>> {
+    // Mock response - TODO: Integrate with Worker 3 climate module
+    Ok(Json(ClimateForecastResponse {
+        forecasted_values: vec![22.5, 23.0, 24.5, 23.8, 22.0],
+        alerts: vec!["Heat wave possible on day 3".to_string()],
+        confidence: 0.80,
+    }))
+}
+
+/// Smart city optimization endpoint
+async fn smart_city_optimize(
+    State(_state): State<Arc<AppState>>,
+    Json(req): Json<SmartCityOptimizationRequest>,
+) -> Result<Json<SmartCityOptimizationResponse>> {
+    // Mock response - TODO: Integrate with Worker 3 smart city module
+    Ok(Json(SmartCityOptimizationResponse {
+        optimized_allocation: vec![85.0, 92.0, 88.0, 90.0],
+        savings_percent: 15.5,
+        recommendations: vec![
+            "Shift peak load to off-hours".to_string(),
+            "Implement dynamic pricing".to_string(),
+        ],
+    }))
+}
+
+/// Education performance prediction endpoint
+async fn education_predict_performance(
+    State(_state): State<Arc<AppState>>,
+    Json(req): Json<EducationPerformanceRequest>,
+) -> Result<Json<EducationPerformanceResponse>> {
+    // Mock response - TODO: Integrate with Worker 3 education module
+    let performance_trajectory = vec![75.0, 73.0, 70.0, 68.0];
+    let risk_level = if performance_trajectory.iter().any(|&p| p < 70.0) {
+        "HIGH"
+    } else if performance_trajectory.iter().any(|&p| p < 75.0) {
+        "MEDIUM"
+    } else {
+        "LOW"
+    };
+
+    Ok(Json(EducationPerformanceResponse {
+        performance_trajectory,
+        risk_level: risk_level.to_string(),
+        interventions: vec![
+            "Schedule tutoring sessions".to_string(),
+            "Review study habits".to_string(),
+        ],
+    }))
+}
+
+/// Retail inventory optimization endpoint
+async fn retail_optimize_inventory(
+    State(_state): State<Arc<AppState>>,
+    Json(req): Json<RetailInventoryRequest>,
+) -> Result<Json<RetailInventoryResponse>> {
+    // Mock response - TODO: Integrate with Worker 3 retail module
+    Ok(Json(RetailInventoryResponse {
+        reorder_quantity: 150.0,
+        reorder_timing: 7,
+        stockout_probability: 0.08,
+    }))
+}
+
+/// Construction project forecast endpoint
+async fn construction_forecast_project(
+    State(_state): State<Arc<AppState>>,
+    Json(req): Json<ConstructionForecastRequest>,
+) -> Result<Json<ConstructionForecastResponse>> {
+    // Mock response - TODO: Integrate with Worker 3 construction module
+    Ok(Json(ConstructionForecastResponse {
+        estimated_completion: 45,
+        progress_trajectory: vec![75.0, 80.0, 85.0, 90.0, 95.0, 100.0],
+        risk_factors: vec![
+            "Weather delays possible".to_string(),
+            "Material shortage risk".to_string(),
+        ],
+        confidence: 0.75,
+    }))
+}
+
 // ============================================================================
 // Router Setup
 // ============================================================================
@@ -318,6 +518,21 @@ pub fn routes() -> Router<Arc<AppState>> {
 
         // Cybersecurity
         .route("/cybersecurity/predict_threats", post(cybersecurity_predict_threats))
+
+        // Climate
+        .route("/climate/forecast", post(climate_forecast))
+
+        // Smart Cities
+        .route("/smart_city/optimize", post(smart_city_optimize))
+
+        // Education
+        .route("/education/predict_performance", post(education_predict_performance))
+
+        // Retail
+        .route("/retail/optimize_inventory", post(retail_optimize_inventory))
+
+        // Construction
+        .route("/construction/forecast_project", post(construction_forecast_project))
 }
 
 #[cfg(test)]
