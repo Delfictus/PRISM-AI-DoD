@@ -6,6 +6,7 @@
 //! - Threat classification and risk scoring
 //! - Incident response prioritization
 //! - Multi-stage attack pattern recognition
+//! - **NEW**: Threat trajectory forecasting with time series analysis
 //! - Active Inference for adaptive security
 //!
 //! Constitutional Compliance:
@@ -15,6 +16,7 @@
 //! - Defensive security only - no offensive capabilities
 
 pub mod detector;
+pub mod threat_forecaster;
 
 // Re-export main types
 pub use detector::{
@@ -27,4 +29,14 @@ pub use detector::{
     SecurityConfig,
     DetectionStrategy,
     IncidentResponse,
+};
+
+pub use threat_forecaster::{
+    ThreatForecaster,
+    ForecastConfig,
+    SecurityMetricPoint,
+    ThreatTrajectory,
+    ThreatWarning,
+    MitigationImpact,
+    ImpactCategory,
 };
