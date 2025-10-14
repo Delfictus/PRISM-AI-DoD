@@ -85,6 +85,16 @@ pub use mathematics::{
 pub use information_theory::{
     TransferEntropy, TransferEntropyResult, CausalDirection,
     detect_causal_direction,
+    // Phase 1 enhancements
+    KdTree, Neighbor, KsgEstimator, ConditionalTe,
+    BootstrapResampler, BootstrapCi, BootstrapMethod,
+    TransferEntropyGpu,
+    // Phase 2 enhancements
+    IncrementalTe, SparseHistogram, CountMinSketch, CompressedKey, CompressedHistogram,
+    AdaptiveEmbedding, EmbeddingParams, SymbolicTe,
+    // Phase 3 enhancements
+    PartialInfoDecomp, PidResult, PidMethod,
+    MultipleTestingCorrection, CorrectedPValues, CorrectionMethod,
 };
 
 pub use statistical_mechanics::{
