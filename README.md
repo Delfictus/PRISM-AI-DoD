@@ -103,6 +103,27 @@ cargo run --release --bin llm_consensus
 
 ---
 
+## Application Domains
+
+PRISM-AI provides production-ready implementations across **15+ real-world domains** with time series forecasting, GPU acceleration, and Active Inference integration.
+
+### Domain Coordination Strategy
+- **Worker 3** (Breadth): 13+ domains with rapid prototyping and broad coverage
+- **Worker 4** (Depth): Advanced/quantitative finance with state-of-the-art algorithms
+
+**Operational Domains**:
+Healthcare, Energy Grid, Manufacturing, Supply Chain, Agriculture, Telecom, Cybersecurity, Climate, Smart Cities, Education, Retail, Construction, Entertainment, Drug Discovery, Robotics
+
+**Key Features**:
+- Time series forecasting (ARIMA, LSTM, Kalman) integrated across all domains
+- GPU-accelerated compute (15-100x speedup target)
+- 24-hour trajectory prediction (healthcare, finance)
+- Real-time optimization and early warning systems
+
+📖 **Full Documentation**: [03-Source-Code/APPLICATIONS_README.md](03-Source-Code/APPLICATIONS_README.md)
+
+---
+
 ## Shared Infrastructure
 
 All three missions leverage:
