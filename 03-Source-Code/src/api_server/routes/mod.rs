@@ -8,3 +8,4 @@ pub mod llm;
 pub mod time_series;
 pub mod pixels;
 pub mod gpu_monitoring;
+pub mod applications; // Worker 3 application domain APIs

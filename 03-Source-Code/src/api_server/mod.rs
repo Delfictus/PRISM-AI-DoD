@@ -111,6 +111,9 @@ pub fn build_router(state: AppState) -> Router {
         .nest("/api/v1/pixels", routes::pixels::routes())
         .nest("/api/v1/gpu", routes::gpu_monitoring::routes())
 
+        // Worker 3 Application Domain APIs
+        .nest("/api/v1/applications", routes::applications::routes())
+
         // WebSocket endpoint
         .route("/ws", get(websocket::ws_handler))
 

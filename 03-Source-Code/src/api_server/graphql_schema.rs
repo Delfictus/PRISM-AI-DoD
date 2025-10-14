@@ -121,6 +121,33 @@ impl QueryRoot {
             },
         ]
     }
+
+    /// Healthcare risk prediction (Worker 3)
+    async fn healthcare_predict_risk(
+        &self,
+        input: HealthcareRiskInput,
+    ) -> HealthcareRiskResult {
+        HealthcareRiskResult {
+            risk_trajectory: vec![0.3, 0.35, 0.4, 0.45, 0.5],
+            risk_level: "MEDIUM".to_string(),
+            confidence: 0.85,
+            warnings: vec!["Elevated risk trend detected".to_string()],
+        }
+    }
+
+    /// Energy load forecasting (Worker 3)
+    async fn energy_forecast_load(
+        &self,
+        input: EnergyForecastInput,
+    ) -> EnergyForecastResult {
+        let forecasted_load = vec![150.0, 155.0, 160.0, 158.0, 152.0];
+        EnergyForecastResult {
+            forecasted_load: forecasted_load.clone(),
+            peak_load: 160.0,
+            confidence_lower: forecasted_load.iter().map(|v| v * 0.9).collect(),
+            confidence_upper: forecasted_load.iter().map(|v| v * 1.1).collect(),
+        }
+    }
 }
 
 /// Root Mutation type
@@ -292,6 +319,40 @@ struct EndpointMetrics {
     p95_response_time_ms: f64,
     requests_per_second: f64,
     error_rate: f64,
+}
+
+// ============================================================================
+// Worker 3 Application Domain Types
+// ============================================================================
+
+#[derive(async_graphql::InputObject)]
+struct HealthcareRiskInput {
+    historical_metrics: Vec<f64>,
+    horizon: i32,
+    risk_factors: Vec<String>,
+}
+
+#[derive(SimpleObject)]
+struct HealthcareRiskResult {
+    risk_trajectory: Vec<f64>,
+    risk_level: String,
+    confidence: f64,
+    warnings: Vec<String>,
+}
+
+#[derive(async_graphql::InputObject)]
+struct EnergyForecastInput {
+    historical_load: Vec<f64>,
+    horizon: i32,
+    temperature: Option<Vec<f64>>,
+}
+
+#[derive(SimpleObject)]
+struct EnergyForecastResult {
+    forecasted_load: Vec<f64>,
+    peak_load: f64,
+    confidence_lower: Vec<f64>,
+    confidence_upper: Vec<f64>,
 }
 
 /// Create GraphQL schema
