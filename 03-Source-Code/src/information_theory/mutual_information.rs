@@ -28,7 +28,7 @@
 
 use ndarray::Array1;
 use std::collections::HashMap;
-use super::kdtree::{KdTree, Point};
+use super::kdtree::KdTree;
 use super::ksg_estimator::digamma;
 
 /// Mutual Information estimation method
@@ -188,21 +188,21 @@ impl MutualInformationEstimator {
         let y_noisy: Array1<f64> = y.mapv(|v| v + rand::random::<f64>() * self.noise_level);
 
         // Build joint space [X, Y]
-        let xy_points: Vec<Point> = (0..n)
-            .map(|i| Point::new(vec![x_noisy[i], y_noisy[i]], i))
+        let xy_points: Vec<Vec<f64>> = (0..n)
+            .map(|i| vec![x_noisy[i], y_noisy[i]])
             .collect();
-        let xy_tree = KdTree::new(xy_points.clone());
+        let xy_tree = KdTree::new(&xy_points);
 
         // Build marginal spaces
-        let x_points: Vec<Point> = (0..n)
-            .map(|i| Point::new(vec![x_noisy[i]], i))
+        let x_points: Vec<Vec<f64>> = (0..n)
+            .map(|i| vec![x_noisy[i]])
             .collect();
-        let x_tree = KdTree::new(x_points);
+        let x_tree = KdTree::new(&x_points);
 
-        let y_points: Vec<Point> = (0..n)
-            .map(|i| Point::new(vec![y_noisy[i]], i))
+        let y_points: Vec<Vec<f64>> = (0..n)
+            .map(|i| vec![y_noisy[i]])
             .collect();
-        let y_tree = KdTree::new(y_points);
+        let y_tree = KdTree::new(&y_points);
 
         // KSG formula: I(X;Y) = ψ(k) + ψ(n) - ⟨ψ(n_x) + ψ(n_y)⟩
         let psi_k = digamma(self.k_neighbors as f64);
@@ -213,25 +213,25 @@ impl MutualInformationEstimator {
         for i in 0..n {
             // Find k-th nearest neighbor in joint space
             let query_xy = &xy_points[i];
-            let neighbors_xy = xy_tree.k_nearest(query_xy, self.k_neighbors + 1); // +1 to exclude self
+            let neighbors_xy = xy_tree.knn_search(query_xy, self.k_neighbors + 1); // +1 to exclude self
 
             // Get k-th distance (excluding self)
             let epsilon = neighbors_xy
                 .iter()
-                .filter(|(dist, idx)| *idx != i && *dist > 0.0)
+                .filter(|n| n.index != i && n.distance > 0.0)
                 .nth(self.k_neighbors - 1)
-                .map(|(dist, _)| *dist)
+                .map(|n| n.distance)
                 .unwrap_or(1.0);
 
             // Count neighbors in marginal spaces within epsilon
-            let query_x = Point::new(vec![x_noisy[i]], i);
+            let query_x = &x_points[i];
             let n_x = x_tree
-                .range_query(&query_x, epsilon, self.use_max_norm)
+                .range_search(query_x, epsilon)
                 .len();
 
-            let query_y = Point::new(vec![y_noisy[i]], i);
+            let query_y = &y_points[i];
             let n_y = y_tree
-                .range_query(&query_y, epsilon, self.use_max_norm)
+                .range_search(query_y, epsilon)
                 .len();
 
             psi_nx_sum += digamma(n_x as f64);
@@ -407,25 +407,25 @@ impl MutualInformationEstimator {
         let z_noisy: Array1<f64> = z.mapv(|v| v + rand::random::<f64>() * self.noise_level);
 
         // Build spaces
-        let xyz_points: Vec<Point> = (0..n)
-            .map(|i| Point::new(vec![x_noisy[i], y_noisy[i], z_noisy[i]], i))
+        let xyz_points: Vec<Vec<f64>> = (0..n)
+            .map(|i| vec![x_noisy[i], y_noisy[i], z_noisy[i]])
             .collect();
-        let xyz_tree = KdTree::new(xyz_points.clone());
+        let xyz_tree = KdTree::new(&xyz_points);
 
-        let xz_points: Vec<Point> = (0..n)
-            .map(|i| Point::new(vec![x_noisy[i], z_noisy[i]], i))
+        let xz_points: Vec<Vec<f64>> = (0..n)
+            .map(|i| vec![x_noisy[i], z_noisy[i]])
             .collect();
-        let xz_tree = KdTree::new(xz_points);
+        let xz_tree = KdTree::new(&xz_points);
 
-        let yz_points: Vec<Point> = (0..n)
-            .map(|i| Point::new(vec![y_noisy[i], z_noisy[i]], i))
+        let yz_points: Vec<Vec<f64>> = (0..n)
+            .map(|i| vec![y_noisy[i], z_noisy[i]])
             .collect();
-        let yz_tree = KdTree::new(yz_points);
+        let yz_tree = KdTree::new(&yz_points);
 
-        let z_points: Vec<Point> = (0..n)
-            .map(|i| Point::new(vec![z_noisy[i]], i))
+        let z_points: Vec<Vec<f64>> = (0..n)
+            .map(|i| vec![z_noisy[i]])
             .collect();
-        let z_tree = KdTree::new(z_points);
+        let z_tree = KdTree::new(&z_points);
 
         // KSG formula for conditional MI
         let psi_k = digamma(self.k_neighbors as f64);
@@ -435,23 +435,23 @@ impl MutualInformationEstimator {
 
         for i in 0..n {
             let query_xyz = &xyz_points[i];
-            let neighbors_xyz = xyz_tree.k_nearest(query_xyz, self.k_neighbors + 1);
+            let neighbors_xyz = xyz_tree.knn_search(query_xyz, self.k_neighbors + 1);
 
             let epsilon = neighbors_xyz
                 .iter()
-                .filter(|(dist, idx)| *idx != i && *dist > 0.0)
+                .filter(|n| n.index != i && n.distance > 0.0)
                 .nth(self.k_neighbors - 1)
-                .map(|(dist, _)| *dist)
+                .map(|n| n.distance)
                 .unwrap_or(1.0);
 
-            let query_xz = Point::new(vec![x_noisy[i], z_noisy[i]], i);
-            let n_xz = xz_tree.range_query(&query_xz, epsilon, true).len();
+            let query_xz = &xz_points[i];
+            let n_xz = xz_tree.range_search(query_xz, epsilon).len();
 
-            let query_yz = Point::new(vec![y_noisy[i], z_noisy[i]], i);
-            let n_yz = yz_tree.range_query(&query_yz, epsilon, true).len();
+            let query_yz = &yz_points[i];
+            let n_yz = yz_tree.range_search(query_yz, epsilon).len();
 
-            let query_z = Point::new(vec![z_noisy[i]], i);
-            let n_z = z_tree.range_query(&query_z, epsilon, true).len();
+            let query_z = &z_points[i];
+            let n_z = z_tree.range_search(query_z, epsilon).len();
 
             psi_nxz_sum += digamma(n_xz as f64);
             psi_nyz_sum += digamma(n_yz as f64);

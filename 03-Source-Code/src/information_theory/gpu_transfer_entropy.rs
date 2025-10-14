@@ -78,32 +78,16 @@ impl GpuTransferEntropy {
         self.calculate_with_ksg_cpu(source, target)
     }
 
-    /// Calculate using CPU KSG implementation (Worker 4's own implementation)
+    /// Calculate using CPU KSG implementation (Worker 1's implementation)
     fn calculate_with_ksg_cpu(&self, source: &Array1<f64>, target: &Array1<f64>) -> Result<TransferEntropyResult> {
-        use super::ksg_estimator::{KsgEstimator, KsgConfig};
+        use super::ksg_estimator::KsgEstimator;
 
-        let config = KsgConfig {
-            k_neighbors: self.k_neighbors,
-            source_embedding: 1,
-            target_embedding: 1,
-            time_lag: 1,
-            use_max_norm: true,
-            noise_level: 1e-10,
-        };
+        // Use Worker 1's simpler KSG API
+        let estimator = KsgEstimator::new(self.k_neighbors, 1, 1, 1);
+        let result = estimator.calculate(source, target)?;
 
-        let estimator = KsgEstimator::new(config);
-        let result = estimator.calculate(source, target);
-
-        // Convert KsgResult to TransferEntropyResult
-        // For now, we use simple conversions - can enhance with statistical tests later
-        Ok(TransferEntropyResult {
-            te_value: result.te_bits,       // Use bits as the main value
-            p_value: 0.05,                   // Placeholder - requires permutation test
-            std_error: 0.01,                 // Placeholder - requires bootstrap
-            effective_te: result.te_bits * 0.9, // Simple bias correction
-            n_samples: result.n_samples,
-            time_lag: 1,                     // From config
-        })
+        // Result is already TransferEntropyResult from Worker 1's API
+        Ok(result)
     }
 
     /// Calculate batch transfer entropy for multiple asset pairs
