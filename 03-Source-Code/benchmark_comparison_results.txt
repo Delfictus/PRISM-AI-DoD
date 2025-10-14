@@ -1,0 +1,1614 @@
+warning: patch for `cudarc` uses the features mechanism. default-features and features will not take effect because the patch dependency does not support this mechanism
+warning: use of deprecated associated function `gpu_reservoir::GpuReservoirComputer::new`: Use new_shared() with shared CUDA context
+   --> src/neuromorphic/src/gpu_reservoir.rs:662:27
+    |
+662 |     GpuReservoirComputer::new(config, gpu_config)
+    |                           ^^^
+    |
+    = note: `#[warn(deprecated)]` on by default
+
+warning: unused import: `rayon::prelude`
+  --> src/neuromorphic/src/gpu_reservoir.rs:15:5
+   |
+15 | use rayon::prelude::*;
+   |     ^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` on by default
+
+warning: unused variable: `reason`
+   --> src/neuromorphic/src/pattern_detector.rs:357:30
+    |
+357 |     fn record_failure(&self, reason: &str) {
+    |                              ^^^^^^ help: if this is intentional, prefix it with an underscore: `_reason`
+    |
+    = note: `#[warn(unused_variables)]` on by default
+
+warning: unused variable: `bin_source_past`
+   --> src/neuromorphic/src/transfer_entropy.rs:109:17
+    |
+109 |             let bin_source_past = self.discretize_vector(&source_past);
+    |                 ^^^^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_bin_source_past`
+
+warning: type `ReservoirStatistics` is more private than the item `ReservoirComputer::get_statistics`
+   --> src/neuromorphic/src/reservoir.rs:224:5
+    |
+224 |     pub fn get_statistics(&self) -> &ReservoirStatistics {
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ method `ReservoirComputer::get_statistics` is reachable at visibility `pub`
+    |
+note: but type `ReservoirStatistics` is only usable at visibility `pub(self)`
+   --> src/neuromorphic/src/reservoir.rs:108:1
+    |
+108 | struct ReservoirStatistics {
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^
+    = note: `#[warn(private_interfaces)]` on by default
+
+warning: fields `max_pool_size` and `total_allocated_bytes` are never read
+  --> src/neuromorphic/src/gpu_memory.rs:17:5
+   |
+13 | pub struct GpuMemoryPool {
+   |            ------------- fields in this struct
+...
+17 |     max_pool_size: usize,
+   |     ^^^^^^^^^^^^^
+18 |     total_allocated_bytes: Arc<Mutex<usize>>,
+   |     ^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` on by default
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+   --> src/neuromorphic/src/gpu_memory.rs:302:29
+    |
+302 |     pub fn borrow_zero_copy(&mut self) -> Result<GpuBufferBorrow> {
+    |                             ^^^^^^^^^            --------------- the same lifetime is hidden here
+    |                             |
+    |                             the lifetime is elided here
+    |
+    = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+    = note: `#[warn(mismatched_lifetime_syntaxes)]` on by default
+help: use `'_` for type paths
+    |
+302 |     pub fn borrow_zero_copy(&mut self) -> Result<GpuBufferBorrow<'_>> {
+    |                                                                 ++++
+
+warning: `neuromorphic-engine` (lib) generated 7 warnings
+warning: unused import: `HashMap`
+  --> src/prct-core/src/coloring.rs:10:24
+   |
+10 | use std::collections::{HashMap, HashSet};
+   |                        ^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` on by default
+
+warning: unused import: `rayon::prelude`
+ --> src/prct-core/src/coloring.rs:9:5
+  |
+9 | use rayon::prelude::*;
+  |     ^^^^^^^^^^^^^^
+
+warning: unused variable: `neuro_state`
+   --> src/prct-core/src/drpp_algorithm.rs:194:9
+    |
+194 |         neuro_state: &NeuroState,
+    |         ^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_neuro_state`
+    |
+    = note: `#[warn(unused_variables)]` on by default
+
+warning: unused variable: `quantum_state`
+   --> src/prct-core/src/drpp_algorithm.rs:195:9
+    |
+195 |         quantum_state: &QuantumState,
+    |         ^^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_quantum_state`
+
+warning: unused variable: `phase_field`
+   --> src/prct-core/src/drpp_algorithm.rs:196:9
+    |
+196 |         phase_field: &mut PhaseField,
+    |         ^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_phase_field`
+
+warning: unused variable: `n`
+  --> src/prct-core/src/simulated_annealing.rs:31:9
+   |
+31 |     let n = graph.num_vertices;
+   |         ^ help: if this is intentional, prefix it with an underscore: `_n`
+
+warning: `prct-core` (lib) generated 6 warnings (run `cargo fix --lib -p prct-core` to apply 1 suggestion)
+warning: unused import: `Array1`
+  --> src/quantum/src/prct_coloring.rs:12:15
+   |
+12 | use ndarray::{Array1, Array2};
+   |               ^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` on by default
+
+warning: unused import: `Context`
+  --> src/quantum/src/prct_coloring.rs:14:22
+   |
+14 | use anyhow::{Result, Context};
+   |                      ^^^^^^^
+
+warning: unused import: `Hamiltonian`
+  --> src/quantum/src/prct_coloring.rs:17:47
+   |
+17 | use crate::hamiltonian::{PhaseResonanceField, Hamiltonian};
+   |                                               ^^^^^^^^^^^
+
+warning: unused import: `HashMap`
+  --> src/quantum/src/gpu_coloring.rs:10:24
+   |
+10 | use std::collections::{HashMap, HashSet};
+   |                        ^^^^^^^
+
+warning: unused import: `Context`
+ --> src/quantum/src/prct_tsp.rs:8:22
+  |
+8 | use anyhow::{Result, Context};
+  |                      ^^^^^^^
+
+warning: unused import: `Context`
+  --> src/quantum/src/qubo.rs:10:22
+   |
+10 | use anyhow::{anyhow, Context, Result};
+   |                      ^^^^^^^
+
+warning: unused import: `std::sync::Arc`
+  --> src/quantum/src/qubo.rs:12:5
+   |
+12 | use std::sync::Arc;
+   |     ^^^^^^^^^^^^^^
+
+warning: variable does not need to be mutable
+   --> src/quantum/src/gpu_coloring.rs:287:13
+    |
+287 |         let mut gpu_priorities = stream.alloc_zeros::<f32>(n)
+    |             ----^^^^^^^^^^^^^^
+    |             |
+    |             help: remove this `mut`
+    |
+    = note: `#[warn(unused_mut)]` on by default
+
+warning: variable does not need to be mutable
+   --> src/quantum/src/gpu_coloring.rs:289:13
+    |
+289 |         let mut gpu_colors = stream.alloc_zeros::<u32>(n)
+    |             ----^^^^^^^^^^
+    |             |
+    |             help: remove this `mut`
+
+warning: variable does not need to be mutable
+   --> src/quantum/src/gpu_coloring.rs:291:13
+    |
+291 |         let mut gpu_can_color = stream.alloc_zeros::<u32>(n)
+    |             ----^^^^^^^^^^^^^
+    |             |
+    |             help: remove this `mut`
+
+warning: value assigned to `current_energy` is never read
+   --> src/quantum/src/qubo.rs:161:17
+    |
+161 |         let mut current_energy = self.best_energy;
+    |                 ^^^^^^^^^^^^^^
+    |
+    = help: maybe it is overwritten before being read?
+    = note: `#[warn(unused_assignments)]` on by default
+
+warning: variable `tour_gpu` is assigned to, but never used
+  --> src/quantum/src/gpu_k_opt.rs:86:17
+   |
+86 |         let mut tour_gpu = stream.memcpy_stod(&tour_i32)?;
+   |                 ^^^^^^^^
+   |
+   = note: consider using `_tour_gpu` instead
+   = note: `#[warn(unused_variables)]` on by default
+
+warning: unused variable: `dist_gpu`
+  --> src/quantum/src/gpu_k_opt.rs:89:13
+   |
+89 |         let dist_gpu = stream.memcpy_stod(&dist_flat)?;
+   |             ^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_dist_gpu`
+
+warning: unused variable: `best_i_gpu`
+  --> src/quantum/src/gpu_k_opt.rs:92:17
+   |
+92 |         let mut best_i_gpu = stream.alloc_zeros::<i32>(1)?;
+   |                 ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_best_i_gpu`
+
+warning: unused variable: `best_j_gpu`
+  --> src/quantum/src/gpu_k_opt.rs:93:17
+   |
+93 |         let mut best_j_gpu = stream.alloc_zeros::<i32>(1)?;
+   |                 ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_best_j_gpu`
+
+warning: variable `best_delta_gpu` is assigned to, but never used
+  --> src/quantum/src/gpu_k_opt.rs:94:17
+   |
+94 |         let mut best_delta_gpu = stream.memcpy_stod(&[f32::INFINITY])?;
+   |                 ^^^^^^^^^^^^^^
+   |
+   = note: consider using `_best_delta_gpu` instead
+
+warning: value assigned to `tour_gpu` is never read
+   --> src/quantum/src/gpu_k_opt.rs:104:13
+    |
+104 |             tour_gpu = stream.memcpy_stod(&tour_i32)?;
+    |             ^^^^^^^^
+    |
+    = help: maybe it is overwritten before being read?
+
+warning: value assigned to `best_delta_gpu` is never read
+   --> src/quantum/src/gpu_k_opt.rs:108:13
+    |
+108 |             best_delta_gpu = stream.memcpy_stod(&[f32::INFINITY])?;
+    |             ^^^^^^^^^^^^^^
+    |
+    = help: maybe it is overwritten before being read?
+
+warning: unused variable: `block_size`
+   --> src/quantum/src/gpu_k_opt.rs:111:17
+    |
+111 |             let block_size = 16;
+    |                 ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_block_size`
+
+warning: unused variable: `cfg`
+   --> src/quantum/src/gpu_k_opt.rs:112:17
+    |
+112 |             let cfg = LaunchConfig {
+    |                 ^^^ help: if this is intentional, prefix it with an underscore: `_cfg`
+
+warning: variable does not need to be mutable
+  --> src/quantum/src/gpu_k_opt.rs:92:13
+   |
+92 |         let mut best_i_gpu = stream.alloc_zeros::<i32>(1)?;
+   |             ----^^^^^^^^^^
+   |             |
+   |             help: remove this `mut`
+
+warning: variable does not need to be mutable
+  --> src/quantum/src/gpu_k_opt.rs:93:13
+   |
+93 |         let mut best_j_gpu = stream.alloc_zeros::<i32>(1)?;
+   |             ----^^^^^^^^^^
+   |             |
+   |             help: remove this `mut`
+
+warning: methods `generate_chromatic_coloring` and `optimize_tsp_ordering` are never used
+   --> src/quantum/src/hamiltonian.rs:196:8
+    |
+137 | impl PhaseResonanceField {
+    | ------------------------ methods in this implementation
+...
+196 |     fn generate_chromatic_coloring(&mut self, n_atoms: usize) {
+    |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+...
+220 |     fn optimize_tsp_ordering(&mut self, n_atoms: usize) {
+    |        ^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` on by default
+
+warning: fields `masses`, `stencil_order`, and `energy_tolerance` are never read
+   --> src/quantum/src/hamiltonian.rs:529:5
+    |
+522 | pub struct Hamiltonian {
+    |            ----------- fields in this struct
+...
+529 |     masses: Array1<f64>,
+    |     ^^^^^^
+...
+545 |     stencil_order: usize,   // Finite difference stencil order (9-point)
+    |     ^^^^^^^^^^^^^
+...
+575 |     energy_tolerance: f64,
+    |     ^^^^^^^^^^^^^^^^
+    |
+    = note: `Hamiltonian` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: methods `calculate_coupling_strength` and `pauli_dot_product` are never used
+    --> src/quantum/src/hamiltonian.rs:1183:8
+     |
+ 581 | impl Hamiltonian {
+     | ---------------- methods in this implementation
+...
+1183 |     fn calculate_coupling_strength(&self, i: usize, j: usize, _t: f64) -> Complex64 {
+     |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+...
+1194 |     fn pauli_dot_product(&self, _i: usize, _j: usize) -> Complex64 {
+     |        ^^^^^^^^^^^^^^^^^
+
+warning: field `coupling` is never read
+  --> src/quantum/src/prct_coloring.rs:33:5
+   |
+21 | pub struct ChromaticColoring {
+   |            ----------------- field in this struct
+...
+33 |     coupling: Box<Array2<Complex64>>,
+   |     ^^^^^^^^
+   |
+   = note: `ChromaticColoring` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: field `max_k` is never read
+  --> src/quantum/src/gpu_k_opt.rs:14:5
+   |
+12 | pub struct GpuKOpt {
+   |            ------- field in this struct
+13 |     context: Arc<CudaContext>,
+14 |     max_k: usize,
+   |     ^^^^^
+
+warning: `quantum-engine` (lib) generated 27 warnings (run `cargo fix --lib -p quantum-engine` to apply 12 suggestions)
+warning: unused variable: `state`
+   --> src/foundation/src/adp/decision_processor.rs:182:34
+    |
+182 |     fn generate_reasoning(&self, state: &State, action: Action, features: &[f64]) -> String {
+    |                                  ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+    |
+    = note: `#[warn(unused_variables)]` on by default
+
+warning: field `quantum_hamiltonian` is never read
+  --> src/foundation/src/platform.rs:33:5
+   |
+26 | pub struct NeuromorphicQuantumPlatform {
+   |            --------------------------- field in this struct
+...
+33 |     quantum_hamiltonian: Arc<RwLock<Option<Hamiltonian>>>,
+   |     ^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `NeuromorphicQuantumPlatform` has a derived impl for the trait `Debug`, but this is intentionally ignored during dead code analysis
+   = note: `#[warn(dead_code)]` on by default
+
+warning: field `state_to_reservoir` is never read
+   --> src/foundation/src/platform.rs:101:5
+    |
+ 95 | struct BidirectionalCoupling {
+    |        --------------------- field in this struct
+...
+101 |     state_to_reservoir: f64,
+    |     ^^^^^^^^^^^^^^^^^^
+    |
+    = note: `BidirectionalCoupling` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: methods `ensure_quantum_initialized`, `extract_quantum_features`, and `initialize_quantum_state` are never used
+   --> src/foundation/src/platform.rs:758:14
+    |
+167 | impl NeuromorphicQuantumPlatform {
+    | -------------------------------- methods in this implementation
+...
+758 |     async fn ensure_quantum_initialized(&self, input: &PlatformInput) -> Result<()> {
+    |              ^^^^^^^^^^^^^^^^^^^^^^^^^^
+...
+782 |     async fn extract_quantum_features(&self, _input: &PlatformInput, neuro_results: &NeuromorphicResults) -> Vec<f64> {
+    |              ^^^^^^^^^^^^^^^^^^^^^^^^
+...
+822 |     async fn initialize_quantum_state(&self, hamiltonian: &mut Hamiltonian, features: &[f64]) -> Array1<Complex64> {
+    |              ^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: associated function `ingest_from_source` is never used
+   --> src/foundation/src/ingestion/engine.rs:325:14
+    |
+ 69 | impl IngestionEngine {
+    | -------------------- associated function in this implementation
+...
+325 |     async fn ingest_from_source(
+    |              ^^^^^^^^^^^^^^^^^^
+
+warning: `platform-foundation` (lib) generated 5 warnings
+   Compiling prism-ai v0.1.0 (/home/diddy/Desktop/PRISM-AI-DoD/03-Source-Code)
+warning: unused import: `rand_distr::Normal`
+ --> src/information_theory/advanced_transfer_entropy.rs:9:5
+  |
+9 | use rand_distr::Normal;
+  |     ^^^^^^^^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` on by default
+
+warning: unused import: `Context`
+  --> src/information_theory/conditional_te.rs:19:22
+   |
+19 | use anyhow::{Result, Context};
+   |                      ^^^^^^^
+
+warning: unused import: `super::TransferEntropyResult`
+  --> src/information_theory/bootstrap_ci.rs:22:5
+   |
+22 | use super::TransferEntropyResult;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unnecessary parentheses around assigned value
+   --> src/information_theory/bootstrap_ci.rs:405:19
+    |
+405 |         let num = ((((((((C[8] * t + C[7]) * t + C[6]) * t + C[5]) * t + C[4]) * t + C[3]) * t + C[2]) * t + C[1]) * t + C[0]);
+    |                   ^                                                                                                          ^
+    |
+    = note: `#[warn(unused_parens)]` on by default
+help: remove these parentheses
+    |
+405 -         let num = ((((((((C[8] * t + C[7]) * t + C[6]) * t + C[5]) * t + C[4]) * t + C[3]) * t + C[2]) * t + C[1]) * t + C[0]);
+405 +         let num = (((((((C[8] * t + C[7]) * t + C[6]) * t + C[5]) * t + C[4]) * t + C[3]) * t + C[2]) * t + C[1]) * t + C[0];
+    |
+
+warning: unused import: `Context`
+ --> src/information_theory/transfer_entropy_gpu.rs:7:22
+  |
+7 | use anyhow::{Result, Context};
+  |                      ^^^^^^^
+
+warning: unused import: `CausalDirection`
+  --> src/information_theory/transfer_entropy_gpu.rs:10:36
+   |
+10 | use super::{TransferEntropyResult, CausalDirection};
+   |                                    ^^^^^^^^^^^^^^^
+
+warning: unused import: `Context`
+  --> src/information_theory/incremental_te.rs:18:22
+   |
+18 | use anyhow::{Result, Context};
+   |                      ^^^^^^^
+
+warning: unused import: `Context`
+  --> src/information_theory/symbolic_te.rs:18:22
+   |
+18 | use anyhow::{Result, Context};
+   |                      ^^^^^^^
+
+warning: unused import: `Context`
+  --> src/information_theory/pid.rs:23:22
+   |
+23 | use anyhow::{Result, Context};
+   |                      ^^^^^^^
+
+warning: unused import: `anyhow::Result`
+ --> src/statistical_mechanics/gpu_integration.rs:4:5
+  |
+4 | use anyhow::Result;
+  |     ^^^^^^^^^^^^^^
+
+warning: unused imports: `NetworkConfig`, `ThermodynamicMetrics`, and `ThermodynamicState`
+ --> src/statistical_mechanics/gpu_integration.rs:6:35
+  |
+6 | use super::{ThermodynamicNetwork, ThermodynamicState, NetworkConfig, EvolutionResult, ThermodynamicMetrics};
+  |                                   ^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^                   ^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `Array1`
+  --> src/statistical_mechanics/gpu.rs:14:15
+   |
+14 | use ndarray::{Array1, Array2};
+   |               ^^^^^^
+
+warning: unused imports: `DeviceRepr` and `ValidAsZeroBits`
+  --> src/statistical_mechanics/gpu.rs:16:74
+   |
+16 | use cudarc::driver::{CudaContext, CudaFunction, CudaSlice, LaunchConfig, DeviceRepr, ValidAsZeroBits, PushKernelArg};
+   |                                                                          ^^^^^^^^^^  ^^^^^^^^^^^^^^^
+
+warning: unused import: `constants`
+  --> src/active_inference/recognition_model.rs:15:68
+   |
+15 | use super::hierarchical_model::{HierarchicalModel, GaussianBelief, constants};
+   |                                                                    ^^^^^^^^^
+
+warning: unused import: `super::observation_model::ObservationModel`
+  --> src/active_inference/recognition_model.rs:16:5
+   |
+16 | use super::observation_model::ObservationModel;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `super::transition_model::TransitionModel`
+  --> src/active_inference/recognition_model.rs:17:5
+   |
+17 | use super::transition_model::TransitionModel;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `ObservationModel`
+  --> src/active_inference/gpu.rs:19:54
+   |
+19 | use super::{HierarchicalModel, VariationalInference, ObservationModel};
+   |                                                      ^^^^^^^^^^^^^^^^
+
+warning: unused import: `Context`
+  --> src/active_inference/hierarchical_inference_gpu.rs:19:22
+   |
+19 | use anyhow::{Result, Context};
+   |                      ^^^^^^^
+
+warning: unused import: `Array2`
+  --> src/active_inference/hierarchical_inference_gpu.rs:20:23
+   |
+20 | use ndarray::{Array1, Array2};
+   |                       ^^^^^^
+
+warning: unused import: `GaussianBelief`
+  --> src/active_inference/hierarchical_inference_gpu.rs:23:33
+   |
+23 | use super::hierarchical_model::{GaussianBelief, HierarchicalModel};
+   |                                 ^^^^^^^^^^^^^^
+
+warning: unused import: `Array2`
+  --> src/active_inference/policy_search_gpu.rs:19:23
+   |
+19 | use ndarray::{Array1, Array2};
+   |                       ^^^^^^
+
+warning: unused import: `GaussianBelief`
+  --> src/active_inference/policy_search_gpu.rs:21:52
+   |
+21 | use super::hierarchical_model::{HierarchicalModel, GaussianBelief};
+   |                                                    ^^^^^^^^^^^^^^
+
+warning: unused import: `ExpectedFreeEnergyComponents`
+  --> src/active_inference/policy_search_gpu.rs:22:39
+   |
+22 | use super::policy_selection::{Policy, ExpectedFreeEnergyComponents};
+   |                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `CompiledQuantumKernel`
+  --> src/integration/quantum_mlir_integration.rs:12:36
+   |
+12 |     QuantumState, ExecutionParams, CompiledQuantumKernel
+   |                                    ^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `ThermodynamicNetwork`
+  --> src/integration/adapters.rs:14:36
+   |
+14 | use crate::statistical_mechanics::{ThermodynamicNetwork, ThermodynamicState};
+   |                                    ^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `GpuTensorOpt`
+ --> src/integration/multi_modal_reasoner.rs:9:37
+  |
+9 | use crate::gpu::{GpuKernelExecutor, GpuTensorOpt};
+  |                                     ^^^^^^^^^^^^
+
+warning: unused import: `Array1`
+  --> src/integration/multi_modal_reasoner.rs:10:15
+   |
+10 | use ndarray::{Array1, Array2};
+   |               ^^^^^^
+
+warning: unused import: `Complex64`
+  --> src/quantum_mlir/runtime.rs:12:13
+   |
+12 | use super::{Complex64, QuantumOp, Hamiltonian, QuantumState};
+   |             ^^^^^^^^^
+
+warning: unused import: `cudarc::nvrtc::compile_ptx_with_opts`
+ --> src/quantum_mlir/cuda_kernels.rs:7:5
+  |
+7 | use cudarc::nvrtc::compile_ptx_with_opts;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `cudarc::driver::result::DriverError`
+ --> src/quantum_mlir/gpu_memory.rs:6:5
+  |
+6 | use cudarc::driver::result::DriverError;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `Context`
+  --> src/quantum_mlir/mod.rs:22:22
+   |
+22 | use anyhow::{Result, Context};
+   |                      ^^^^^^^
+
+warning: unused import: `self::gpu_memory::GpuMemoryManager`
+  --> src/quantum_mlir/mod.rs:25:5
+   |
+25 | use self::gpu_memory::GpuMemoryManager;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `get_global_executor`
+ --> src/gpu/gpu_enabled.rs:8:49
+  |
+8 | use super::kernel_executor::{GpuKernelExecutor, get_global_executor};
+  |                                                 ^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `anyhow`
+  --> src/phase6/tda.rs:13:22
+   |
+13 | use anyhow::{Result, anyhow};
+   |                      ^^^^^^
+
+warning: unused import: `Array1`
+  --> src/phase6/tda.rs:14:15
+   |
+14 | use ndarray::{Array1, Array2};
+   |               ^^^^^^
+
+warning: unused import: `std::sync::Arc`
+  --> src/phase6/predictive_neuro.rs:12:5
+   |
+12 | use std::sync::Arc;
+   |     ^^^^^^^^^^^^^^
+
+warning: unused import: `Axis`
+  --> src/phase6/predictive_neuro.rs:14:39
+   |
+14 | use ndarray::{Array1, Array2, Array3, Axis};
+   |                                       ^^^^
+
+warning: unused import: `parking_lot::RwLock`
+  --> src/phase6/predictive_neuro.rs:15:5
+   |
+15 | use parking_lot::RwLock;
+   |     ^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `VariationalInference`
+  --> src/phase6/predictive_neuro.rs:18:48
+   |
+18 | use crate::active_inference::{GenerativeModel, VariationalInference};
+   |                                                ^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `anyhow`
+ --> src/phase6/integration.rs:7:22
+  |
+7 | use anyhow::{Result, anyhow};
+  |                      ^^^^^^
+
+warning: unused imports: `CircuitBreaker`, `DomainState`, `GenerativeModel`, `ThermodynamicState`, `VariationalInference`, `predictive_neuro::PredictiveNeuromorphic`, and `tda::TdaAdapter`
+  --> src/phase6/integration.rs:15:9
+   |
+15 |         tda::TdaAdapter,
+   |         ^^^^^^^^^^^^^^^
+16 |         predictive_neuro::PredictiveNeuromorphic,
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+...
+20 |     active_inference::{GenerativeModel, HierarchicalModel, VariationalInference},
+   |                        ^^^^^^^^^^^^^^^                     ^^^^^^^^^^^^^^^^^^^^
+21 |     statistical_mechanics::{ThermodynamicNetwork, ThermodynamicState, NetworkConfig},
+   |                                                   ^^^^^^^^^^^^^^^^^^
+22 |     integration::{CrossDomainBridge, DomainState},
+   |                                      ^^^^^^^^^^^
+23 |     resilience::{HealthMonitor, CircuitBreaker},
+   |                                 ^^^^^^^^^^^^^^
+
+warning: unused import: `nalgebra as na`
+   --> src/phase6/integration.rs:423:5
+    |
+423 | use nalgebra as na;
+    |     ^^^^^^^^^^^^^^
+
+warning: unused imports: `E` and `PI`
+  --> src/cma/pac_bayes.rs:11:24
+   |
+11 | use std::f64::consts::{E, PI};
+   |                        ^  ^^
+
+warning: unused import: `anyhow`
+  --> src/cma/pac_bayes.rs:13:22
+   |
+13 | use anyhow::{Result, anyhow};
+   |                      ^^^^^^
+
+warning: unused imports: `Array2` and `Axis`
+  --> src/cma/conformal_prediction.rs:12:23
+   |
+12 | use ndarray::{Array1, Array2, Axis};
+   |                       ^^^^^^  ^^^^
+
+warning: unused import: `rand::seq::SliceRandom`
+  --> src/cma/conformal_prediction.rs:14:5
+   |
+14 | use rand::seq::SliceRandom;
+   |     ^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `rand::thread_rng`
+  --> src/cma/conformal_prediction.rs:15:5
+   |
+15 | use rand::thread_rng;
+   |     ^^^^^^^^^^^^^^^^
+
+warning: unused import: `Context`
+  --> src/applications/robotics/trajectory.rs:10:22
+   |
+10 | use anyhow::{Result, Context};
+   |                      ^^^^^^^
+
+warning: unused imports: `Array1` and `Array2`
+  --> src/applications/drug_discovery/mod.rs:11:15
+   |
+11 | use ndarray::{Array1, Array2};
+   |               ^^^^^^  ^^^^^^
+
+warning: unused import: `Axis`
+  --> src/time_series/arima_gpu.rs:19:31
+   |
+19 | use ndarray::{Array1, Array2, Axis};
+   |                               ^^^^
+
+warning: unused import: `Context`
+  --> src/time_series/lstm_forecaster.rs:22:22
+   |
+22 | use anyhow::{Result, Context, bail};
+   |                      ^^^^^^^
+
+warning: unused imports: `Array3` and `Axis`
+  --> src/time_series/lstm_forecaster.rs:23:31
+   |
+23 | use ndarray::{Array1, Array2, Array3, Axis};
+   |                               ^^^^^^  ^^^^
+
+warning: unused import: `Context`
+  --> src/time_series/uncertainty.rs:17:22
+   |
+17 | use anyhow::{Result, Context, bail};
+   |                      ^^^^^^^
+
+warning: unused imports: `Array1` and `Array2`
+  --> src/time_series/uncertainty.rs:18:15
+   |
+18 | use ndarray::{Array1, Array2};
+   |               ^^^^^^  ^^^^^^
+
+warning: unused import: `Query`
+ --> src/api_server/routes/pwsa.rs:6:21
+  |
+6 |     extract::{Path, Query, State},
+  |                     ^^^^^
+
+warning: unused import: `ApiError`
+  --> src/api_server/routes/pwsa.rs:13:25
+   |
+13 | use crate::api_server::{ApiError, Result, AppState, models::ApiResponse, info_theory::InfoTheoryMetrics};
+   |                         ^^^^^^^^
+
+warning: unused import: `Query`
+ --> src/api_server/routes/finance.rs:6:21
+  |
+6 |     extract::{Path, Query, State},
+  |                     ^^^^^
+
+warning: unused import: `ApiError`
+  --> src/api_server/routes/telecom.rs:13:25
+   |
+13 | use crate::api_server::{ApiError, Result, AppState, models::ApiResponse};
+   |                         ^^^^^^^^
+
+warning: unused import: `ApiError`
+  --> src/api_server/routes/llm.rs:13:25
+   |
+13 | use crate::api_server::{ApiError, Result, AppState, models::ApiResponse};
+   |                         ^^^^^^^^
+
+warning: unused import: `body::Body`
+ --> src/api_server/middleware.rs:4:5
+  |
+4 |     body::Body,
+  |     ^^^^^^^^^^
+
+warning: unused import: `Duration`
+  --> src/api_server/middleware.rs:10:17
+   |
+10 | use std::time::{Duration, Instant};
+   |                 ^^^^^^^^
+
+warning: unused import: `std::collections::HashMap`
+  --> src/api_server/advanced_info_theory.rs:10:5
+   |
+10 | use std::collections::HashMap;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `Extension` and `post`
+  --> src/api_server/mod.rs:27:20
+   |
+27 |     routing::{get, post},
+   |                    ^^^^
+28 |     Extension,
+   |     ^^^^^^^^^
+
+warning: unused import: `tokio::sync::RwLock`
+  --> src/api_server/mod.rs:32:5
+   |
+32 | use tokio::sync::RwLock;
+   |     ^^^^^^^^^^^^^^^^^^^
+
+warning: unused variable: `hamiltonian`
+   --> src/phase6/integration.rs:240:9
+    |
+240 |         hamiltonian: &ModulatedHamiltonian,
+    |         ^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_hamiltonian`
+    |
+    = note: `#[warn(unused_variables)]` on by default
+
+warning: unused variable: `n`
+   --> src/phase6/integration.rs:242:13
+    |
+242 |         let n = adjacency.nrows();
+    |             ^ help: if this is intentional, prefix it with an underscore: `_n`
+
+warning: unused variable: `initial_state`
+   --> src/phase6/integration.rs:267:9
+    |
+267 |         initial_state: &Array1<f64>,
+    |         ^^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_initial_state`
+
+warning: unused variable: `avg_temp`
+   --> src/phase6/integration.rs:271:13
+    |
+271 |         let avg_temp = hamiltonian.local_temperature.mean().unwrap_or(1.0);
+    |             ^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_avg_temp`
+
+warning: unused variable: `state`
+  --> src/api_server/routes/pwsa.rs:95:11
+   |
+95 |     State(state): State<Arc<AppState>>,
+   |           ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+warning: unused variable: `state`
+   --> src/api_server/routes/pwsa.rs:140:11
+    |
+140 |     State(state): State<Arc<AppState>>,
+    |           ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+warning: unused variable: `state`
+   --> src/api_server/routes/pwsa.rs:159:11
+    |
+159 |     State(state): State<Arc<AppState>>,
+    |           ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+warning: unused variable: `state`
+   --> src/api_server/routes/pwsa.rs:179:11
+    |
+179 |     State(state): State<Arc<AppState>>,
+    |           ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+warning: unused variable: `state`
+   --> src/api_server/routes/finance.rs:103:11
+    |
+103 |     State(state): State<Arc<AppState>>,
+    |           ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+warning: unused variable: `state`
+   --> src/api_server/routes/finance.rs:195:11
+    |
+195 |     State(state): State<Arc<AppState>>,
+    |           ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+warning: unused variable: `state`
+   --> src/api_server/routes/finance.rs:215:11
+    |
+215 |     State(state): State<Arc<AppState>>,
+    |           ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+warning: unused variable: `state`
+   --> src/api_server/routes/finance.rs:233:11
+    |
+233 |     State(state): State<Arc<AppState>>,
+    |           ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+warning: unused variable: `state`
+   --> src/api_server/routes/finance.rs:299:11
+    |
+299 |     State(state): State<Arc<AppState>>,
+    |           ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+warning: unused variable: `request`
+   --> src/api_server/routes/finance.rs:300:10
+    |
+300 |     Json(request): Json<BacktestRequest>,
+    |          ^^^^^^^ help: if this is intentional, prefix it with an underscore: `_request`
+
+warning: unused variable: `state`
+   --> src/api_server/routes/telecom.rs:101:11
+    |
+101 |     State(state): State<Arc<AppState>>,
+    |           ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+warning: unused variable: `state`
+   --> src/api_server/routes/telecom.rs:122:11
+    |
+122 |     State(state): State<Arc<AppState>>,
+    |           ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+warning: unused variable: `state`
+   --> src/api_server/routes/telecom.rs:142:11
+    |
+142 |     State(state): State<Arc<AppState>>,
+    |           ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+warning: unused variable: `state`
+   --> src/api_server/routes/telecom.rs:157:11
+    |
+157 |     State(state): State<Arc<AppState>>,
+    |           ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+error[E0308]: mismatched types
+   --> src/api_server/routes/robotics.rs:108:19
+    |
+108 |         position: request.start_state.position,
+    |                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `ArrayBase<OwnedRepr<f64>, ...>`, found `(f64, f64, f64)`
+    |
+    = note: expected struct `ArrayBase<OwnedRepr<f64>, ndarray::Dim<[usize; 1]>>`
+                found tuple `(f64, f64, f64)`
+
+error[E0308]: mismatched types
+   --> src/api_server/routes/robotics.rs:109:19
+    |
+109 |         velocity: request.start_state.velocity,
+    |                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `ArrayBase<OwnedRepr<f64>, ...>`, found `(f64, f64, f64)`
+    |
+    = note: expected struct `ArrayBase<OwnedRepr<f64>, ndarray::Dim<[usize; 1]>>`
+                found tuple `(f64, f64, f64)`
+
+error[E0560]: struct `ros_bridge::RobotState` has no field named `joint_angles`
+   --> src/api_server/routes/robotics.rs:110:9
+    |
+110 |         joint_angles: request.start_state.joint_angles.clone(),
+    |         ^^^^^^^^^^^^ `ros_bridge::RobotState` does not have this field
+    |
+    = note: available fields are: `orientation`, `angular_velocity`
+
+error[E0308]: mismatched types
+   --> src/api_server/routes/robotics.rs:115:19
+    |
+115 |         position: request.goal_state.position,
+    |                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `ArrayBase<OwnedRepr<f64>, ...>`, found `(f64, f64, f64)`
+    |
+    = note: expected struct `ArrayBase<OwnedRepr<f64>, ndarray::Dim<[usize; 1]>>`
+                found tuple `(f64, f64, f64)`
+
+error[E0308]: mismatched types
+   --> src/api_server/routes/robotics.rs:116:19
+    |
+116 |         velocity: request.goal_state.velocity,
+    |                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `ArrayBase<OwnedRepr<f64>, ...>`, found `(f64, f64, f64)`
+    |
+    = note: expected struct `ArrayBase<OwnedRepr<f64>, ndarray::Dim<[usize; 1]>>`
+                found tuple `(f64, f64, f64)`
+
+error[E0560]: struct `ros_bridge::RobotState` has no field named `joint_angles`
+   --> src/api_server/routes/robotics.rs:117:9
+    |
+117 |         joint_angles: request.goal_state.joint_angles.clone(),
+    |         ^^^^^^^^^^^^ `ros_bridge::RobotState` does not have this field
+    |
+    = note: available fields are: `orientation`, `angular_velocity`
+
+error[E0609]: no field `state` on type `&trajectory::TrajectoryPoint`
+   --> src/api_server/routes/robotics.rs:132:30
+    |
+132 |                 position: wp.state.position,
+    |                              ^^^^^ unknown field
+    |
+    = note: available fields are: `time`, `position`, `velocity`
+
+error[E0609]: no field `state` on type `&trajectory::TrajectoryPoint`
+   --> src/api_server/routes/robotics.rs:134:34
+    |
+134 |                 joint_angles: wp.state.joint_angles.clone(),
+    |                                  ^^^^^ unknown field
+    |
+    = note: available fields are: `time`, `position`, `velocity`
+
+error[E0609]: no field `state` on type `&trajectory::TrajectoryPoint`
+   --> src/api_server/routes/robotics.rs:135:30
+    |
+135 |                 velocity: wp.state.velocity,
+    |                              ^^^^^ unknown field
+    |
+    = note: available fields are: `time`, `position`, `velocity`
+
+error[E0609]: no field `state` on type `trajectory::TrajectoryPoint`
+   --> src/api_server/routes/robotics.rs:141:23
+    |
+141 |         let dx = w[1].state.position.0 - w[0].state.position.0;
+    |                       ^^^^^ unknown field
+    |
+    = note: available fields are: `time`, `position`, `velocity`
+
+error[E0609]: no field `state` on type `trajectory::TrajectoryPoint`
+   --> src/api_server/routes/robotics.rs:141:47
+    |
+141 |         let dx = w[1].state.position.0 - w[0].state.position.0;
+    |                                               ^^^^^ unknown field
+    |
+    = note: available fields are: `time`, `position`, `velocity`
+
+error[E0609]: no field `state` on type `trajectory::TrajectoryPoint`
+   --> src/api_server/routes/robotics.rs:142:23
+    |
+142 |         let dy = w[1].state.position.1 - w[0].state.position.1;
+    |                       ^^^^^ unknown field
+    |
+    = note: available fields are: `time`, `position`, `velocity`
+
+error[E0609]: no field `state` on type `trajectory::TrajectoryPoint`
+   --> src/api_server/routes/robotics.rs:142:47
+    |
+142 |         let dy = w[1].state.position.1 - w[0].state.position.1;
+    |                                               ^^^^^ unknown field
+    |
+    = note: available fields are: `time`, `position`, `velocity`
+
+error[E0609]: no field `state` on type `trajectory::TrajectoryPoint`
+   --> src/api_server/routes/robotics.rs:143:23
+    |
+143 |         let dz = w[1].state.position.2 - w[0].state.position.2;
+    |                       ^^^^^ unknown field
+    |
+    = note: available fields are: `time`, `position`, `velocity`
+
+error[E0609]: no field `state` on type `trajectory::TrajectoryPoint`
+   --> src/api_server/routes/robotics.rs:143:47
+    |
+143 |         let dz = w[1].state.position.2 - w[0].state.position.2;
+    |                                               ^^^^^ unknown field
+    |
+    = note: available fields are: `time`, `position`, `velocity`
+
+error[E0609]: no field `total_time` on type `motion_planning::MotionPlan`
+   --> src/api_server/routes/robotics.rs:149:33
+    |
+149 |         total_time: worker_plan.total_time,
+    |                                 ^^^^^^^^^^ unknown field
+    |
+    = note: available fields are: `waypoints`, `expected_free_energy`, `planning_time_ms`, `reaches_goal`
+
+error[E0609]: no field `is_collision_free` on type `motion_planning::MotionPlan`
+   --> src/api_server/routes/robotics.rs:151:40
+    |
+151 |         is_collision_free: worker_plan.is_collision_free,
+    |                                        ^^^^^^^^^^^^^^^^^ unknown field
+    |
+    = note: available fields are: `waypoints`, `expected_free_energy`, `planning_time_ms`, `reaches_goal`
+
+warning: unused variable: `state`
+   --> src/api_server/routes/robotics.rs:160:11
+    |
+160 |     State(state): State<Arc<AppState>>,
+    |           ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+warning: unused variable: `state`
+   --> src/api_server/routes/robotics.rs:177:11
+    |
+177 |     State(state): State<Arc<AppState>>,
+    |           ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+warning: unused variable: `state`
+   --> src/api_server/routes/robotics.rs:200:11
+    |
+200 |     State(state): State<Arc<AppState>>,
+    |           ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+warning: unused variable: `state`
+  --> src/api_server/routes/llm.rs:85:11
+   |
+85 |     State(state): State<Arc<AppState>>,
+   |           ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+warning: unused variable: `state`
+   --> src/api_server/routes/llm.rs:105:11
+    |
+105 |     State(state): State<Arc<AppState>>,
+    |           ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+warning: unused variable: `state`
+   --> src/api_server/routes/llm.rs:125:11
+    |
+125 |     State(state): State<Arc<AppState>>,
+    |           ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+warning: unused variable: `state`
+   --> src/api_server/routes/llm.rs:161:11
+    |
+161 |     State(state): State<Arc<AppState>>,
+    |           ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+warning: unused variable: `state`
+   --> src/api_server/routes/llm.rs:180:11
+    |
+180 |     State(state): State<Arc<AppState>>,
+    |           ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+warning: unused variable: `state`
+   --> src/api_server/routes/time_series.rs:122:11
+    |
+122 |     State(state): State<Arc<AppState>>,
+    |           ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+warning: unused variable: `state`
+   --> src/api_server/routes/time_series.rs:241:11
+    |
+241 |     State(state): State<Arc<AppState>>,
+    |           ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+warning: unused variable: `state`
+   --> src/api_server/routes/time_series.rs:263:11
+    |
+263 |     State(state): State<Arc<AppState>>,
+    |           ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+warning: unused variable: `state`
+   --> src/api_server/routes/time_series.rs:287:11
+    |
+287 |     State(state): State<Arc<AppState>>,
+    |           ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+warning: unused variable: `state`
+   --> src/api_server/routes/time_series.rs:306:11
+    |
+306 |     State(state): State<Arc<AppState>>,
+    |           ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+warning: unused variable: `state`
+   --> src/api_server/routes/pixels.rs:144:11
+    |
+144 |     State(state): State<Arc<AppState>>,
+    |           ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+warning: unused variable: `state`
+   --> src/api_server/routes/pixels.rs:201:11
+    |
+201 |     State(state): State<Arc<AppState>>,
+    |           ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+warning: unused variable: `state`
+   --> src/api_server/routes/pixels.rs:221:11
+    |
+221 |     State(state): State<Arc<AppState>>,
+    |           ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+warning: unused variable: `state`
+   --> src/api_server/routes/pixels.rs:240:11
+    |
+240 |     State(state): State<Arc<AppState>>,
+    |           ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+warning: unused variable: `state`
+   --> src/api_server/routes/pixels.rs:258:11
+    |
+258 |     State(state): State<Arc<AppState>>,
+    |           ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+warning: unused variable: `state`
+  --> src/api_server/websocket.rs:76:43
+   |
+76 | async fn handle_socket(socket: WebSocket, state: Arc<AppState>) {
+   |                                           ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+warning: unused import: `Context`
+  --> src/statistical_mechanics/gpu.rs:15:30
+   |
+15 | use anyhow::{Result, anyhow, Context};
+   |                              ^^^^^^^
+
+warning: unused import: `Context`
+  --> src/active_inference/gpu.rs:16:30
+   |
+16 | use anyhow::{Result, anyhow, Context};
+   |                              ^^^^^^^
+
+warning: unused import: `gpu_integration::GpuSolvable`
+   --> src/cma/mod.rs:127:13
+    |
+127 |         use gpu_integration::GpuSolvable;
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `Read`
+  --> src/resilience/checkpoint_manager.rs:38:15
+   |
+38 | use std::io::{Read, Write};
+   |               ^^^^
+
+warning: unused import: `Context`
+ --> src/quantum_mlir/runtime.rs:6:22
+  |
+6 | use anyhow::{Result, Context};
+  |                      ^^^^^^^
+
+warning: unused import: `sha2::Digest`
+  --> src/cma/guarantees/mod.rs:16:5
+   |
+16 | use sha2::Digest;
+   |     ^^^^^^^^^^^^
+
+warning: unused variable: `psi_n`
+   --> src/information_theory/transfer_entropy.rs:391:13
+    |
+391 |         let psi_n = digamma(n as f64);
+    |             ^^^^^ help: if this is intentional, prefix it with an underscore: `_psi_n`
+
+warning: value assigned to `count_greater` is never read
+   --> src/information_theory/transfer_entropy.rs:487:17
+    |
+487 |         let mut count_greater = 0;
+    |                 ^^^^^^^^^^^^^
+    |
+    = help: maybe it is overwritten before being read?
+    = note: `#[warn(unused_assignments)]` on by default
+
+warning: unused variable: `rng`
+   --> src/information_theory/transfer_entropy.rs:491:17
+    |
+491 |             let rng = rand::thread_rng();
+    |                 ^^^ help: if this is intentional, prefix it with an underscore: `_rng`
+
+warning: unused variable: `lag_xy`
+   --> src/information_theory/transfer_entropy.rs:672:10
+    |
+672 |     let (lag_xy, result_xy) = te_calc.find_optimal_lag(x, y, max_lag);
+    |          ^^^^^^ help: if this is intentional, prefix it with an underscore: `_lag_xy`
+
+warning: unused variable: `lag_yx`
+   --> src/information_theory/transfer_entropy.rs:675:10
+    |
+675 |     let (lag_yx, result_yx) = te_calc.find_optimal_lag(y, x, max_lag);
+    |          ^^^^^^ help: if this is intentional, prefix it with an underscore: `_lag_yx`
+
+warning: unused variable: `source_i`
+   --> src/information_theory/advanced_transfer_entropy.rs:614:38
+    |
+614 |     pub fn unique_information(&self, source_i: &Array1<f64>,
+    |                                      ^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_source_i`
+
+warning: unused variable: `other_sources`
+   --> src/information_theory/advanced_transfer_entropy.rs:615:30
+    |
+615 | ...                   other_sources: &[Array1<f64>],
+    |                       ^^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_other_sources`
+
+warning: unused variable: `target`
+   --> src/information_theory/advanced_transfer_entropy.rs:616:30
+    |
+616 | ...                   target: &Array1<f64>) -> f64 {
+    |                       ^^^^^^ help: if this is intentional, prefix it with an underscore: `_target`
+
+warning: unused variable: `sources`
+   --> src/information_theory/advanced_transfer_entropy.rs:640:43
+    |
+640 |     pub fn synergistic_information(&self, sources: &[Array1<f64>],
+    |                                           ^^^^^^^ help: if this is intentional, prefix it with an underscore: `_sources`
+
+warning: unused variable: `target`
+   --> src/information_theory/advanced_transfer_entropy.rs:641:35
+    |
+641 | ...                   target: &Array1<f64>) -> f64 {
+    |                       ^^^^^^ help: if this is intentional, prefix it with an underscore: `_target`
+
+warning: unused variable: `n`
+  --> src/information_theory/ksg_estimator.rs:66:13
+   |
+66 |         let n = source.len();
+   |             ^ help: if this is intentional, prefix it with an underscore: `_n`
+
+warning: unused variable: `tree_dim_plus`
+   --> src/information_theory/ksg_estimator.rs:349:13
+    |
+349 |         let tree_dim_plus = KdTree::new(&points_dim_plus);
+    |             ^^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_tree_dim_plus`
+
+warning: unused variable: `n`
+  --> src/information_theory/conditional_te.rs:89:13
+   |
+89 |         let n = source.len();
+   |             ^ help: if this is intentional, prefix it with an underscore: `_n`
+
+warning: unused variable: `x_embed`
+   --> src/information_theory/transfer_entropy_gpu.rs:161:26
+    |
+161 |     fn gpu_ksg_te(&self, x_embed: &[Vec<f64>], y_embed: &[Vec<f64>], y_future: &[f64]) -> Result<f64> {
+    |                          ^^^^^^^ help: if this is intentional, prefix it with an underscore: `_x_embed`
+
+warning: unused variable: `y_embed`
+   --> src/information_theory/transfer_entropy_gpu.rs:161:48
+    |
+161 |     fn gpu_ksg_te(&self, x_embed: &[Vec<f64>], y_embed: &[Vec<f64>], y_future: &[f64]) -> Result<f64> {
+    |                                                ^^^^^^^ help: if this is intentional, prefix it with an underscore: `_y_embed`
+
+warning: unused variable: `y_future`
+   --> src/information_theory/transfer_entropy_gpu.rs:161:70
+    |
+161 |     fn gpu_ksg_te(&self, x_embed: &[Vec<f64>], y_embed: &[Vec<f64>], y_future: &[f64]) -> Result<f64> {
+    |                                                                      ^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_y_future`
+
+warning: unused variable: `source`
+   --> src/information_theory/transfer_entropy_gpu.rs:168:36
+    |
+168 |     fn gpu_permutation_test(&self, source: &Array1<f64>, target: &Array1<f64>, observed_te: f64) -> Result<f64> {
+    |                                    ^^^^^^ help: if this is intentional, prefix it with an underscore: `_source`
+
+warning: unused variable: `target`
+   --> src/information_theory/transfer_entropy_gpu.rs:168:58
+    |
+168 |     fn gpu_permutation_test(&self, source: &Array1<f64>, target: &Array1<f64>, observed_te: f64) -> Result<f64> {
+    |                                                          ^^^^^^ help: if this is intentional, prefix it with an underscore: `_target`
+
+warning: unused variable: `observed_te`
+   --> src/information_theory/transfer_entropy_gpu.rs:168:80
+    |
+168 |     fn gpu_permutation_test(&self, source: &Array1<f64>, target: &Array1<f64>, observed_te: f64) -> Result<f64> {
+    |                                                                                ^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_observed_te`
+
+warning: unused variable: `source`
+   --> src/information_theory/transfer_entropy_gpu.rs:174:36
+    |
+174 |     fn gpu_ksg_significance(&self, source: &Array1<f64>, target: &Array1<f64>, observed_te: f64) -> Result<f64> {
+    |                                    ^^^^^^ help: if this is intentional, prefix it with an underscore: `_source`
+
+warning: unused variable: `target`
+   --> src/information_theory/transfer_entropy_gpu.rs:174:58
+    |
+174 |     fn gpu_ksg_significance(&self, source: &Array1<f64>, target: &Array1<f64>, observed_te: f64) -> Result<f64> {
+    |                                                          ^^^^^^ help: if this is intentional, prefix it with an underscore: `_target`
+
+warning: unused variable: `observed_te`
+   --> src/information_theory/transfer_entropy_gpu.rs:174:80
+    |
+174 |     fn gpu_ksg_significance(&self, source: &Array1<f64>, target: &Array1<f64>, observed_te: f64) -> Result<f64> {
+    |                                                                                ^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_observed_te`
+
+warning: unused variable: `mi_y_x1`
+   --> src/information_theory/pid.rs:227:13
+    |
+227 |         let mi_y_x1 = self.mutual_information(y, x1)?;
+    |             ^^^^^^^ help: if this is intentional, prefix it with an underscore: `_mi_y_x1`
+
+warning: unused variable: `mi_y_x2`
+   --> src/information_theory/pid.rs:228:13
+    |
+228 |         let mi_y_x2 = self.mutual_information(y, x2)?;
+    |             ^^^^^^^ help: if this is intentional, prefix it with an underscore: `_mi_y_x2`
+
+warning: unused variable: `mi_y_x1x2`
+   --> src/information_theory/pid.rs:229:13
+    |
+229 |         let mi_y_x1x2 = self.mutual_information_joint(y, x1, x2)?;
+    |             ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_mi_y_x1x2`
+
+warning: unused variable: `dtheta`
+   --> src/statistical_mechanics/thermodynamic_network.rs:255:13
+    |
+255 |         let dtheta = 2.0 * PI / 10.0; // 10 bins in phase
+    |             ^^^^^^ help: if this is intentional, prefix it with an underscore: `_dtheta`
+
+warning: unused variable: `dv`
+   --> src/statistical_mechanics/thermodynamic_network.rs:256:13
+    |
+256 |         let dv = (KB * temperature).sqrt() / 5.0; // 5 bins in velocity
+    |             ^^ help: if this is intentional, prefix it with an underscore: `_dv`
+
+warning: unused variable: `natural_frequencies`
+   --> src/statistical_mechanics/thermodynamic_network.rs:278:9
+    |
+278 |         natural_frequencies: &[f64],
+    |         ^^^^^^^^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_natural_frequencies`
+
+warning: unused variable: `initial_entropy`
+   --> src/statistical_mechanics/thermodynamic_network.rs:398:13
+    |
+398 |         let initial_entropy = self.state.entropy;
+    |             ^^^^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_initial_entropy`
+
+warning: unused variable: `order_r`
+   --> src/statistical_mechanics/gpu.rs:266:13
+    |
+266 |         let order_r = (order_real_vec[0]*order_real_vec[0] + order_imag_vec[0]*order_imag_vec[0]).sqrt() / (n as f64);
+    |             ^^^^^^^ help: if this is intentional, prefix it with an underscore: `_order_r`
+
+warning: unused variable: `horizon`
+   --> src/active_inference/hierarchical_model.rs:434:31
+    |
+434 |     pub fn predict(&mut self, horizon: f64) {
+    |                               ^^^^^^^ help: if this is intentional, prefix it with an underscore: `_horizon`
+
+warning: unused variable: `weighted_dynamical`
+   --> src/active_inference/variational_inference.rs:225:13
+    |
+225 |         let weighted_dynamical = &dynamical_error * &model.level1.belief.precision;
+    |             ^^^^^^^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_weighted_dynamical`
+
+warning: unused variable: `action`
+  --> src/active_inference/controller.rs:43:17
+   |
+43 |             let action = self.controller.control(&test_model);
+   |                 ^^^^^^ help: if this is intentional, prefix it with an underscore: `_action`
+
+warning: unused variable: `obs`
+  --> src/active_inference/controller.rs:46:17
+   |
+46 |             let obs = Array1::<f64>::ones(100);  // Simplified
+   |                 ^^^ help: if this is intentional, prefix it with an underscore: `_obs`
+
+warning: unused variable: `num_steps`
+  --> src/active_inference/controller.rs:66:9
+   |
+66 |         num_steps: usize,
+   |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_num_steps`
+
+warning: unused variable: `diffusion`
+   --> src/active_inference/gpu_inference.rs:236:13
+    |
+236 |         let diffusion = level.diffusion;
+    |             ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_diffusion`
+
+warning: unused variable: `predicted`
+   --> src/active_inference/gpu_inference.rs:301:17
+    |
+301 |             let predicted = self.predict_observations_gpu(
+    |                 ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_predicted`
+
+warning: unused variable: `model`
+   --> src/active_inference/gpu_policy_eval.rs:684:42
+    |
+684 |     fn compute_efe_components(&mut self, model: &HierarchicalModel) -> Result<()> {
+    |                                          ^^^^^ help: if this is intentional, prefix it with an underscore: `_model`
+
+warning: unused variable: `t`
+   --> src/active_inference/policy_search_gpu.rs:380:18
+    |
+380 |             for (t, base_action) in base_policy.actions.iter().enumerate() {
+    |                  ^ help: if this is intentional, prefix it with an underscore: `_t`
+
+warning: unused variable: `j`
+  --> src/integration/information_channel.rs:60:22
+   |
+60 |                 for (j, &p_y_given_x) in self.transition_matrix.column(i).iter().enumerate() {
+   |                      ^ help: if this is intentional, prefix it with an underscore: `_j`
+
+warning: unused variable: `performance`
+   --> src/integration/unified_platform.rs:101:13
+    |
+101 |         let performance = self.total_latency_ms < 500.0;
+    |             ^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_performance`
+
+warning: unused variable: `exec`
+   --> src/integration/multi_modal_reasoner.rs:216:13
+    |
+216 |         let exec = self.executor.lock().unwrap();
+    |             ^^^^ help: if this is intentional, prefix it with an underscore: `_exec`
+
+warning: unused variable: `conf_gpu`
+   --> src/integration/multi_modal_reasoner.rs:220:13
+    |
+220 |         let conf_gpu = stream.memcpy_stod(&confidences)?;
+    |             ^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_conf_gpu`
+
+warning: unused variable: `op`
+   --> src/quantum_mlir/dialect.rs:117:42
+    |
+117 |             verification: Some(Box::new(|op| {
+    |                                          ^^ help: if this is intentional, prefix it with an underscore: `_op`
+
+warning: unused variable: `op`
+   --> src/quantum_mlir/dialect.rs:166:42
+    |
+166 |             verification: Some(Box::new(|op| {
+    |                                          ^^ help: if this is intentional, prefix it with an underscore: `_op`
+
+warning: unused variable: `block_size`
+  --> src/gpu/gpu_tensor_optimized.rs:69:13
+   |
+69 |         let block_size = 16;
+   |             ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_block_size`
+
+warning: variable does not need to be mutable
+   --> src/phase6/predictive_neuro.rs:488:13
+    |
+488 |         let mut xtx_reg = xtx + lambda * Array2::eye(self.reservoir_size);
+    |             ----^^^^^^^
+    |             |
+    |             help: remove this `mut`
+    |
+    = note: `#[warn(unused_mut)]` on by default
+
+warning: unused variable: `regulated`
+   --> src/phase6/predictive_neuro.rs:512:13
+    |
+512 |         let regulated = matrix + reg * Array2::eye(n);
+    |             ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_regulated`
+
+warning: variable does not need to be mutable
+   --> src/phase6/predictive_neuro.rs:508:13
+    |
+508 |         let mut inv = Array2::eye(n);
+    |             ----^^^
+    |             |
+    |             help: remove this `mut`
+
+warning: unused variable: `block_size`
+   --> src/phase6/gpu_tda.rs:179:13
+    |
+179 |         let block_size = 16;
+    |             ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_block_size`
+
+warning: unused variable: `delay`
+   --> src/cma/causal_discovery.rs:131:13
+    |
+131 |         let delay = 1;
+    |             ^^^^^ help: if this is intentional, prefix it with an underscore: `_delay`
+
+warning: unused variable: `beta`
+   --> src/cma/quantum/path_integral.rs:143:9
+    |
+143 |         beta: f64,
+    |         ^^^^ help: if this is intentional, prefix it with an underscore: `_beta`
+
+warning: unused variable: `hamiltonian`
+   --> src/cma/quantum/pimc_gpu.rs:168:37
+    |
+168 |     fn hamiltonian_to_matrix(&self, hamiltonian: &ProblemHamiltonian, n_dim: usize) -> Vec<f32> {
+    |                                     ^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_hamiltonian`
+
+warning: unused variable: `hamiltonian`
+   --> src/cma/neural/neural_quantum.rs:511:9
+    |
+511 |         hamiltonian: &ProblemHamiltonian,
+    |         ^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_hamiltonian`
+
+warning: unused variable: `hamiltonian`
+   --> src/cma/neural/neural_quantum.rs:526:9
+    |
+526 |         hamiltonian: &ProblemHamiltonian,
+    |         ^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_hamiltonian`
+
+warning: unused variable: `rng`
+  --> src/cma/gpu_integration.rs:76:13
+   |
+76 |         let rng = ChaCha20Rng::seed_from_u64(seed);
+   |             ^^^ help: if this is intentional, prefix it with an underscore: `_rng`
+
+warning: unused variable: `n`
+  --> src/cma/transfer_entropy_gpu.rs:63:13
+   |
+63 |         let n = source.len();
+   |             ^ help: if this is intentional, prefix it with an underscore: `_n`
+
+warning: unused variable: `psi`
+   --> src/cma/pac_bayes.rs:209:13
+    |
+209 |         let psi = |x: f64| -> f64 {
+    |             ^^^ help: if this is intentional, prefix it with an underscore: `_psi`
+
+warning: unused variable: `train_data`
+   --> src/cma/conformal_prediction.rs:212:14
+    |
+212 |         let (train_data, calib_data) = proper_training_data.split_at(split_point);
+    |              ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_train_data`
+
+warning: unused variable: `candidates`
+   --> src/cma/conformal_prediction.rs:391:58
+    |
+391 |     fn compute_efficiency(&self, prediction_set: &[f64], candidates: &[f64]) -> f64 {
+    |                                                          ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_candidates`
+
+warning: unused variable: `x`
+   --> src/cma/conformal_prediction.rs:476:35
+    |
+476 |     fn predict_uncertainty(&self, x: &Array1<f64>) -> Result<f64> {
+    |                                   ^ help: if this is intentional, prefix it with an underscore: `_x`
+
+warning: unused variable: `n`
+   --> src/time_series/arima_gpu.rs:392:13
+    |
+392 |         let n = data.len();
+    |             ^ help: if this is intentional, prefix it with an underscore: `_n`
+
+warning: unused variable: `x_arr`
+   --> src/time_series/lstm_forecaster.rs:353:13
+    |
+353 |         let x_arr = Array1::from(input_vec);
+    |             ^^^^^ help: if this is intentional, prefix it with an underscore: `_x_arr`
+
+warning: unused variable: `variance`
+   --> src/finance/portfolio_optimizer.rs:288:17
+    |
+288 |             let variance = self.compute_portfolio_variance(&weights, covariance);
+    |                 ^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_variance`
+
+warning: unused variable: `key`
+   --> src/api_server/advanced_info_theory.rs:141:13
+    |
+141 |         let key = (hash_sequence(&x_history), hash_sequence(&y_prev_history), y_current);
+    |             ^^^ help: if this is intentional, prefix it with an underscore: `_key`
+
+warning: unused variable: `y_recent`
+   --> src/api_server/advanced_info_theory.rs:346:9
+    |
+346 |     let y_recent = if y_history.is_empty() {
+    |         ^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_y_recent`
+
+warning: unused variable: `sharpe`
+  --> src/api_server/portfolio.rs:86:17
+   |
+86 |             let sharpe = (portfolio_return - self.risk_free_rate) / portfolio_risk;
+   |                 ^^^^^^ help: if this is intentional, prefix it with an underscore: `_sharpe`
+
+Some errors have detailed explanations: E0308, E0560, E0609.
+For more information about an error, try `rustc --explain E0308`.
+warning: `prism-ai` (lib) generated 174 warnings
+error: could not compile `prism-ai` (lib) due to 17 previous errors; 174 warnings emitted
