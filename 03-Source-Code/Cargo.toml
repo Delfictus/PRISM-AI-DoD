@@ -234,6 +234,10 @@ name = "pwsa_benchmarks"
 harness = false
 required-features = ["pwsa"]
 
+[[bench]]
+name = "worker7_performance"
+harness = false
+
 # ═══════════════════════════════════════════════════════════════════════════
 # CUDA 13 SUPPORT
 # ═══════════════════════════════════════════════════════════════════════════

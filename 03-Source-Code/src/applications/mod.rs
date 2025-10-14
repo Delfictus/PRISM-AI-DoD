@@ -13,6 +13,7 @@ pub mod robotics;
 pub mod scientific;
 pub mod drug_discovery;
 pub mod information_metrics;
+pub mod information_metrics_optimized;
 
 pub use robotics::{
     RoboticsController, RoboticsConfig, MotionPlanner, MotionPlan,
@@ -25,6 +26,7 @@ pub use information_metrics::{
     MolecularInformationMetrics,
     RoboticsInformationMetrics,
 };
+pub use information_metrics_optimized::OptimizedExperimentInformationMetrics;
 
 /// Applications module version
 pub const VERSION: &str = "0.1.0";
