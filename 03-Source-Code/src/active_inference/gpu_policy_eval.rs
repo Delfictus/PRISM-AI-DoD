@@ -736,8 +736,9 @@ mod tests {
         {
             use cudarc::driver::CudaContext;
             if let Ok(context) = CudaContext::new(0) {
+                let context_arc = Arc::new(context);
                 let evaluator = GpuPolicyEvaluator::new(
-                    Arc::new(context),
+                    context_arc,
                     5,   // n_policies
                     3,   // horizon
                     10,  // substeps
