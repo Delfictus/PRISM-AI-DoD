@@ -16,6 +16,7 @@ pub mod gpu_neural_enhancements;
 pub mod gpu_visual_embeddings;
 pub mod gpu_inference_optimization;
 pub mod gpu_protein_folding;
+pub mod gpu_deep_graph_protein;
 
 pub use gpu_llm_inference::{
     GpuLocalLLMSystem,
@@ -159,4 +160,12 @@ pub use gpu_protein_folding::{
     PhaseDynamicsAnalysis,
     FoldingDynamics,
     EnergyWeights,
+};
+
+pub use gpu_deep_graph_protein::{
+    // Deep multi-scale graph neural network for ultra-accurate protein folding
+    DeepGraphProteinFolder,
+    DeepProteinPrediction,
+    DeepGraphConfig,
+    AccuracyMetrics,
 };
