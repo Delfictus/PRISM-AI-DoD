@@ -32,6 +32,7 @@ pub mod gpu_context;
 pub mod gpu_linalg;
 pub mod gpu_risk;
 pub mod gnn_portfolio;
+pub mod causal_analysis;
 
 pub use market_regime::{MarketRegime, MarketRegimeDetector};
 pub use forecasting::{PortfolioForecaster, ForecastOptimizationConfig};
@@ -53,6 +54,11 @@ pub use gpu_risk::{GpuRiskAnalyzer, RiskMetrics, PortfolioUncertainty};
 pub use gnn_portfolio::{
     GnnPortfolioOptimizer, GnnPortfolioConfig, GnnPortfolioSolution,
     GnnPortfolioStats, PortfolioProblem,
+};
+pub use causal_analysis::{
+    CausalityAnalyzer, CausalAnalysisConfig, CausalRelationship,
+    TransferEntropyMatrix, NetworkStatistics, CausalPortfolioResult,
+    RelationshipStrength,
 };
 
 /// Represents a financial asset
