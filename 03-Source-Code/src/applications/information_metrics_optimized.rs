@@ -53,11 +53,14 @@ impl OptimizedExperimentInformationMetrics {
         }
 
         // Build KD-tree for fast nearest neighbor queries
-        let mut kdtree = KdTree::new(d);
+        // First collect all points to ensure they live long enough
+        let points: Vec<Vec<f64>> = (0..n)
+            .map(|i| samples.row(i).to_vec())
+            .collect();
 
-        for i in 0..n {
-            let point: Vec<f64> = samples.row(i).to_vec();
-            kdtree.add(&point, i).map_err(|e| anyhow::anyhow!("KD-tree error: {:?}", e))?;
+        let mut kdtree = KdTree::new(d);
+        for (i, point) in points.iter().enumerate() {
+            kdtree.add(point, i).map_err(|e| anyhow::anyhow!("KD-tree error: {:?}", e))?;
         }
 
         // Parallel computation of k-NN distances
@@ -158,17 +161,23 @@ impl OptimizedExperimentInformationMetrics {
         }
 
         // Build KD-trees for P and Q distributions
-        let mut p_kdtree = KdTree::new(d);
-        let mut q_kdtree = KdTree::new(d);
+        // First collect all points to ensure they live long enough
+        let p_points: Vec<Vec<f64>> = (0..n_p)
+            .map(|i| p_samples.row(i).to_vec())
+            .collect();
 
-        for i in 0..n_p {
-            let point: Vec<f64> = p_samples.row(i).to_vec();
-            p_kdtree.add(&point, i).map_err(|e| anyhow::anyhow!("KD-tree error: {:?}", e))?;
+        let q_points: Vec<Vec<f64>> = (0..n_q)
+            .map(|i| q_samples.row(i).to_vec())
+            .collect();
+
+        let mut p_kdtree = KdTree::new(d);
+        for (i, point) in p_points.iter().enumerate() {
+            p_kdtree.add(point, i).map_err(|e| anyhow::anyhow!("KD-tree error: {:?}", e))?;
         }
 
-        for i in 0..n_q {
-            let point: Vec<f64> = q_samples.row(i).to_vec();
-            q_kdtree.add(&point, i).map_err(|e| anyhow::anyhow!("KD-tree error: {:?}", e))?;
+        let mut q_kdtree = KdTree::new(d);
+        for (i, point) in q_points.iter().enumerate() {
+            q_kdtree.add(point, i).map_err(|e| anyhow::anyhow!("KD-tree error: {:?}", e))?;
         }
 
         // Parallel computation of KL sum

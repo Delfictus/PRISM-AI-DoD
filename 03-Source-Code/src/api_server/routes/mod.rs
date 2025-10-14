@@ -10,3 +10,4 @@ pub mod time_series;
 pub mod pixels;
 pub mod gpu_monitoring;
 pub mod applications; // Worker 3 application domain APIs
+pub mod worker7_apps; // Worker 7 specialized applications (Robotics, Drug Discovery, Scientific)
