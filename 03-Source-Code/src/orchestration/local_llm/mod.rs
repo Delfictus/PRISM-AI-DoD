@@ -15,6 +15,7 @@ pub mod phase6_llm_adapters;
 pub mod gpu_neural_enhancements;
 pub mod gpu_visual_embeddings;
 pub mod gpu_inference_optimization;
+pub mod gpu_protein_folding;
 
 pub use gpu_llm_inference::{
     GpuLocalLLMSystem,
@@ -118,6 +119,11 @@ pub use gpu_neural_enhancements::{
     AttentionVisualFeatures,
     AttentionPattern,
     ComprehensiveAttentionAnalysis,
+
+    // Protein folding prediction types
+    ProteinStructureFeatures,
+    SecondaryStructure,
+    ContactRanges,
 };
 
 pub use gpu_visual_embeddings::{
@@ -141,4 +147,16 @@ pub use gpu_inference_optimization::{
     BoundingBox,
     MemoryStats,
     CompressionStats,
+};
+
+pub use gpu_protein_folding::{
+    // GPU-accelerated neuromorphic-topological protein folding
+    GpuProteinFoldingSystem,
+    ProteinPrediction,
+    FreeEnergyAnalysis,
+    EntropyAnalysis,
+    BindingPocket,
+    PhaseDynamicsAnalysis,
+    FoldingDynamics,
+    EnergyWeights,
 };
