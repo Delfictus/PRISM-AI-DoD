@@ -734,6 +734,7 @@ impl GNNTrainingPipeline {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::cma::Solution;
 
     fn create_test_dataset(n: usize) -> GNNDataset {
         let ensembles: Vec<_> = (0..n).map(|i| Ensemble {

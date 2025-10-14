@@ -972,6 +972,7 @@ impl GpuBatchGNNTrainer {
 mod tests {
     use super::*;
     use ndarray::Array2;
+    use crate::cma::Solution;
 
     fn create_test_ensemble(n: usize) -> Ensemble {
         (0..n).map(|i| Solution {
