@@ -2,6 +2,7 @@
 
 pub mod pwsa;
 pub mod finance;
+pub mod finance_advanced; // Worker 4 advanced/quantitative finance APIs
 pub mod telecom;
 pub mod robotics;
 pub mod llm;

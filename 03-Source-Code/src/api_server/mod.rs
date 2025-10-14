@@ -114,6 +114,9 @@ pub fn build_router(state: AppState) -> Router {
         // Worker 3 Application Domain APIs
         .nest("/api/v1/applications", routes::applications::routes())
 
+        // Worker 4 Advanced Finance APIs
+        .nest("/api/v1/finance_advanced", routes::finance_advanced::routes())
+
         // WebSocket endpoint
         .route("/ws", get(websocket::ws_handler))
 
