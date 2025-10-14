@@ -512,7 +512,7 @@ mod tests {
 
         // Sample count should decrease
         assert!(n_samples_after < n_samples_before);
-        assert!((n_samples_after / n_samples_before - 0.95).abs() < 0.01);
+        assert!((n_samples_after as f64 / n_samples_before as f64 - 0.95).abs() < 0.01);
     }
 
     #[test]
@@ -520,7 +520,7 @@ mod tests {
         let mut inc_te = IncrementalTe::new(1, 1, 1, 10, 0);
 
         let x = Array1::linspace(0.0, 10.0, 100);
-        let y = x.mapv(|v| v.sin());
+        let y = x.mapv(|v: f64| v.sin());
 
         inc_te.initialize(&x, &y).unwrap();
 

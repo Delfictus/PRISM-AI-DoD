@@ -10,14 +10,14 @@
 //! - GPU-accelerated time series forecasting
 
 use anyhow::Result;
-use ndarray::{Array1, Array2};
+use ndarray::Array1;
 
 use crate::time_series::{
     TimeSeriesForecaster, ArimaConfig, LstmConfig, CellType,
     ForecastWithUncertainty,
 };
 
-use super::environment_model::{ObstacleModel, EnvironmentState};
+use super::environment_model::ObstacleModel;
 use super::trajectory::{Trajectory, TrajectoryPoint, EnvironmentSnapshot, AgentState, InteractionHistory};
 
 /// Configuration for trajectory forecasting

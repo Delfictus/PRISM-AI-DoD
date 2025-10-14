@@ -458,6 +458,6 @@ mod tests {
         println!("Compressed memory: {} bytes", compressed_memory);
 
         // Verify compressed memory is reasonable
-        assert!(compressed_memory < n_entries * 100); // Much less than naive storage
+        assert!(compressed_memory < n_entries as usize * 100); // Much less than naive storage
     }
 }

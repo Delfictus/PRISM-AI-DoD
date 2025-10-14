@@ -486,7 +486,7 @@ mod tests {
         assert_eq!(system.iteration(), 10);
 
         // Beliefs should have updated
-        let initial_belief = Array1::zeros(900);
+        let initial_belief: Array1<f64> = Array1::zeros(900);
         assert_ne!(system.levels[0].mean, initial_belief);
     }
 

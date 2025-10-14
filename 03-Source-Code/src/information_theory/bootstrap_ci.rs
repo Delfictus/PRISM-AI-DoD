@@ -450,7 +450,7 @@ mod tests {
         };
 
         let source = Array1::linspace(0.0, 10.0, 100);
-        let target = source.mapv(|x| x.sin());
+        let target = source.mapv(|x: f64| x.sin());
 
         let ci = resampler.calculate_ci(te_calc, &source, &target, 0.5).unwrap();
 
@@ -493,7 +493,7 @@ mod tests {
         };
 
         let source = Array1::linspace(0.0, 10.0, 100);
-        let target = source.mapv(|x| x.sin());
+        let target = source.mapv(|x: f64| x.sin());
 
         let ci = resampler.calculate_ci(te_calc, &source, &target, 0.3).unwrap();
 

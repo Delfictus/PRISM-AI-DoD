@@ -19,7 +19,7 @@ use std::collections::HashMap;
 use std::time::{SystemTime, Duration};
 use super::gnn_integration::E3EquivariantGNN;
 use super::neural_quantum::Device;
-use crate::cma::{CausalManifold, CausalEdge, Ensemble, Solution};
+use crate::cma::{CausalManifold, CausalEdge, Ensemble};
 
 /// Training configuration for GNN training loops.
 ///

@@ -11,7 +11,6 @@
 //! - Article I: Worker 3 owns this file
 //! - Article III: Comprehensive testing required
 
-use std::collections::HashMap;
 
 /// Enhanced information theory metrics with bias correction
 pub struct EnhancedITMetrics {
