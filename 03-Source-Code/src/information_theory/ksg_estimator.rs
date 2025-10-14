@@ -402,7 +402,7 @@ impl Clone for KsgEstimator {
 /// Digamma function (ψ) - derivative of log Gamma
 ///
 /// ψ(x) = d/dx [ln Γ(x)] = Γ'(x) / Γ(x)
-fn digamma(x: f64) -> f64 {
+pub fn digamma(x: f64) -> f64 {
     if x <= 0.0 {
         return f64::NEG_INFINITY;
     }
