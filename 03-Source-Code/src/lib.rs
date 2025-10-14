@@ -71,6 +71,9 @@ pub mod applications;
 // Finance applications
 pub mod finance;
 
+// Time series forecasting (Worker 1 integration)
+pub mod time_series;
+
 // Re-export key components
 pub use mathematics::{
     MathematicalStatement, ProofResult, Assumption,
