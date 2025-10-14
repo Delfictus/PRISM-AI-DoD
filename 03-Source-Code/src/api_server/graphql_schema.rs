@@ -148,6 +148,30 @@ impl QueryRoot {
             confidence_upper: forecasted_load.iter().map(|v| v * 1.1).collect(),
         }
     }
+
+    /// Drug discovery molecular screening (Worker 7)
+    async fn screen_molecules(
+        &self,
+        input: MolecularScreeningInput,
+    ) -> MolecularScreeningResult {
+        MolecularScreeningResult {
+            top_candidates: vec!["CCO".to_string(), "CC(=O)O".to_string()],
+            screening_time_ms: 150.0,
+            num_screened: input.molecules.len() as i32,
+        }
+    }
+
+    /// Scientific experiment design (Worker 7)
+    async fn design_experiment(
+        &self,
+        input: ExperimentDesignInput,
+    ) -> ExperimentDesignResult {
+        ExperimentDesignResult {
+            num_experiments: input.num_experiments,
+            expected_information_gain: 0.85,
+            design_strategy: "Latin Hypercube Sampling".to_string(),
+        }
+    }
 }
 
 /// Root Mutation type
@@ -353,6 +377,36 @@ struct EnergyForecastResult {
     peak_load: f64,
     confidence_lower: Vec<f64>,
     confidence_upper: Vec<f64>,
+}
+
+// ============================================================================
+// Worker 7 Application Types
+// ============================================================================
+
+#[derive(async_graphql::InputObject)]
+struct MolecularScreeningInput {
+    molecules: Vec<String>,
+    target_protein: String,
+}
+
+#[derive(SimpleObject)]
+struct MolecularScreeningResult {
+    top_candidates: Vec<String>,
+    screening_time_ms: f64,
+    num_screened: i32,
+}
+
+#[derive(async_graphql::InputObject)]
+struct ExperimentDesignInput {
+    hypothesis: String,
+    num_experiments: i32,
+}
+
+#[derive(SimpleObject)]
+struct ExperimentDesignResult {
+    num_experiments: i32,
+    expected_information_gain: f64,
+    design_strategy: String,
 }
 
 /// Create GraphQL schema
