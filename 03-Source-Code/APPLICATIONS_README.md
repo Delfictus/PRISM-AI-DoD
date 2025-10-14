@@ -217,68 +217,168 @@ if trajectory.warnings.len() > 0 {
 
 ---
 
-## Worker 4: Advanced Finance (Maximum Depth)
+## Worker 4: Advanced/Quantitative Finance (Maximum Depth)
 
-### Finance Portfolio Optimization
-**Location**: `src/finance/`
-**Status**: ✅ Production-Ready with Time Series Forecasting
+### Advanced Finance Portfolio Optimization
+**Location**: `src/applications/financial/`
+**Status**: ✅ Production-Ready (5,471 LOC)
+**Documentation**: [📖 Complete Financial Module Documentation](src/applications/financial/README.md)
+**API Namespace**: `/api/finance/advanced/*`
+**GPU Acceleration**: 50% (19/38 kernels)
 
-**Capabilities**:
+**Design Philosophy**: State-of-the-art algorithms, academic rigor, production-grade implementation
 
-#### 1. Portfolio Optimization
-- Modern Portfolio Theory (Markowitz)
-- Black-Litterman model
-- Risk parity strategies
-- GPU-accelerated covariance computation
+---
 
-#### 2. **NEW**: Portfolio Forecasting (Worker 3 Integration)
-**File**: `src/finance/portfolio_forecaster.rs` (520 lines)
+### Core Modules (8 Production-Ready Components):
 
-**Time Series Integration**:
-- Asset return forecasting (ARIMA/LSTM)
-- Volatility prediction with uncertainty quantification
-- Dynamic rebalancing recommendations
-- 95% confidence intervals
+#### 1. Interior Point QP Solver (508 LOC)
+- Primal-dual interior point method
+- Mehrotra predictor-corrector
+- Portfolio optimization with inequality constraints
+- KKT condition validation
 
-**Rebalancing Actions**:
-- Hold: Portfolio still optimal
-- Rebalance: Significant drift from optimal weights
-- ReduceRisk: High uncertainty detected
-- IncreaseRisk: Low uncertainty, opportunities available
+#### 2. GPU Infrastructure (1,142 LOC)
+- **GPU Context Management**: Device selection, memory management
+- **GPU Covariance**: 15-25x speedup for large asset universes
+- **GPU Forecasting**: ARIMA, LSTM, Kalman (50-100x speedup)
+- **GPU Linear Algebra**: Tensor Core WMMA (100-200x speedup)
+- **GPU Risk Analysis**: VaR/CVaR with Monte Carlo (10-20x speedup)
 
-**Example Usage**:
+#### 3. Risk Analysis (674 LOC)
+- Value-at-Risk (VaR): Historical, parametric, Monte Carlo
+- Conditional VaR (CVaR): Expected shortfall
+- Maximum Drawdown, Sharpe Ratio, Sortino Ratio
+- Beta, Tracking Error
+
+#### 4. Market Regime Detection (673 LOC)
+- Active Inference-based regime inference
+- 6 regime types: Bull, Bear, High/Low Volatility, Crisis, Recovery
+- Regime-adaptive portfolio strategies
+- Free energy minimization
+
+#### 5. Multi-Objective Optimization (472 LOC)
+- Pareto-optimal portfolios (NSGA-II algorithm)
+- Multiple objectives: Return, Risk, CVaR, Sharpe, Diversification
+- Trade-off visualization
+- Efficient frontier computation
+
+#### 6. Backtesting (730 LOC)
+- Historical simulation with transaction costs
+- Slippage modeling
+- Multiple rebalancing frequencies
+- Performance attribution and metrics
+
+#### 7. Dynamic Rebalancing (407 LOC)
+- Transaction cost-aware rebalancing
+- Optimal rebalancing timing
+- Cost-benefit analysis
+- Adaptive threshold adjustment
+
+#### 8. Asset Forecasting (587 LOC)
+- ARIMA, GARCH, LSTM forecasting
+- Volatility prediction
+- Uncertainty quantification (95% CI)
+- Integration with Worker 1 time series
+
+---
+
+### Phase 2 Integration (In Progress - Issue #17):
+
+#### GNN Integration (Worker 5):
+- Hybrid solver: GNN prediction + exact solver fallback
+- 10-100x speedup for high-confidence cases
+- Confidence-based routing (threshold 0.7)
+- Transfer learning across market conditions
+
+#### Transfer Entropy Integration (Worker 1):
+- Portfolio causality analysis (information flow between assets)
+- Market regime detection with causal structure
+- Lead-lag relationship identification
+- Causal risk decomposition
+
+---
+
+### Example Usage:
+
 ```rust
-use prism_ai::finance::{PortfolioForecaster, ForecastConfig, Asset};
+use prism_ai::applications::financial::{
+    InteriorPointQpSolver, MarketRegimeDetector,
+    MultiObjectiveOptimizer, GpuContext
+};
 
-let mut forecaster = PortfolioForecaster::new(portfolio_config, forecast_config)?;
+// Initialize GPU context
+let gpu_ctx = GpuContext::new(0)?;
 
-// Forecast and optimize
-let forecasted_portfolio = forecaster.forecast_and_optimize(
-    &assets,
-    OptimizationStrategy::MaxSharpe
-)?;
+// Portfolio optimization with Interior Point QP
+let solver = InteriorPointQpSolver::new(Q, c, A, b, G, h)?;
+let optimal_weights = solver.solve()?;
 
-// Generate rebalancing schedule
-let schedule = forecaster.generate_rebalancing_schedule(
-    &current_weights,
-    &forecasted_portfolio.optimal_weights,
-    3  // 3 periods
+// Market regime detection
+let detector = MarketRegimeDetector::new(config)?;
+let regime = detector.detect_regime(&market_data)?;
+let adapted_weights = detector.adapt_portfolio(&optimal_weights, &regime)?;
+
+// Multi-objective optimization
+let optimizer = MultiObjectiveOptimizer::new(config)?;
+let pareto_portfolios = optimizer.optimize_multi_objective(
+    &expected_returns,
+    &cov_matrix,
+    &[Objective::MaximizeReturn, Objective::MinimizeRisk]
 )?;
 ```
 
-**Demo**: `examples/finance_forecast_demo.rs`
+**Demos**:
+- `examples/advanced_portfolio_demo.rs` - Portfolio optimization showcase
+- `examples/regime_adaptive_strategy.rs` - Market regime strategies
+- `examples/backtest_demo.rs` - Historical simulation
+- `examples/gpu_benchmark.rs` - GPU acceleration comparison
 
-#### 3. Advanced Components (Worker 4 Exclusive)
-- **Interior Point QP Solver**: GPU-accelerated quadratic programming
-- **GNN Portfolio Predictor**: Graph neural networks for asset relationships
-- **Hybrid Solver**: 10-100x speedup with confidence-based routing
-- **Multi-Objective Optimization**: Pareto-optimal portfolios
-- **Transfer Entropy**: Market causality analysis, regime detection
+---
 
-**Performance**:
-- GPU-accelerated: >80% GPU utilization
-- Hybrid solver: 10-100x speedup over CPU-only
-- Production-grade: Validated against industry benchmarks
+### Performance Targets:
+
+| Operation | CPU | GPU | Speedup |
+|-----------|-----|-----|---------|
+| Covariance (100 assets) | 200ms | 10ms | 20x |
+| ARIMA Forecast | 100ms | 5ms | 20x |
+| LSTM Forecast | 500ms | 5-10ms | 50-100x |
+| VaR (100k sims) | 500ms | 25-50ms | 10-20x |
+| Matrix Multiply | 1000ms | 5-10ms | 100-200x |
+
+**GPU Utilization**: 50% (19/38 kernels), Target: >80% by Phase 4
+
+---
+
+### API Endpoints (Worker 8 - Phase 2):
+
+```
+POST /api/finance/advanced/optimize-portfolio
+POST /api/finance/advanced/pareto-frontier
+POST /api/finance/advanced/detect-regime
+POST /api/finance/advanced/risk-metrics
+POST /api/finance/advanced/gnn-predict
+POST /api/finance/advanced/causality-analysis
+POST /api/finance/advanced/backtest
+```
+
+**See**: [Complete API Documentation](src/applications/financial/README.md#api-endpoints-worker-8---phase-2)
+
+---
+
+### Domain Coordination (Option C Approved):
+
+**Worker 4**: Advanced/Quantitative Finance
+- **Scope**: Production-grade, state-of-the-art algorithms
+- **API**: `/api/finance/advanced/*`
+- **Focus**: Maximum depth, GPU acceleration, research integration
+
+**Worker 3**: Basic Finance (Reference)
+- **Scope**: Standard portfolio optimization, basic risk analysis
+- **API**: `/api/finance/basic/*`
+- **Focus**: Breadth, rapid prototyping
+
+**For detailed documentation, see**: [Worker 4 Financial Module README](src/applications/financial/README.md)
 
 ---
 
