@@ -142,6 +142,9 @@ pub use applications::{
     DrugDiscoveryController, DrugDiscoveryConfig,
 };
 
+// PRISM Assistant - Fully Offline Autonomous AI
+pub mod assistant;
+
 /// Platform version information
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 pub const NAME: &str = "Prism-AI";
