@@ -15,7 +15,7 @@ pub mod gpu_kernels;
 pub mod streaming;
 pub mod active_inference_classifier;
 pub mod gpu_classifier;
-pub mod gpu_classifier_v2;
+pub mod pixel_processor;
 
 // Re-export primary types for convenient access
 pub use satellite_adapters::{
@@ -38,6 +38,12 @@ pub use vendor_sandbox::{
     AuditLogger,
     SecureDataSlice,
     DataClassification,
+};
+
+pub use pixel_processor::{
+    PixelProcessor,
+    ConvFeatures,
+    PixelTdaFeatures,
 };
 
 /// PWSA Configuration for Tranche 1

@@ -37,6 +37,12 @@ impl Device {
                 Err(_) => Ok(Device::Cpu),
             }
         }
+
+        #[cfg(not(feature = "cuda"))]
+        {
+            Ok(Device::Cpu)
+        }
+    }
 }
 
 /// Simple tensor representation for neural network operations
