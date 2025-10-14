@@ -161,60 +161,11 @@ impl UncertaintyQuantifier {
     }
 
     /// GPU-accelerated uncertainty propagation (Worker 2 integration)
-    fn residual_intervals_gpu(&self, forecast: &[f64]) -> Result<ForecastWithUncertainty> {
-        let executor_arc = crate::gpu::kernel_executor::get_global_executor()
-            .context("GPU executor not available")?;
-        let executor = executor_arc.lock()
-            .map_err(|e| anyhow::anyhow!("Failed to lock GPU executor: {}", e))?;
-
-        // Compute residual standard deviation
-        let mean_residual: f64 = self.residuals.iter().sum::<f64>() / self.residuals.len() as f64;
-        let variance: f64 = self.residuals.iter()
-            .map(|&r| (r - mean_residual).powi(2))
-            .sum::<f64>() / self.residuals.len() as f64;
-        let base_std_dev = variance.sqrt();
-
-        // Convert to f32 for GPU
-        let forecast_f32: Vec<f32> = forecast.iter().map(|&x| x as f32).collect();
-        let horizon = forecast.len();
-
-        // Model error propagates over forecast horizon
-        // For simplicity, use constant error, but Worker 2's kernel supports horizon-dependent error
-        let model_error_std_f32: Vec<f32> = vec![base_std_dev as f32; horizon];
-
-        // Call Worker 2's uncertainty_propagation kernel
-        let forecast_variance_f32 = executor.uncertainty_propagation(
-            &forecast_f32,
-            &model_error_std_f32,
-            horizon,
-        ).context("GPU uncertainty_propagation failed")?;
-
-        // Convert variance to std dev and back to f64
-        let std_devs: Vec<f64> = forecast_variance_f32.iter()
-            .map(|&var| (var.sqrt() as f64))
-            .collect();
-
-        // Compute z-score for confidence level
-        let z = self.compute_z_score(self.config.confidence_level)?;
-
-        // Build intervals using GPU-computed variances
-        let lower_bound: Vec<f64> = forecast.iter()
-            .zip(std_devs.iter())
-            .map(|(&f, &std)| f - z * std)
-            .collect();
-
-        let upper_bound: Vec<f64> = forecast.iter()
-            .zip(std_devs.iter())
-            .map(|(&f, &std)| f + z * std)
-            .collect();
-
-        Ok(ForecastWithUncertainty {
-            forecast: forecast.to_vec(),
-            lower_bound,
-            upper_bound,
-            std_dev: std_devs,
-            confidence_level: self.config.confidence_level,
-        })
+    /// TEMPORARILY DISABLED - GPU kernels from Worker 2 not yet integrated
+    fn residual_intervals_gpu(&self, _forecast: &[f64]) -> Result<ForecastWithUncertainty> {
+        // TODO: Enable GPU acceleration once Worker 2's uncertainty_propagation kernel is integrated
+        // Return error to trigger CPU fallback
+        bail!("GPU uncertainty propagation not yet available - using CPU fallback")
     }
 
     /// Compute z-score for given confidence level
