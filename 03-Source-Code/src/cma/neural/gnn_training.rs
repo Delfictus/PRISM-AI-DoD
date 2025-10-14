@@ -975,10 +975,12 @@ mod tests {
     use crate::cma::Solution;
 
     fn create_test_ensemble(n: usize) -> Ensemble {
-        (0..n).map(|i| Solution {
-            parameters: vec![i as f64, (i * 2) as f64],
-            cost: i as f64 * 0.1,
-        }).collect()
+        Ensemble {
+            solutions: (0..n).map(|i| Solution {
+                data: vec![i as f64, (i * 2) as f64],
+                cost: i as f64 * 0.1,
+            }).collect()
+        }
     }
 
     fn create_test_manifold(n: usize) -> CausalManifold {
