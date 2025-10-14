@@ -332,9 +332,9 @@ mod tests {
         let solver = UniversalSolver::new(config);
 
         let algo = solver.select_algorithm(&ProblemType::ContinuousOptimization);
-        assert_eq!(algo, "CMA-ES");
+        assert_eq!(algo, "CMA (Causal Manifold Annealing)");
 
-        let algo = solver.select_algorithm(&ProblemType::Graph);
-        assert_eq!(algo, "GPU Graph Coloring");
+        let algo = solver.select_algorithm(&ProblemType::GraphProblem);
+        assert_eq!(algo, "Phase6-AdaptiveSolver");
     }
 }

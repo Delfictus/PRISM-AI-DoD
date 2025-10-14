@@ -574,6 +574,7 @@ impl MondrianConformalPredictor {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use ndarray::arr1;
 
     struct SimpleModel {
         noise: f64,
