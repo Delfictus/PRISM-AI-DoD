@@ -18,12 +18,12 @@ pub mod kalman_filter;
 pub mod optimizations;
 
 // GPU-Optimized modules (Phase 2: Full GPU utilization)
-// TEMPORARILY DISABLED - Requires Worker 2 GPU kernels to be integrated first
-// These will be enabled once ar_forecast, lstm_cell_forward, gru_cell_forward,
-// uncertainty_propagation, and tensor_core_matmul_wmma methods are added to kernel_executor.rs
-// pub mod arima_gpu_optimized;
-// pub mod lstm_gpu_optimized;
-// pub mod uncertainty_gpu_optimized;
+// ✅ ENABLED - Worker 2 GPU kernels integrated (Issue #16, Phase 2)
+// Methods available: ar_forecast, lstm_cell_forward, gru_cell_forward,
+// uncertainty_propagation, and tensor_core_matmul_wmma
+pub mod arima_gpu_optimized;
+pub mod lstm_gpu_optimized;
+pub mod uncertainty_gpu_optimized;
 
 pub use arima_gpu::{ArimaGpu, ArimaConfig, ArimaCoefficients, auto_arima};
 pub use lstm_forecaster::{LstmForecaster, LstmConfig, CellType};
@@ -37,10 +37,10 @@ pub use optimizations::{
 };
 
 // Re-export GPU-optimized modules
-// TEMPORARILY DISABLED - Will be enabled once Worker 2 GPU kernels are integrated
-// pub use arima_gpu_optimized::ArimaGpuOptimized;
-// pub use lstm_gpu_optimized::LstmGpuOptimized;
-// pub use uncertainty_gpu_optimized::UncertaintyGpuOptimized;
+// ✅ ENABLED - Worker 2 GPU kernels integrated (Issue #16, Phase 2)
+pub use arima_gpu_optimized::ArimaGpuOptimized;
+pub use lstm_gpu_optimized::LstmGpuOptimized;
+pub use uncertainty_gpu_optimized::UncertaintyGpuOptimized;
 
 use anyhow::Result;
 
