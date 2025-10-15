@@ -34,7 +34,7 @@ pub mod optimization;
 pub mod pwsa;
 
 // Mission Charlie: Thermodynamic LLM Intelligence Fusion
-#[cfg(feature = "mission_charlie")]
+// NOTE: Local LLM module always available even without mission_charlie feature
 pub mod orchestration;
 
 // Unified PRISM-AI Platform Integration

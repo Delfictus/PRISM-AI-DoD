@@ -15,6 +15,9 @@ use serde::{Serialize, Deserialize};
 // Simplified - using basic types for now
 use crate::assistant::autonomous_agent::{AutonomousAgent, SafetyMode, ToolCall, ToolResult};
 
+// Local LLM integration
+use crate::assistant::local_llm::GpuLocalLLMSystem;
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum AssistantMode {
     /// Local GPU LLM only (privacy-first, zero cost, fully offline)
@@ -32,6 +35,7 @@ pub struct PrismAssistant {
     tools_enabled: bool,
     agent: Option<AutonomousAgent>,
     model_path: Option<String>,
+    llm_system: Option<GpuLocalLLMSystem>,
 }
 
 impl PrismAssistant {
@@ -39,12 +43,18 @@ impl PrismAssistant {
     pub async fn new(mode: AssistantMode, model_path: Option<String>) -> Result<Self> {
         let agent = Some(AutonomousAgent::new(SafetyMode::Balanced)?);
 
-        // Verify model exists if local mode
-        match &mode {
+        // Load local LLM model if needed
+        let llm_system = match &mode {
             AssistantMode::LocalOnly | AssistantMode::Hybrid { .. } => {
-                Self::verify_local_model(model_path.as_deref())?;
+                let path = Self::find_model_path(model_path.as_deref())?;
+                println!("🔄 Loading GPU LLM from: {}", path);
+
+                let system = GpuLocalLLMSystem::from_gguf_file(&path)?;
+                println!("✅ GPU LLM loaded successfully");
+
+                Some(system)
             }
-            AssistantMode::CloudOnly => {}
+            AssistantMode::CloudOnly => None,
         };
 
         Ok(Self {
@@ -52,6 +62,7 @@ impl PrismAssistant {
             tools_enabled: true,
             agent,
             model_path,
+            llm_system,
         })
     }
 
@@ -144,20 +155,30 @@ impl PrismAssistant {
     async fn chat_local(&mut self, message: &str) -> Result<ChatResponse> {
         let start = std::time::Instant::now();
 
-        // Simple response for now - full LLM integration would be here
-        let response = format!(
-            "PRISM AI Assistant (offline mode): Your query was '{}'. \
-            Full LLM integration pending - autonomous agent is operational!",
+        let llm = self.llm_system.as_mut()
+            .ok_or_else(|| anyhow::anyhow!("Local LLM not loaded"))?;
+
+        // Format prompt for Llama 3.2 Instruct
+        let prompt = format!(
+            "<|begin_of_text|><|start_header_id|>system<|end_header_id|>\n\
+            You are PRISM Assistant, a helpful AI with access to code execution and PRISM platform tools.\
+            You can write Python code in ```python blocks, Rust in ```rust blocks, and shell commands in ```bash blocks.\n\
+            <|eot_id|><|start_header_id|>user<|end_header_id|>\n\
+            {}<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n",
             message
         );
+
+        // Generate response using GPU LLM
+        let response_text = llm.generate_text(&prompt, 256)?;
+
         let latency = start.elapsed().as_millis() as u64;
 
         Ok(ChatResponse {
-            text: response,
+            text: response_text,
             mode_used: "local_gpu".to_string(),
             latency_ms: latency,
             cost_usd: 0.0,
-            model: self.model_path.clone().unwrap_or_else(|| "local-llm-gpu".to_string()),
+            model: "Llama-3.2-3B-Instruct-Q4_K_M".to_string(),
             tools_called: vec![],
         })
     }
@@ -176,14 +197,14 @@ impl PrismAssistant {
         complexity.min(1.0)
     }
 
-    /// Verify local LLM model exists
-    fn verify_local_model(model_path: Option<&str>) -> Result<()> {
+    /// Find and verify local LLM model exists
+    fn find_model_path(model_path: Option<&str>) -> Result<String> {
         let search_paths = if let Some(path) = model_path {
             vec![path.to_string()]
         } else {
             vec![
                 "/home/diddy/Desktop/PRISM-Worker-6/models/Llama-3.2-3B-Instruct-Q4_K_M.gguf".into(),
-                "/home/diddy/Desktop/PRISM-Worker-6/models/Mistral-7B-Instruct-v0.3-Q4_K_M.gguf".into(),
+                "/home/diddy/Desktop/prism-ai-v1.0.0/models/Llama-3.2-3B-Instruct-Q4_K_M.gguf".into(),
                 "./models/Llama-3.2-3B-Instruct-Q4_K_M.gguf".into(),
             ]
         };
@@ -193,12 +214,11 @@ impl PrismAssistant {
         for path in &search_paths {
             if std::path::Path::new(path).exists() {
                 println!("✅ Found model: {}", path);
-                return Ok(());
+                return Ok(path.clone());
             }
         }
 
-        println!("⚠️  No local model found - offline mode will have limited capability");
-        Ok(())
+        Err(anyhow::anyhow!("No local model found. Searched paths: {:?}", search_paths))
     }
 
     pub fn set_mode(&mut self, mode: AssistantMode) {
