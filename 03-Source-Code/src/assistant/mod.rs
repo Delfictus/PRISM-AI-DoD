@@ -8,6 +8,7 @@
 
 pub mod autonomous_agent;
 pub mod prism_assistant;
+pub mod local_llm;
 
 pub use autonomous_agent::{AutonomousAgent, SafetyMode, ToolCall, ToolResult};
 pub use prism_assistant::{PrismAssistant, AssistantMode, ChatResponse, ChatResponseWithTools, AssistantStatus};
