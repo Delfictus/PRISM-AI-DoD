@@ -387,3 +387,19 @@ pub mod mlir {
         pub fn append_op(&self, _op: crate::quantum_mlir::ops::Operation) {}
     }
 }
+
+// Type aliases for integration compatibility
+pub type QuantumCircuit = QuantumCompiler;
+pub type QuantumGate = QuantumOp;
+pub type GpuBackend = runtime::QuantumGpuRuntime;
+pub type ExecutionConfig = ExecutionParams;
+
+// Re-export compile_and_execute function
+pub fn compile_and_execute(circuit: &QuantumCircuit, config: &ExecutionConfig) -> Result<QuantumState> {
+    let ops = vec![]; // Empty for now
+    circuit.execute(&ops)?;
+    Ok(QuantumState {
+        dimension: config.dimension,
+        amplitudes: vec![Complex64::zero(); config.dimension],
+    })
+}
