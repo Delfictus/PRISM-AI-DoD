@@ -364,6 +364,7 @@ mod tests {
     use super::*;
 
     #[test]
+    #[cfg_attr(not(feature = "cuda"), ignore = "Requires CUDA")]
     fn test_thermodynamic_gpu_creation() {
         if let Ok(context) = CudaContext::new(0) {
             let config = NetworkConfig {

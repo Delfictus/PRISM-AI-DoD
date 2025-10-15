@@ -348,6 +348,7 @@ mod tests {
     use super::super::{ObservationModel, TransitionModel};
 
     #[test]
+    #[cfg_attr(not(feature = "cuda"), ignore = "Requires CUDA")]
     fn test_active_inference_gpu_creation() {
         if let Ok(context) = CudaContext::new(0) {
             let hierarchical_model = HierarchicalModel::new();

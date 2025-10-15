@@ -731,6 +731,7 @@ mod tests {
     use super::*;
 
     #[test]
+    #[cfg_attr(not(feature = "cuda"), ignore = "Requires CUDA")]
     fn test_gpu_policy_evaluator_creation() {
         #[cfg(feature = "cuda")]
         {
