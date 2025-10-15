@@ -68,6 +68,9 @@ pub mod cma;
 // Worker 7: Domain-Specific Applications (Robotics, Scientific Discovery, Drug Discovery)
 pub mod applications;
 
+// Worker 7: Chemistry - RDKit Integration (Rust-only, no C++)
+pub mod chemistry;
+
 // Worker 1: Time Series Forecasting (ARIMA, LSTM, Uncertainty Quantification)
 pub mod time_series;
 
