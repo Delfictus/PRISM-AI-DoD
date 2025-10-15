@@ -1,0 +1,269 @@
+warning: patch for `cudarc` uses the features mechanism. default-features and features will not take effect because the patch dependency does not support this mechanism
+warning: use of deprecated associated function `gpu_reservoir::GpuReservoirComputer::new`: Use new_shared() with shared CUDA context
+   --> src/neuromorphic/src/gpu_reservoir.rs:662:27
+    |
+662 |     GpuReservoirComputer::new(config, gpu_config)
+    |                           ^^^
+    |
+    = note: `#[warn(deprecated)]` on by default
+
+warning: unused import: `rayon::prelude`
+  --> src/neuromorphic/src/gpu_reservoir.rs:15:5
+   |
+15 | use rayon::prelude::*;
+   |     ^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` on by default
+
+warning: unused variable: `reason`
+   --> src/neuromorphic/src/pattern_detector.rs:357:30
+    |
+357 |     fn record_failure(&self, reason: &str) {
+    |                              ^^^^^^ help: if this is intentional, prefix it with an underscore: `_reason`
+    |
+    = note: `#[warn(unused_variables)]` on by default
+
+warning: unused variable: `bin_source_past`
+   --> src/neuromorphic/src/transfer_entropy.rs:109:17
+    |
+109 |             let bin_source_past = self.discretize_vector(&source_past);
+    |                 ^^^^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_bin_source_past`
+
+warning: type `ReservoirStatistics` is more private than the item `ReservoirComputer::get_statistics`
+   --> src/neuromorphic/src/reservoir.rs:224:5
+    |
+224 |     pub fn get_statistics(&self) -> &ReservoirStatistics {
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ method `ReservoirComputer::get_statistics` is reachable at visibility `pub`
+    |
+note: but type `ReservoirStatistics` is only usable at visibility `pub(self)`
+   --> src/neuromorphic/src/reservoir.rs:108:1
+    |
+108 | struct ReservoirStatistics {
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^
+    = note: `#[warn(private_interfaces)]` on by default
+
+warning: fields `max_pool_size` and `total_allocated_bytes` are never read
+  --> src/neuromorphic/src/gpu_memory.rs:17:5
+   |
+13 | pub struct GpuMemoryPool {
+   |            ------------- fields in this struct
+...
+17 |     max_pool_size: usize,
+   |     ^^^^^^^^^^^^^
+18 |     total_allocated_bytes: Arc<Mutex<usize>>,
+   |     ^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` on by default
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+   --> src/neuromorphic/src/gpu_memory.rs:302:29
+    |
+302 |     pub fn borrow_zero_copy(&mut self) -> Result<GpuBufferBorrow> {
+    |                             ^^^^^^^^^            --------------- the same lifetime is hidden here
+    |                             |
+    |                             the lifetime is elided here
+    |
+    = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+    = note: `#[warn(mismatched_lifetime_syntaxes)]` on by default
+help: use `'_` for type paths
+    |
+302 |     pub fn borrow_zero_copy(&mut self) -> Result<GpuBufferBorrow<'_>> {
+    |                                                                 ++++
+
+warning: `neuromorphic-engine` (lib) generated 7 warnings
+warning: unused import: `Array1`
+  --> src/quantum/src/prct_coloring.rs:12:15
+   |
+12 | use ndarray::{Array1, Array2};
+   |               ^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` on by default
+
+warning: unused import: `Context`
+  --> src/quantum/src/prct_coloring.rs:14:22
+   |
+14 | use anyhow::{Result, Context};
+   |                      ^^^^^^^
+
+warning: unused import: `Hamiltonian`
+  --> src/quantum/src/prct_coloring.rs:17:47
+   |
+17 | use crate::hamiltonian::{PhaseResonanceField, Hamiltonian};
+   |                                               ^^^^^^^^^^^
+
+warning: unused import: `HashMap`
+  --> src/quantum/src/gpu_coloring.rs:10:24
+   |
+10 | use std::collections::{HashMap, HashSet};
+   |                        ^^^^^^^
+
+warning: unused import: `Context`
+ --> src/quantum/src/prct_tsp.rs:8:22
+  |
+8 | use anyhow::{Result, Context};
+  |                      ^^^^^^^
+
+warning: unused import: `Context`
+  --> src/quantum/src/qubo.rs:10:22
+   |
+10 | use anyhow::{anyhow, Context, Result};
+   |                      ^^^^^^^
+
+warning: unused import: `std::sync::Arc`
+  --> src/quantum/src/qubo.rs:12:5
+   |
+12 | use std::sync::Arc;
+   |     ^^^^^^^^^^^^^^
+
+warning: variable does not need to be mutable
+   --> src/quantum/src/gpu_coloring.rs:287:13
+    |
+287 |         let mut gpu_priorities = stream.alloc_zeros::<f32>(n)
+    |             ----^^^^^^^^^^^^^^
+    |             |
+    |             help: remove this `mut`
+    |
+    = note: `#[warn(unused_mut)]` on by default
+
+warning: variable does not need to be mutable
+   --> src/quantum/src/gpu_coloring.rs:289:13
+    |
+289 |         let mut gpu_colors = stream.alloc_zeros::<u32>(n)
+    |             ----^^^^^^^^^^
+    |             |
+    |             help: remove this `mut`
+
+warning: variable does not need to be mutable
+   --> src/quantum/src/gpu_coloring.rs:291:13
+    |
+291 |         let mut gpu_can_color = stream.alloc_zeros::<u32>(n)
+    |             ----^^^^^^^^^^^^^
+    |             |
+    |             help: remove this `mut`
+
+warning: value assigned to `current_energy` is never read
+   --> src/quantum/src/qubo.rs:161:17
+    |
+161 |         let mut current_energy = self.best_energy;
+    |                 ^^^^^^^^^^^^^^
+    |
+    = help: maybe it is overwritten before being read?
+    = note: `#[warn(unused_assignments)]` on by default
+
+warning: variable `tour_gpu` is assigned to, but never used
+  --> src/quantum/src/gpu_k_opt.rs:86:17
+   |
+86 |         let mut tour_gpu = stream.memcpy_stod(&tour_i32)?;
+   |                 ^^^^^^^^
+   |
+   = note: consider using `_tour_gpu` instead
+   = note: `#[warn(unused_variables)]` on by default
+
+warning: unused variable: `dist_gpu`
+  --> src/quantum/src/gpu_k_opt.rs:89:13
+   |
+89 |         let dist_gpu = stream.memcpy_stod(&dist_flat)?;
+   |             ^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_dist_gpu`
+
+warning: unused variable: `best_i_gpu`
+  --> src/quantum/src/gpu_k_opt.rs:92:17
+   |
+92 |         let mut best_i_gpu = stream.alloc_zeros::<i32>(1)?;
+   |                 ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_best_i_gpu`
+
+warning: unused variable: `best_j_gpu`
+  --> src/quantum/src/gpu_k_opt.rs:93:17
+   |
+93 |         let mut best_j_gpu = stream.alloc_zeros::<i32>(1)?;
+   |                 ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_best_j_gpu`
+
+warning: variable `best_delta_gpu` is assigned to, but never used
+  --> src/quantum/src/gpu_k_opt.rs:94:17
+   |
+94 |         let mut best_delta_gpu = stream.memcpy_stod(&[f32::INFINITY])?;
+   |                 ^^^^^^^^^^^^^^
+   |
+   = note: consider using `_best_delta_gpu` instead
+
+warning: value assigned to `tour_gpu` is never read
+   --> src/quantum/src/gpu_k_opt.rs:104:13
+    |
+104 |             tour_gpu = stream.memcpy_stod(&tour_i32)?;
+    |             ^^^^^^^^
+    |
+    = help: maybe it is overwritten before being read?
+
+warning: value assigned to `best_delta_gpu` is never read
+   --> src/quantum/src/gpu_k_opt.rs:108:13
+    |
+108 |             best_delta_gpu = stream.memcpy_stod(&[f32::INFINITY])?;
+    |             ^^^^^^^^^^^^^^
+    |
+    = help: maybe it is overwritten before being read?
+
+warning: unused variable: `block_size`
+   --> src/quantum/src/gpu_k_opt.rs:111:17
+    |
+111 |             let block_size = 16;
+    |                 ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_block_size`
+
+warning: unused variable: `cfg`
+   --> src/quantum/src/gpu_k_opt.rs:112:17
+    |
+112 |             let cfg = LaunchConfig {
+    |                 ^^^ help: if this is intentional, prefix it with an underscore: `_cfg`
+
+warning: variable does not need to be mutable
+  --> src/quantum/src/gpu_k_opt.rs:92:13
+   |
+92 |         let mut best_i_gpu = stream.alloc_zeros::<i32>(1)?;
+   |             ----^^^^^^^^^^
+   |             |
+   |             help: remove this `mut`
+
+warning: variable does not need to be mutable
+  --> src/quantum/src/gpu_k_opt.rs:93:13
+   |
+93 |         let mut best_j_gpu = stream.alloc_zeros::<i32>(1)?;
+   |             ----^^^^^^^^^^
+   |             |
+   |             help: remove this `mut`
+
+warning: methods `generate_chromatic_coloring` and `optimize_tsp_ordering` are never used
+   --> src/quantum/src/hamiltonian.rs:196:8
+    |
+137 | impl PhaseResonanceField {
+    | ------------------------ methods in this implementation
+...
+196 |     fn generate_chromatic_coloring(&mut self, n_atoms: usize) {
+    |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+...
+220 |     fn optimize_tsp_ordering(&mut self, n_atoms: usize) {
+    |        ^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` on by default
+
+warning: fields `masses`, `stencil_order`, and `energy_tolerance` are never read
+   --> src/quantum/src/hamiltonian.rs:529:5
+    |
+522 | pub struct Hamiltonian {
+    |            ----------- fields in this struct
+...
+529 |     masses: Array1<f64>,
+    |     ^^^^^^
+...
+545 |     stencil_order: usize,   // Finite difference stencil order (9-point)
+    |     ^^^^^^^^^^^^^
+...
+575 |     energy_tolerance: f64,
+    |     ^^^^^^^^^^^^^^^^
+    |
+    = note: `Hamiltonian` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: methods `calculate_coupling_strength` and `pauli_dot_product` are never used
+    --> src/quantum/src/hamiltonian.rs:1183:8
+     |
+ 581 | impl Hamiltonian {
+     | ---------------- methods in this implementation
+...
+1183 |     fn calculate_coupling_strength(&self, i: usize, j: usize, _t: f64) -> Complex64 {

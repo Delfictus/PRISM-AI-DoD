@@ -3,7 +3,7 @@
 //! Uses cudarc's PTX loading instead of FFI to .o files
 //! This solves all linking issues - kernels loaded at runtime
 
-use cudarc::driver::{DeviceRepr, ValidAsZeroBits, CudaSlice, LaunchAsync, LaunchConfig};
+use cudarc::driver::{DeviceRepr, ValidAsZeroBits, CudaSlice, LaunchConfig};
 use cudarc::nvrtc::Ptx;
 use std::sync::Arc;
 use anyhow::Result;

@@ -28,7 +28,7 @@ pub struct GeometricManifoldOptimizer {
 }
 
 /// Riemannian manifold structure
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 struct RiemannianManifold {
     /// Manifold type
     manifold_type: ManifoldType,
@@ -45,7 +45,7 @@ struct RiemannianManifold {
 }
 
 #[derive(Clone, Debug)]
-enum ManifoldType {
+pub enum ManifoldType {
     Euclidean,
     Sphere,
     Hyperbolic,
@@ -57,7 +57,6 @@ enum ManifoldType {
 }
 
 /// Metric tensor for Riemannian geometry
-#[derive(Clone, Debug)]
 struct MetricTensor {
     /// Metric at each point (function)
     g: Box<dyn Fn(&DVector<f64>) -> DMatrix<f64> + Send + Sync>,
@@ -67,21 +66,18 @@ struct MetricTensor {
     det_g: Box<dyn Fn(&DVector<f64>) -> f64 + Send + Sync>,
 }
 
-impl Clone for Box<dyn Fn(&DVector<f64>) -> DMatrix<f64> + Send + Sync> {
+impl Clone for MetricTensor {
     fn clone(&self) -> Self {
-        // Simplified cloning - in production would properly clone the closure
-        Box::new(|x: &DVector<f64>| DMatrix::identity(x.len(), x.len()))
-    }
-}
-
-impl Clone for Box<dyn Fn(&DVector<f64>) -> f64 + Send + Sync> {
-    fn clone(&self) -> Self {
-        Box::new(|_: &DVector<f64>| 1.0)
+        // Simplified cloning - return identity metrics
+        Self {
+            g: Box::new(|x: &DVector<f64>| DMatrix::identity(x.len(), x.len())),
+            g_inv: Box::new(|x: &DVector<f64>| DMatrix::identity(x.len(), x.len())),
+            det_g: Box::new(|_: &DVector<f64>| 1.0),
+        }
     }
 }
 
 /// Christoffel symbols for connection
-#[derive(Clone, Debug)]
 struct ChristoffelSymbols {
     /// Gamma^k_ij components
     gamma: HashMap<(usize, usize, usize), Box<dyn Fn(&DVector<f64>) -> f64 + Send + Sync>>,
@@ -89,9 +85,12 @@ struct ChristoffelSymbols {
     gamma_lower: HashMap<(usize, usize, usize), f64>,
 }
 
-impl Clone for Box<dyn Fn(&DVector<f64>) -> f64 + Send + Sync> {
+impl Clone for ChristoffelSymbols {
     fn clone(&self) -> Self {
-        Box::new(|_: &DVector<f64>| 0.0)
+        Self {
+            gamma: HashMap::new(),
+            gamma_lower: self.gamma_lower.clone(),
+        }
     }
 }
 
@@ -764,9 +763,9 @@ impl GeometricManifoldOptimizer {
                 if norm > 0.0 {
                     Ok(point / norm)
                 } else {
-                    Err(OrchestrationError::InvalidInput {
-                        input: "Zero vector cannot be projected onto sphere".to_string(),
-                    })
+                    Err(OrchestrationError::InvalidInput(
+                        "Zero vector cannot be projected onto sphere".to_string()
+                    ))
                 }
             }
             ManifoldType::ProbabilitySimplex => {
@@ -870,8 +869,8 @@ impl GeometricManifoldOptimizer {
         }
 
         // Get previous moments (simplified - would maintain proper moment buffers)
-        let m = &self.history.gradients.back().unwrap() * beta1 + grad * (1.0 - beta1);
-        let v = &self.history.gradients.back().unwrap().component_mul(&self.history.gradients.back().unwrap()) * beta2
+        let m = self.history.gradients.back().unwrap() * beta1 + grad * (1.0 - beta1);
+        let v = self.history.gradients.back().unwrap().component_mul(self.history.gradients.back().unwrap()) * beta2
                 + grad.component_mul(grad) * (1.0 - beta2);
 
         // Bias correction
@@ -1250,8 +1249,8 @@ impl GeometricManifoldOptimizer {
     /// Simple geodesic (straight line in ambient space, then project)
     fn simple_geodesic(&self, start: &DVector<f64>, end: &DVector<f64>) -> Result<Geodesic, OrchestrationError> {
         let n_points = 100;
-        let mut path = Vec::new();
-        let mut tangents = Vec::new();
+        let mut path: Vec<DVector<f64>> = Vec::new();
+        let mut tangents: Vec<DVector<f64>> = Vec::new();
 
         for i in 0..=n_points {
             let t = i as f64 / n_points as f64;
@@ -1264,7 +1263,7 @@ impl GeometricManifoldOptimizer {
                 tangents.last().unwrap().clone()
             };
 
-            path.push(projected);
+            path.push(projected.clone());
             tangents.push(self.project_to_tangent_space(&projected, &tangent)?);
         }
 
@@ -1368,7 +1367,7 @@ impl GeometricManifoldOptimizer {
             let g0 = (self.manifold.metric.g)(&geodesic.path[i]);
             let g1 = (self.manifold.metric.g)(&geodesic.path[i + 1]);
 
-            if let (Some(g0_inv), Some(g1_inv)) = (g0.try_inverse(), g1.try_inverse()) {
+            if let (Some(g0_inv), Some(g1_inv)) = (g0.clone().try_inverse(), g1.try_inverse()) {
                 transported = &g1_inv * &g0 * &transported;
                 transported = self.project_to_tangent_space(&geodesic.path[i + 1], &transported)?;
             }
@@ -1401,12 +1400,13 @@ impl GeometricManifoldOptimizer {
 
         // Decode optimal response
         let optimal_response = self.decode_from_manifold(&result.optimal_point);
+        let manifold_point_clone = result.optimal_point.clone();
 
         Ok(LLMOptimizationResult {
             optimal_response,
             quality_score: -result.optimal_value,
             manifold_point: result.optimal_point,
-            geodesic_distances: self.compute_geodesic_distances(&encoded, &result.optimal_point)?,
+            geodesic_distances: self.compute_geodesic_distances(&encoded, &manifold_point_clone)?,
         })
     }
 

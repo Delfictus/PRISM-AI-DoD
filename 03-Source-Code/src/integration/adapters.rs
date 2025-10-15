@@ -186,6 +186,10 @@ impl ThermodynamicAdapter {
             coupling_strength: 0.5,
             enable_information_gating: true,
             seed: 42,
+            num_agents: n_oscillators,
+            interaction_strength: 0.5,
+            external_field: 0.01,
+            use_gpu: true,
         };
 
         // GPU ONLY - NO CPU FALLBACK

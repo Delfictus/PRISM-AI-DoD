@@ -748,7 +748,7 @@ impl UnifiedNeuromorphicProcessor {
     fn decode_output(&self, spike_history: &[Vec<usize>]) -> Result<DVector<f64>, OrchestrationError> {
         let output_neurons = &self.network.layers.last()
             .ok_or_else(|| OrchestrationError::MissingData {
-                data_type: "output_layer".to_string()
+                field: "output_layer".to_string()
             })?.neurons;
 
         let mut output = DVector::zeros(output_neurons.len());
@@ -1098,7 +1098,7 @@ impl PopulationCoder {
                 let poisson = Poisson::new(rate * 0.1).unwrap();  // Scale for time window
 
                 for t in 0..10 {
-                    let n_spikes = poisson.sample(&mut rand::thread_rng());
+                    let n_spikes = poisson.sample(&mut rand::thread_rng()).round() as usize;
                     for _ in 0..n_spikes {
                         spikes.push(t as f64 + rand::random::<f64>());
                     }
@@ -1145,7 +1145,7 @@ impl TemporalProcessor {
 
     fn update(&mut self, spikes: &[usize]) -> Result<(), OrchestrationError> {
         // Update reservoir state
-        let input = DVector::from_fn(self.reservoir.size, |i| {
+        let input = DVector::from_fn(self.reservoir.size, |i, _| {
             if spikes.contains(&i) { 1.0 } else { 0.0 }
         });
 
@@ -1184,6 +1184,31 @@ impl ReservoirState {
             state: DVector::zeros(size),
             weights,
         })
+    }
+}
+
+impl SpikeRouter {
+    fn route(&mut self, spikes: &[usize]) -> Result<(), OrchestrationError> {
+        // Record spike patterns
+        for &spike_neuron in spikes {
+            let train = SpikeTrain {
+                neuron: spike_neuron,
+                spikes: vec![0.0],  // Simplified
+            };
+            self.pattern_buffer.push_back(train);
+        }
+
+        // Limit buffer size
+        while self.pattern_buffer.len() > 100 {
+            self.pattern_buffer.pop_front();
+        }
+
+        // Update active routes
+        for route in &mut self.active_routes {
+            route.activity *= 0.95;  // Decay
+        }
+
+        Ok(())
     }
 }
 

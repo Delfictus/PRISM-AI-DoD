@@ -76,6 +76,32 @@ pub enum SystemState {
     Critical,
 }
 
+/// Comprehensive system health state snapshot
+#[derive(Debug, Clone)]
+pub struct SystemHealthState {
+    /// Overall health status
+    pub overall_health: HealthStatus,
+    /// Component health map
+    pub components: std::collections::HashMap<String, ComponentHealth>,
+    /// System metrics
+    pub metrics: SystemMetrics,
+    /// Timestamp of this snapshot
+    pub timestamp: Instant,
+}
+
+/// System-level metrics
+#[derive(Debug, Clone)]
+pub struct SystemMetrics {
+    /// System availability (0.0 to 1.0)
+    pub availability: f64,
+    /// Current system state
+    pub state: SystemState,
+    /// Number of active components
+    pub active_components: usize,
+    /// Number of failed components
+    pub failed_components: usize,
+}
+
 /// Component health information
 #[derive(Debug, Clone)]
 pub struct ComponentHealth {
@@ -91,18 +117,28 @@ pub struct ComponentHealth {
     pub total_failures: u64,
     /// Component uptime
     pub uptime: Duration,
+    /// Alias for last_update (for compatibility)
+    pub last_check: Instant,
+    /// Alias for failure_count (for compatibility)
+    pub error_count: u32,
+    /// Average latency in milliseconds
+    pub latency_ms: u64,
 }
 
 impl ComponentHealth {
     /// Create new healthy component
     pub fn new(weight: f64) -> Self {
+        let now = Instant::now();
         Self {
             status: HealthStatus::Healthy,
             weight: weight.clamp(0.0, 1.0),
-            last_update: Instant::now(),
+            last_update: now,
             failure_count: 0,
             total_failures: 0,
             uptime: Duration::ZERO,
+            last_check: now,
+            error_count: 0,
+            latency_ms: 0,
         }
     }
 
@@ -197,6 +233,19 @@ impl HealthMonitor {
             .get_mut(name)
             .map(|mut health| health.update_status(status))
             .ok_or_else(|| format!("Component '{}' not registered", name))
+    }
+
+    /// Update component with full health info
+    ///
+    /// # Parameters
+    /// - `name`: Component identifier
+    /// - `health`: New component health
+    pub fn update_component(
+        &self,
+        name: impl Into<String>,
+        health: ComponentHealth,
+    ) {
+        self.components.insert(name.into(), health);
     }
 
     /// Mark component as healthy (convenience method)
@@ -317,6 +366,47 @@ impl HealthMonitor {
     /// Reset all component health (for testing)
     pub fn reset(&self) {
         self.components.clear();
+    }
+
+    /// Get overall system health status
+    pub fn get_overall_status(&self) -> HealthStatus {
+        let availability = self.system_availability();
+        if availability >= self.degraded_threshold {
+            HealthStatus::Healthy
+        } else if availability >= self.critical_threshold {
+            HealthStatus::Degraded
+        } else {
+            HealthStatus::Unhealthy
+        }
+    }
+
+    /// Get all components as a HashMap
+    pub fn get_all_components(&self) -> std::collections::HashMap<String, ComponentHealth> {
+        self.components
+            .iter()
+            .map(|entry| (entry.key().clone(), entry.value().clone()))
+            .collect()
+    }
+
+    /// Get comprehensive system health state
+    pub fn get_health_state(&self) -> SystemHealthState {
+        let availability = self.system_availability();
+        let state = self.system_state();
+        let components = self.get_all_components();
+        let active = components.values().filter(|c| c.status != HealthStatus::Unhealthy).count();
+        let failed = components.len() - active;
+
+        SystemHealthState {
+            overall_health: self.get_overall_status(),
+            components,
+            metrics: SystemMetrics {
+                availability,
+                state,
+                active_components: active,
+                failed_components: failed,
+            },
+            timestamp: Instant::now(),
+        }
     }
 }
 

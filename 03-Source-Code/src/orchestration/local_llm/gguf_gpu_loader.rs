@@ -18,9 +18,9 @@ impl GgufGpuLoader {
     /// Create new GPU loader from GGUF file
     pub fn new<P: AsRef<std::path::Path>>(path: P, device_id: usize) -> Result<Self> {
         let loader = GgufLoader::load(path)?;
-        let context = Arc::new(CudaContext::new(device_id)?);
+        let context = CudaContext::new(device_id)?;
 
-        Ok(Self { loader, context })
+        Ok(Self { loader, context: Arc::new(context) })
     }
 
     /// Load tensor to GPU memory as f32

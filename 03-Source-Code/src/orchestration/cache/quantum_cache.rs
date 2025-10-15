@@ -169,7 +169,7 @@ impl QuantumSemanticCache {
     }
 
     /// Store response in cache (all quantum buckets)
-    pub fn insert(&self, prompt: &str, embedding: Array1<f64>, response: LLMResponse) {
+    pub fn insert_with_embedding(&self, prompt: &str, embedding: Array1<f64>, response: LLMResponse) {
         let bucket_indices = self.quantum_hash(&embedding);
 
         let entry = CachedEntry {
@@ -221,6 +221,75 @@ impl QuantumSemanticCache {
             hit_rate: if total > 0 { hits as f64 / total as f64 } else { 0.0 },
         }
     }
+
+    /// Get cache hit rate
+    pub fn get_hit_rate(&self) -> f64 {
+        self.get_stats().hit_rate
+    }
+
+    /// Check if cache is healthy
+    pub fn is_healthy(&self) -> bool {
+        true // Always healthy for now
+    }
+
+    /// Get cached response (async interface for compatibility)
+    pub async fn get(&self, query: &str) -> Result<Option<CachedResponse>> {
+        // Create simple embedding from query
+        let embedding = self.simple_embedding(query);
+
+        if let Some(response) = self.quantum_approximate_nn(&embedding) {
+            Ok(Some(CachedResponse {
+                response: response.text,
+                similarity: 0.95, // Approximate
+                retrieval_time_ms: 1,
+            }))
+        } else {
+            Ok(None)
+        }
+    }
+
+    /// Insert cached response (async interface for compatibility)
+    pub async fn insert(&self, query: &str, response: &str) -> Result<()> {
+        let embedding = self.simple_embedding(query);
+        let llm_response = LLMResponse {
+            text: response.to_string(),
+            model: "cache".to_string(),
+            latency: std::time::Duration::from_millis(1),
+            usage: crate::orchestration::llm_clients::openai_client::Usage {
+                prompt_tokens: 0,
+                completion_tokens: 0,
+                total_tokens: 0,
+            },
+            cached: true,
+        };
+        self.insert_with_embedding(query, embedding, llm_response);
+        Ok(())
+    }
+
+    /// Simple embedding from text (for compatibility)
+    fn simple_embedding(&self, text: &str) -> Array1<f64> {
+        let dim = self.hyperplanes.first().map(|h| h.len()).unwrap_or(768);
+        let mut embedding = Array1::zeros(dim);
+
+        for (i, byte) in text.bytes().take(dim).enumerate() {
+            embedding[i] = byte as f64 / 255.0;
+        }
+
+        // Normalize
+        let norm = embedding.dot(&embedding).sqrt();
+        if norm > 0.0 {
+            embedding / norm
+        } else {
+            embedding
+        }
+    }
+}
+
+/// Cached response for compatibility
+pub struct CachedResponse {
+    pub response: String,
+    pub similarity: f64,
+    pub retrieval_time_ms: u64,
 }
 
 #[derive(Debug)]

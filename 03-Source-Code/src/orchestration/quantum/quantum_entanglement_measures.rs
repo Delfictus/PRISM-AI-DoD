@@ -771,7 +771,7 @@ impl QuantumEntanglementAnalyzer {
                 .ok_or_else(|| OrchestrationError::SingularMatrix {
                     matrix_name: "sqrt iteration".to_string()
                 })?;
-            sqrt_matrix = (&sqrt_matrix + &inverse * matrix) / 2.0;
+            sqrt_matrix = (&sqrt_matrix + &inverse * matrix).scale(0.5);
         }
 
         Ok(sqrt_matrix)
@@ -1023,7 +1023,7 @@ impl QuantumEntanglementAnalyzer {
         let ih_t = hamiltonian * (-i * time);
 
         for n in 1..10 {
-            term = &term * &ih_t / (n as f64);
+            term = (&term * &ih_t).scale(1.0 / (n as f64));
             unitary = unitary + &term;
         }
 
@@ -1045,7 +1045,7 @@ impl QuantumEntanglementAnalyzer {
         let identity = DMatrix::identity(dim, dim);
 
         // ρ' = (1-p)ρ + p*I/d
-        let new_rho = &self.density_matrix.rho * (1.0 - p) + &identity * (p / dim as f64);
+        let new_rho = self.density_matrix.rho.scale(1.0 - p) + identity.scale(p / dim as f64);
 
         self.set_density_matrix(new_rho)
     }

@@ -3,12 +3,12 @@
 //! Uses chemcore for molecules + GPU for parallelization
 
 use anyhow::Result;
-use cudarc::driver::{CudaDevice, CudaSlice};
+use cudarc::driver::CudaContext;
 use std::sync::Arc;
 use super::rdkit_wrapper::Molecule;
 
 pub struct GpuMolecularDocker {
-    device: Arc<CudaDevice>,
+    device: Arc<CudaContext>,
     force_field: ForceFieldType,
 }
 
@@ -25,8 +25,8 @@ pub struct DockingPose {
 
 impl GpuMolecularDocker {
     pub fn new(force_field: ForceFieldType) -> Result<Self> {
-        let device = Arc::new(CudaDevice::new(0)?);
-        Ok(Self { device, force_field })
+        let device = CudaContext::new(0)?;
+        Ok(Self { device: Arc::new(device), force_field })
     }
 
     /// Dock ligand to protein using chemcore + GPU parallelization

@@ -455,9 +455,7 @@ impl JointActiveInference {
     pub fn new(n_agents: usize, state_dim: usize) -> Result<Self, OrchestrationError> {
         if n_agents == 0 {
             return Err(OrchestrationError::InvalidConfiguration {
-                parameter: "n_agents".to_string(),
-                value: "0".to_string(),
-                reason: "Need at least one agent".to_string(),
+                message: "n_agents: Need at least one agent (got 0)".to_string()
             });
         }
 
@@ -535,7 +533,7 @@ impl JointActiveInference {
         if observations.len() != self.agents.len() {
             return Err(OrchestrationError::DimensionMismatch {
                 expected: self.agents.len(),
-                actual: observations.len(),
+                got: observations.len(),
             });
         }
 
@@ -928,7 +926,7 @@ impl JointActiveInference {
         }
 
         best_policy.ok_or_else(|| OrchestrationError::NoSolution {
-            context: "No viable joint policy found".to_string(),
+            reason: "No viable joint policy found".to_string()
         })
     }
 

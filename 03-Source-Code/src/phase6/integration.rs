@@ -74,6 +74,10 @@ impl Phase6Integration {
             coupling_strength: 0.5,
             enable_information_gating: true,
             seed: 42,
+            num_agents: 100,
+            interaction_strength: 0.5,
+            external_field: 0.01,
+            use_gpu: false,
         };
         let thermodynamic = Arc::new(RwLock::new(ThermodynamicNetwork::new(network_config)));
 

@@ -52,6 +52,28 @@ impl DomainState {
         }
     }
 
+    /// Create quantum domain state from vector
+    pub fn Quantum(data: Vec<f64>) -> Self {
+        Self {
+            state_vector: Array1::from_vec(data.clone()),
+            phases: Array1::zeros(data.len()),
+            energy: 0.0,
+            entropy: 0.0,
+            timestamp: 0.0,
+        }
+    }
+
+    /// Create neuromorphic domain state from vector
+    pub fn Neuromorphic(data: Vec<f64>) -> Self {
+        Self {
+            state_vector: Array1::from_vec(data.clone()),
+            phases: Array1::zeros(data.len()),
+            energy: 0.0,
+            entropy: 0.0,
+            timestamp: 0.0,
+        }
+    }
+
     /// Initialize with random state
     pub fn initialize_random(&mut self) {
         use rand::Rng;
@@ -393,6 +415,18 @@ impl CrossDomainBridge {
         }
 
         best_mi
+    }
+
+    /// Transfer between two domain states
+    ///
+    /// Generic transfer method for compatibility
+    pub fn transfer(&mut self, from: DomainState, to: DomainState) -> Result<BridgeMetrics, String> {
+        // Update states
+        self.neuro_state = from;
+        self.quantum_state = to;
+
+        // Perform bidirectional transfer
+        Ok(self.bidirectional_step(0.01))
     }
 
     /// Validate bridge meets all Task 3.1 criteria

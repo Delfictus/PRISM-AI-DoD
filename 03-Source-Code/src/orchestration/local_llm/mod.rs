@@ -52,4 +52,4 @@ pub use sampling::{
 pub use llm_metrics::LLMMetrics;
 pub use attention_analyzer::AttentionAnalyzer;
 pub use transfer_entropy_llm::TransferEntropyLLM;
-pub use tda_topology_adapter::{TdaTopologyAdapter, TopologyAnalysis};
+pub use tda_topology_adapter::{TdaTopologyAdapter, TopologyAnalysis, PlaceholderTdaAdapter};

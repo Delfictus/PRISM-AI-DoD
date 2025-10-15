@@ -28,7 +28,7 @@ use ndarray::{Array1, Array2, Array3, Axis};
 use std::sync::Arc;
 
 #[cfg(feature = "cuda")]
-use cudarc::driver::{CudaDevice, CudaSlice};
+use cudarc::driver::{CudaContext, CudaSlice};
 
 /// Flash Attention: Memory-efficient attention mechanism
 ///
@@ -51,7 +51,7 @@ pub struct FlashAttention {
     scale: f32,
 
     #[cfg(feature = "cuda")]
-    device: Arc<CudaDevice>,
+    device: Arc<CudaContext>,
 }
 
 impl FlashAttention {
@@ -64,7 +64,7 @@ impl FlashAttention {
             head_dim,
             scale,
             #[cfg(feature = "cuda")]
-            device: CudaDevice::new(0).expect("Failed to create CUDA device"),
+            device: CudaContext::new(0).expect("Failed to create CUDA device"),
         }
     }
 

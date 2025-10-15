@@ -37,6 +37,8 @@ pub use fault_tolerance::{
     ComponentHealth,
     HealthStatus,
     SystemState,
+    SystemHealthState,
+    SystemMetrics,
 };
 
 pub use circuit_breaker::{

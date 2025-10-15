@@ -108,13 +108,16 @@ impl GpuTimeDelayEmbedding {
         };
 
         unsafe {
-            stream.launch_builder(kernel)
-                .arg(&ts_dev)
-                .arg(&mut embedded_dev)
-                .arg(&(n_samples as i32))
-                .arg(&(embedding_dim as i32))
-                .arg(&(tau as i32))
-                .launch(cfg)?;
+            kernel.launch(
+                cfg,
+                (
+                    &ts_dev,
+                    &mut embedded_dev,
+                    n_samples as i32,
+                    embedding_dim as i32,
+                    tau as i32,
+                ),
+            )?;
         }
 
         // Synchronize and download result

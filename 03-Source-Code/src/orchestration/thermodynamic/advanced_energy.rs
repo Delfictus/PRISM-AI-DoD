@@ -265,18 +265,21 @@ impl AdvancedEnergyModel {
         };
 
         unsafe {
-            stream.launch_builder(kernel)
-                .arg(&costs_dev)
-                .arg(&qualities_dev)
-                .arg(&latencies_dev)
-                .arg(&uncertainties_dev)
-                .arg(&mut energies_dev)
-                .arg(&(n as i32))
-                .arg(&w_cost)
-                .arg(&w_quality)
-                .arg(&w_latency)
-                .arg(&w_uncertainty)
-                .launch(cfg)?;
+            kernel.launch(
+                cfg,
+                (
+                    &costs_dev,
+                    &qualities_dev,
+                    &latencies_dev,
+                    &uncertainties_dev,
+                    &mut energies_dev,
+                    n as i32,
+                    w_cost,
+                    w_quality,
+                    w_latency,
+                    w_uncertainty,
+                ),
+            )?;
         }
 
         // Download results

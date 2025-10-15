@@ -78,6 +78,9 @@ pub struct ModelConfig {
 pub use crate::orchestration::local_llm::{BPETokenizer, TokenSampler, SamplingConfig, GgufLoader};
 use std::path::Path;
 
+// Type alias for compatibility
+pub type SimpleTokenizer = BPETokenizer;
+
 /// Complete GPU LLM System
 pub struct GpuLocalLLMSystem {
     model: GpuLLMInference,

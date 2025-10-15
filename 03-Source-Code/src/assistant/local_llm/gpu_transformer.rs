@@ -123,7 +123,7 @@ impl GpuTransformerLayer {
         let scale = (1.0 / d_model as f32).sqrt();
 
         // Helper function to try multiple tensor name patterns
-        let try_load = |names: &[String]| -> Option<CudaSlice<f32>> {
+        let mut try_load = |names: &[String]| -> Option<CudaSlice<f32>> {
             for name in names {
                 if let Ok(tensor) = gguf_loader.load_tensor_to_gpu(name) {
                     return Some(tensor);

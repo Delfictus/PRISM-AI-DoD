@@ -8,7 +8,7 @@ use std::sync::Arc;
 use parking_lot::Mutex;
 use anyhow::Result;
 
-use crate::pwsa::satellite_adapters::{PwsaFusionPlatform, MissionAwareness, ThreatDetection};
+use crate::pwsa::{PwsaFusionPlatform, MissionAwareness, ThreatDetection, OctTelemetry, IrSensorFrame, GroundStationData};
 use crate::orchestration::llm_clients::LLMOrchestrator;
 
 /// Complete Intelligence (Sensor + AI)
@@ -81,7 +81,7 @@ impl PwsaLLMFusionPlatform {
 }
 
 pub struct SensorInput {
-    pub transport: crate::pwsa::satellite_adapters::OctTelemetry,
-    pub tracking: crate::pwsa::satellite_adapters::IrSensorFrame,
-    pub ground: crate::pwsa::satellite_adapters::GroundStationData,
+    pub transport: OctTelemetry,
+    pub tracking: IrSensorFrame,
+    pub ground: GroundStationData,
 }

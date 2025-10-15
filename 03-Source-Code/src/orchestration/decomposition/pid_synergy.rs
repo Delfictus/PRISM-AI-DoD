@@ -6,7 +6,7 @@
 
 use crate::orchestration::OrchestrationError;
 use nalgebra::{DMatrix, DVector};
-use std::collections::{HashMap, HashSet, BTreeMap};
+use std::collections::{HashMap, HashSet, BTreeMap, BTreeSet};
 use ordered_float::OrderedFloat;
 
 /// Advanced PID Decomposition with full lattice structure
@@ -85,7 +85,7 @@ pub struct PIDDecomposition {
     /// Pairwise redundancies
     pub pairwise_redundancy: DMatrix<f64>,
     /// Higher-order interactions
-    pub higher_order: HashMap<HashSet<usize>, f64>,
+    pub higher_order: HashMap<BTreeSet<usize>, f64>,
     /// Total mutual information
     pub total_mi: f64,
     /// Normalized complexity measure
@@ -235,7 +235,7 @@ impl PIDSynergyDecomposition {
     }
 
     /// Compute redundancy function at each lattice node
-    fn compute_redundancies(&self, distributions: &[DVector<f64>]) -> Result<HashMap<HashSet<usize>, f64>, OrchestrationError> {
+    fn compute_redundancies(&self, distributions: &[DVector<f64>]) -> Result<HashMap<BTreeSet<usize>, f64>, OrchestrationError> {
         let mut redundancies = HashMap::new();
 
         for node in &self.lattice.nodes {
@@ -264,7 +264,9 @@ impl PIDSynergyDecomposition {
                 }
             };
 
-            redundancies.insert(node.sources.clone(), redundancy);
+            // Convert HashSet to BTreeSet for HashMap key
+            let sources_key: BTreeSet<usize> = node.sources.iter().copied().collect();
+            redundancies.insert(sources_key, redundancy);
         }
 
         Ok(redundancies)
@@ -555,7 +557,7 @@ impl PIDSynergyDecomposition {
     }
 
     /// Möbius inversion to get partial information values
-    fn mobius_inversion(&self, redundancies: &HashMap<HashSet<usize>, f64>) -> Result<HashMap<HashSet<usize>, f64>, OrchestrationError> {
+    fn mobius_inversion(&self, redundancies: &HashMap<BTreeSet<usize>, f64>) -> Result<HashMap<BTreeSet<usize>, f64>, OrchestrationError> {
         let mut partial_infos = HashMap::new();
 
         // Apply Möbius inversion formula
@@ -564,12 +566,15 @@ impl PIDSynergyDecomposition {
 
             // Sum over all ancestors in lattice
             for ancestor in self.get_ancestors(&node.sources) {
+                let ancestor_key: BTreeSet<usize> = ancestor.iter().copied().collect();
                 let sign = if (ancestor.len() - node.sources.len()) % 2 == 0 { 1.0 } else { -1.0 };
-                let redundancy = redundancies.get(&ancestor).unwrap_or(&0.0);
+                let redundancy = redundancies.get(&ancestor_key).unwrap_or(&0.0);
                 pi_value += sign * redundancy;
             }
 
-            partial_infos.insert(node.sources.clone(), pi_value.max(0.0)); // Ensure non-negative
+            // Convert HashSet to BTreeSet for HashMap key
+            let sources_key: BTreeSet<usize> = node.sources.iter().copied().collect();
+            partial_infos.insert(sources_key, pi_value.max(0.0_f64)); // Ensure non-negative
         }
 
         Ok(partial_infos)
@@ -600,7 +605,7 @@ impl PIDSynergyDecomposition {
     }
 
     /// Extract unique, redundant, and synergistic components
-    fn extract_components(&self, partial_infos: &HashMap<HashSet<usize>, f64>, n_sources: usize) -> Result<PIDDecomposition, OrchestrationError> {
+    fn extract_components(&self, partial_infos: &HashMap<BTreeSet<usize>, f64>, n_sources: usize) -> Result<PIDDecomposition, OrchestrationError> {
         let mut unique = vec![0.0; n_sources];
         let mut redundancy = 0.0;
         let mut synergy = 0.0;

@@ -79,7 +79,7 @@ use std::sync::Arc;
 use std::collections::HashMap;
 
 #[cfg(feature = "cuda")]
-use cudarc::driver::{CudaDevice, CudaContext, CudaSlice, CudaStream, LaunchAsync, LaunchConfig};
+use cudarc::driver::{CudaContext, CudaSlice};
 
 // Import existing protein folding components
 use crate::orchestration::local_llm::{
@@ -102,9 +102,9 @@ pub struct FullGpuProteinSystem {
     #[cfg(feature = "cuda")]
     context: Arc<CudaContext>,
 
-    /// CUDA streams for async operations
-    #[cfg(feature = "cuda")]
-    streams: Vec<CudaStream>,
+    /// CUDA streams for async operations (commented for now)
+    // #[cfg(feature = "cuda")]
+    // streams: Vec<CudaStream>,
 
     /// Training mode flag
     training_mode: bool,
@@ -270,14 +270,14 @@ impl FullGpuProteinSystem {
     /// Create new fully GPU-accelerated trainable system
     pub fn new(train_config: TrainingConfig) -> Result<Self> {
         #[cfg(feature = "cuda")]
-        let context = CudaDevice::new(0)
+        let context = CudaContext::new(0)
             .context("Failed to initialize CUDA device")?;
 
-        // Create multiple CUDA streams for async operations
-        #[cfg(feature = "cuda")]
-        let streams = (0..4)
-            .map(|_| context.fork_default_stream())
-            .collect::<Result<Vec<_>, _>>()?;
+        // Create multiple CUDA streams for async operations (commented for now)
+        // #[cfg(feature = "cuda")]
+        // let streams = (0..4)
+        //     .map(|_| context.fork_default_stream())
+        //     .collect::<Result<Vec<_>, _>>()?;
 
         // Create base systems
         let base_system = GpuProteinFoldingSystem::new()?;
@@ -304,8 +304,8 @@ impl FullGpuProteinSystem {
             deep_system,
             #[cfg(feature = "cuda")]
             context,
-            #[cfg(feature = "cuda")]
-            streams,
+            // #[cfg(feature = "cuda")]
+            // streams,
             training_mode: false,
             #[cfg(feature = "cuda")]
             parameters,

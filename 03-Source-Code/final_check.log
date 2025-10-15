@@ -1,0 +1,2379 @@
+warning: patch for `cudarc` uses the features mechanism. default-features and features will not take effect because the patch dependency does not support this mechanism
+warning: use of deprecated associated function `gpu_reservoir::GpuReservoirComputer::new`: Use new_shared() with shared CUDA context
+   --> src/neuromorphic/src/gpu_reservoir.rs:662:27
+    |
+662 |     GpuReservoirComputer::new(config, gpu_config)
+    |                           ^^^
+    |
+    = note: `#[warn(deprecated)]` on by default
+
+warning: unused import: `rayon::prelude`
+  --> src/neuromorphic/src/gpu_reservoir.rs:15:5
+   |
+15 | use rayon::prelude::*;
+   |     ^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` on by default
+
+warning: unused variable: `reason`
+   --> src/neuromorphic/src/pattern_detector.rs:357:30
+    |
+357 |     fn record_failure(&self, reason: &str) {
+    |                              ^^^^^^ help: if this is intentional, prefix it with an underscore: `_reason`
+    |
+    = note: `#[warn(unused_variables)]` on by default
+
+warning: unused variable: `bin_source_past`
+   --> src/neuromorphic/src/transfer_entropy.rs:109:17
+    |
+109 |             let bin_source_past = self.discretize_vector(&source_past);
+    |                 ^^^^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_bin_source_past`
+
+warning: type `ReservoirStatistics` is more private than the item `ReservoirComputer::get_statistics`
+   --> src/neuromorphic/src/reservoir.rs:224:5
+    |
+224 |     pub fn get_statistics(&self) -> &ReservoirStatistics {
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ method `ReservoirComputer::get_statistics` is reachable at visibility `pub`
+    |
+note: but type `ReservoirStatistics` is only usable at visibility `pub(self)`
+   --> src/neuromorphic/src/reservoir.rs:108:1
+    |
+108 | struct ReservoirStatistics {
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^
+    = note: `#[warn(private_interfaces)]` on by default
+
+warning: fields `max_pool_size` and `total_allocated_bytes` are never read
+  --> src/neuromorphic/src/gpu_memory.rs:17:5
+   |
+13 | pub struct GpuMemoryPool {
+   |            ------------- fields in this struct
+...
+17 |     max_pool_size: usize,
+   |     ^^^^^^^^^^^^^
+18 |     total_allocated_bytes: Arc<Mutex<usize>>,
+   |     ^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` on by default
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+   --> src/neuromorphic/src/gpu_memory.rs:302:29
+    |
+302 |     pub fn borrow_zero_copy(&mut self) -> Result<GpuBufferBorrow> {
+    |                             ^^^^^^^^^            --------------- the same lifetime is hidden here
+    |                             |
+    |                             the lifetime is elided here
+    |
+    = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+    = note: `#[warn(mismatched_lifetime_syntaxes)]` on by default
+help: use `'_` for type paths
+    |
+302 |     pub fn borrow_zero_copy(&mut self) -> Result<GpuBufferBorrow<'_>> {
+    |                                                                 ++++
+
+warning: `neuromorphic-engine` (lib) generated 7 warnings
+warning: unused import: `Array1`
+  --> src/quantum/src/prct_coloring.rs:12:15
+   |
+12 | use ndarray::{Array1, Array2};
+   |               ^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` on by default
+
+warning: unused import: `Context`
+  --> src/quantum/src/prct_coloring.rs:14:22
+   |
+14 | use anyhow::{Result, Context};
+   |                      ^^^^^^^
+
+warning: unused import: `Hamiltonian`
+  --> src/quantum/src/prct_coloring.rs:17:47
+   |
+17 | use crate::hamiltonian::{PhaseResonanceField, Hamiltonian};
+   |                                               ^^^^^^^^^^^
+
+warning: unused import: `HashMap`
+  --> src/quantum/src/gpu_coloring.rs:10:24
+   |
+10 | use std::collections::{HashMap, HashSet};
+   |                        ^^^^^^^
+
+warning: unused import: `Context`
+ --> src/quantum/src/prct_tsp.rs:8:22
+  |
+8 | use anyhow::{Result, Context};
+  |                      ^^^^^^^
+
+warning: unused import: `Context`
+  --> src/quantum/src/qubo.rs:10:22
+   |
+10 | use anyhow::{anyhow, Context, Result};
+   |                      ^^^^^^^
+
+warning: unused import: `std::sync::Arc`
+  --> src/quantum/src/qubo.rs:12:5
+   |
+12 | use std::sync::Arc;
+   |     ^^^^^^^^^^^^^^
+
+warning: variable does not need to be mutable
+   --> src/quantum/src/gpu_coloring.rs:287:13
+    |
+287 |         let mut gpu_priorities = stream.alloc_zeros::<f32>(n)
+    |             ----^^^^^^^^^^^^^^
+    |             |
+    |             help: remove this `mut`
+    |
+    = note: `#[warn(unused_mut)]` on by default
+
+warning: variable does not need to be mutable
+   --> src/quantum/src/gpu_coloring.rs:289:13
+    |
+289 |         let mut gpu_colors = stream.alloc_zeros::<u32>(n)
+    |             ----^^^^^^^^^^
+    |             |
+    |             help: remove this `mut`
+
+warning: variable does not need to be mutable
+   --> src/quantum/src/gpu_coloring.rs:291:13
+    |
+291 |         let mut gpu_can_color = stream.alloc_zeros::<u32>(n)
+    |             ----^^^^^^^^^^^^^
+    |             |
+    |             help: remove this `mut`
+
+warning: value assigned to `current_energy` is never read
+   --> src/quantum/src/qubo.rs:161:17
+    |
+161 |         let mut current_energy = self.best_energy;
+    |                 ^^^^^^^^^^^^^^
+    |
+    = help: maybe it is overwritten before being read?
+    = note: `#[warn(unused_assignments)]` on by default
+
+warning: variable `tour_gpu` is assigned to, but never used
+  --> src/quantum/src/gpu_k_opt.rs:86:17
+   |
+86 |         let mut tour_gpu = stream.memcpy_stod(&tour_i32)?;
+   |                 ^^^^^^^^
+   |
+   = note: consider using `_tour_gpu` instead
+   = note: `#[warn(unused_variables)]` on by default
+
+warning: unused variable: `dist_gpu`
+  --> src/quantum/src/gpu_k_opt.rs:89:13
+   |
+89 |         let dist_gpu = stream.memcpy_stod(&dist_flat)?;
+   |             ^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_dist_gpu`
+
+warning: unused variable: `best_i_gpu`
+  --> src/quantum/src/gpu_k_opt.rs:92:17
+   |
+92 |         let mut best_i_gpu = stream.alloc_zeros::<i32>(1)?;
+   |                 ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_best_i_gpu`
+
+warning: unused variable: `best_j_gpu`
+  --> src/quantum/src/gpu_k_opt.rs:93:17
+   |
+93 |         let mut best_j_gpu = stream.alloc_zeros::<i32>(1)?;
+   |                 ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_best_j_gpu`
+
+warning: variable `best_delta_gpu` is assigned to, but never used
+  --> src/quantum/src/gpu_k_opt.rs:94:17
+   |
+94 |         let mut best_delta_gpu = stream.memcpy_stod(&[f32::INFINITY])?;
+   |                 ^^^^^^^^^^^^^^
+   |
+   = note: consider using `_best_delta_gpu` instead
+
+warning: value assigned to `tour_gpu` is never read
+   --> src/quantum/src/gpu_k_opt.rs:104:13
+    |
+104 |             tour_gpu = stream.memcpy_stod(&tour_i32)?;
+    |             ^^^^^^^^
+    |
+    = help: maybe it is overwritten before being read?
+
+warning: value assigned to `best_delta_gpu` is never read
+   --> src/quantum/src/gpu_k_opt.rs:108:13
+    |
+108 |             best_delta_gpu = stream.memcpy_stod(&[f32::INFINITY])?;
+    |             ^^^^^^^^^^^^^^
+    |
+    = help: maybe it is overwritten before being read?
+
+warning: unused variable: `block_size`
+   --> src/quantum/src/gpu_k_opt.rs:111:17
+    |
+111 |             let block_size = 16;
+    |                 ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_block_size`
+
+warning: unused variable: `cfg`
+   --> src/quantum/src/gpu_k_opt.rs:112:17
+    |
+112 |             let cfg = LaunchConfig {
+    |                 ^^^ help: if this is intentional, prefix it with an underscore: `_cfg`
+
+warning: variable does not need to be mutable
+  --> src/quantum/src/gpu_k_opt.rs:92:13
+   |
+92 |         let mut best_i_gpu = stream.alloc_zeros::<i32>(1)?;
+   |             ----^^^^^^^^^^
+   |             |
+   |             help: remove this `mut`
+
+warning: variable does not need to be mutable
+  --> src/quantum/src/gpu_k_opt.rs:93:13
+   |
+93 |         let mut best_j_gpu = stream.alloc_zeros::<i32>(1)?;
+   |             ----^^^^^^^^^^
+   |             |
+   |             help: remove this `mut`
+
+warning: methods `generate_chromatic_coloring` and `optimize_tsp_ordering` are never used
+   --> src/quantum/src/hamiltonian.rs:196:8
+    |
+137 | impl PhaseResonanceField {
+    | ------------------------ methods in this implementation
+...
+196 |     fn generate_chromatic_coloring(&mut self, n_atoms: usize) {
+    |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+...
+220 |     fn optimize_tsp_ordering(&mut self, n_atoms: usize) {
+    |        ^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` on by default
+
+warning: fields `masses`, `stencil_order`, and `energy_tolerance` are never read
+   --> src/quantum/src/hamiltonian.rs:529:5
+    |
+522 | pub struct Hamiltonian {
+    |            ----------- fields in this struct
+...
+529 |     masses: Array1<f64>,
+    |     ^^^^^^
+...
+545 |     stencil_order: usize,   // Finite difference stencil order (9-point)
+    |     ^^^^^^^^^^^^^
+...
+575 |     energy_tolerance: f64,
+    |     ^^^^^^^^^^^^^^^^
+    |
+    = note: `Hamiltonian` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: methods `calculate_coupling_strength` and `pauli_dot_product` are never used
+    --> src/quantum/src/hamiltonian.rs:1183:8
+     |
+ 581 | impl Hamiltonian {
+     | ---------------- methods in this implementation
+...
+1183 |     fn calculate_coupling_strength(&self, i: usize, j: usize, _t: f64) -> Complex64 {
+     |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+...
+1194 |     fn pauli_dot_product(&self, _i: usize, _j: usize) -> Complex64 {
+     |        ^^^^^^^^^^^^^^^^^
+
+warning: field `coupling` is never read
+  --> src/quantum/src/prct_coloring.rs:33:5
+   |
+21 | pub struct ChromaticColoring {
+   |            ----------------- field in this struct
+...
+33 |     coupling: Box<Array2<Complex64>>,
+   |     ^^^^^^^^
+   |
+   = note: `ChromaticColoring` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: field `max_k` is never read
+  --> src/quantum/src/gpu_k_opt.rs:14:5
+   |
+12 | pub struct GpuKOpt {
+   |            ------- field in this struct
+13 |     context: Arc<CudaContext>,
+14 |     max_k: usize,
+   |     ^^^^^
+
+warning: `quantum-engine` (lib) generated 27 warnings (run `cargo fix --lib -p quantum-engine` to apply 12 suggestions)
+warning: prism-ai@0.1.0: Compiling CUDA kernels with nvcc: /usr/local/cuda/bin/nvcc
+warning: prism-ai@0.1.0: Detected Compute 12.0, using sm_90
+warning: prism-ai@0.1.0: Compiling for GPU architecture: sm_90
+warning: prism-ai@0.1.0: Compiling cuda_kernels/tensor_core_matmul.cu
+warning: prism-ai@0.1.0: Successfully compiled cuda_kernels/tensor_core_matmul.cu to PTX
+warning: prism-ai@0.1.0: Compiling neuromorphic kernels to shared library
+warning: prism-ai@0.1.0: Successfully compiled neuromorphic kernels to shared library
+warning: prism-ai@0.1.0: Library: /home/diddy/Desktop/PRISM-AI-DoD/03-Source-Code/target/release/build/prism-ai-0a2a4a3f381a983c/out/libneuromorphic_kernels.so
+warning: unused variable: `state`
+   --> src/foundation/src/adp/decision_processor.rs:182:34
+    |
+182 |     fn generate_reasoning(&self, state: &State, action: Action, features: &[f64]) -> String {
+    |                                  ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+    |
+    = note: `#[warn(unused_variables)]` on by default
+
+warning: field `quantum_hamiltonian` is never read
+  --> src/foundation/src/platform.rs:33:5
+   |
+26 | pub struct NeuromorphicQuantumPlatform {
+   |            --------------------------- field in this struct
+...
+33 |     quantum_hamiltonian: Arc<RwLock<Option<Hamiltonian>>>,
+   |     ^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `NeuromorphicQuantumPlatform` has a derived impl for the trait `Debug`, but this is intentionally ignored during dead code analysis
+   = note: `#[warn(dead_code)]` on by default
+
+warning: field `state_to_reservoir` is never read
+   --> src/foundation/src/platform.rs:101:5
+    |
+ 95 | struct BidirectionalCoupling {
+    |        --------------------- field in this struct
+...
+101 |     state_to_reservoir: f64,
+    |     ^^^^^^^^^^^^^^^^^^
+    |
+    = note: `BidirectionalCoupling` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: methods `ensure_quantum_initialized`, `extract_quantum_features`, and `initialize_quantum_state` are never used
+   --> src/foundation/src/platform.rs:758:14
+    |
+167 | impl NeuromorphicQuantumPlatform {
+    | -------------------------------- methods in this implementation
+...
+758 |     async fn ensure_quantum_initialized(&self, input: &PlatformInput) -> Result<()> {
+    |              ^^^^^^^^^^^^^^^^^^^^^^^^^^
+...
+782 |     async fn extract_quantum_features(&self, _input: &PlatformInput, neuro_results: &NeuromorphicResults) -> Vec<f64> {
+    |              ^^^^^^^^^^^^^^^^^^^^^^^^
+...
+822 |     async fn initialize_quantum_state(&self, hamiltonian: &mut Hamiltonian, features: &[f64]) -> Array1<Complex64> {
+    |              ^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: associated function `ingest_from_source` is never used
+   --> src/foundation/src/ingestion/engine.rs:325:14
+    |
+ 69 | impl IngestionEngine {
+    | -------------------- associated function in this implementation
+...
+325 |     async fn ingest_from_source(
+    |              ^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `HashMap`
+  --> src/prct-core/src/coloring.rs:10:24
+   |
+10 | use std::collections::{HashMap, HashSet};
+   |                        ^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` on by default
+
+warning: unused import: `rayon::prelude`
+ --> src/prct-core/src/coloring.rs:9:5
+  |
+9 | use rayon::prelude::*;
+  |     ^^^^^^^^^^^^^^
+
+warning: unused variable: `neuro_state`
+   --> src/prct-core/src/drpp_algorithm.rs:194:9
+    |
+194 |         neuro_state: &NeuroState,
+    |         ^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_neuro_state`
+    |
+    = note: `#[warn(unused_variables)]` on by default
+
+warning: unused variable: `quantum_state`
+   --> src/prct-core/src/drpp_algorithm.rs:195:9
+    |
+195 |         quantum_state: &QuantumState,
+    |         ^^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_quantum_state`
+
+warning: unused variable: `phase_field`
+   --> src/prct-core/src/drpp_algorithm.rs:196:9
+    |
+196 |         phase_field: &mut PhaseField,
+    |         ^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_phase_field`
+
+warning: unused variable: `n`
+  --> src/prct-core/src/simulated_annealing.rs:31:9
+   |
+31 |     let n = graph.num_vertices;
+   |         ^ help: if this is intentional, prefix it with an underscore: `_n`
+
+warning: `platform-foundation` (lib) generated 5 warnings
+warning: `prct-core` (lib) generated 6 warnings (run `cargo fix --lib -p prct-core` to apply 1 suggestion)
+   Compiling prism-ai v0.1.0 (/home/diddy/Desktop/PRISM-AI-DoD/03-Source-Code)
+error: expected item after doc comment
+   --> src/assistant/local_llm/gpu_llm_inference.rs:334:1
+    |
+307 | / /// COMPLETE IMPLEMENTATION NOTES:
+308 | | ///
+309 | | /// This is a FULL transformer implementation with ALL operations on GPU:
+310 | | ///
+...   |
+332 | | /// 4. Add KV-cache for faster generation
+333 | | ///
+    | |___- other attributes here
+334 |   /// Current implementation: Random weights, demonstrates full GPU pipeline
+    |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ this doc comment doesn't document anything
+
+error[E0433]: failed to resolve: unresolved import
+  --> src/orchestration/integration/pwsa_llm_bridge.rs:11:12
+   |
+11 | use crate::pwsa::satellite_adapters::{PwsaFusionPlatform, MissionAwareness, ThreatDetection};
+   |            ^^^^
+   |            |
+   |            unresolved import
+   |            help: a similar path exists: `api_server::routes::pwsa`
+   |
+note: found an item that was configured out
+  --> src/lib.rs:34:9
+   |
+33 | #[cfg(feature = "pwsa")]
+   |       ---------------- the item is gated behind the `pwsa` feature
+34 | pub mod pwsa;
+   |         ^^^^
+
+error[E0432]: unresolved import `crate::orchestration::cache::quantum_cache::QuantumApproximateCache`
+  --> src/orchestration/integration/mission_charlie_integration.rs:10:5
+   |
+10 | use crate::orchestration::cache::quantum_cache::QuantumApproximateCache;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ no `QuantumApproximateCache` in `orchestration::cache::quantum_cache`
+   |
+help: consider importing this type alias through its public re-export instead
+   |
+10 - use crate::orchestration::cache::quantum_cache::QuantumApproximateCache;
+10 + use crate::orchestration::QuantumApproximateCache;
+   |
+
+error[E0432]: unresolved import `crate::orchestration::routing::transfer_entropy_router::TransferEntropyRouter`
+  --> src/orchestration/integration/mission_charlie_integration.rs:11:5
+   |
+11 | use crate::orchestration::routing::transfer_entropy_router::TransferEntropyRouter;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ no `TransferEntropyRouter` in `orchestration::routing::transfer_entropy_router`
+   |
+help: a similar name exists in the module
+   |
+11 - use crate::orchestration::routing::transfer_entropy_router::TransferEntropyRouter;
+11 + use crate::orchestration::routing::transfer_entropy_router::TransferEntropy;
+   |
+help: consider importing this type alias through its public re-export instead
+   |
+11 - use crate::orchestration::routing::transfer_entropy_router::TransferEntropyRouter;
+11 + use crate::orchestration::TransferEntropyRouter;
+   |
+
+error[E0433]: failed to resolve: unresolved import
+  --> src/orchestration/integration/pwsa_llm_bridge.rs:84:27
+   |
+84 |     pub transport: crate::pwsa::satellite_adapters::OctTelemetry,
+   |                           ^^^^
+   |                           |
+   |                           unresolved import
+   |                           help: a similar path exists: `api_server::routes::pwsa`
+   |
+note: found an item that was configured out
+  --> src/lib.rs:34:9
+   |
+33 | #[cfg(feature = "pwsa")]
+   |       ---------------- the item is gated behind the `pwsa` feature
+34 | pub mod pwsa;
+   |         ^^^^
+
+error[E0433]: failed to resolve: unresolved import
+  --> src/orchestration/integration/pwsa_llm_bridge.rs:85:26
+   |
+85 |     pub tracking: crate::pwsa::satellite_adapters::IrSensorFrame,
+   |                          ^^^^
+   |                          |
+   |                          unresolved import
+   |                          help: a similar path exists: `api_server::routes::pwsa`
+   |
+note: found an item that was configured out
+  --> src/lib.rs:34:9
+   |
+33 | #[cfg(feature = "pwsa")]
+   |       ---------------- the item is gated behind the `pwsa` feature
+34 | pub mod pwsa;
+   |         ^^^^
+
+error[E0433]: failed to resolve: unresolved import
+  --> src/orchestration/integration/pwsa_llm_bridge.rs:86:24
+   |
+86 |     pub ground: crate::pwsa::satellite_adapters::GroundStationData,
+   |                        ^^^^
+   |                        |
+   |                        unresolved import
+   |                        help: a similar path exists: `api_server::routes::pwsa`
+   |
+note: found an item that was configured out
+  --> src/lib.rs:34:9
+   |
+33 | #[cfg(feature = "pwsa")]
+   |       ---------------- the item is gated behind the `pwsa` feature
+34 | pub mod pwsa;
+   |         ^^^^
+
+warning: unused import: `rand_distr::Normal`
+ --> src/information_theory/advanced_transfer_entropy.rs:9:5
+  |
+9 | use rand_distr::Normal;
+  |     ^^^^^^^^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` on by default
+
+warning: unused import: `std::collections::HashMap`
+  --> src/information_theory/conditional_te.rs:24:5
+   |
+24 | use std::collections::HashMap;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `std::collections::HashMap`
+  --> src/information_theory/multivariate_te.rs:24:5
+   |
+24 | use std::collections::HashMap;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `std::collections::HashMap`
+  --> src/information_theory/time_delayed_te.rs:26:5
+   |
+26 | use std::collections::HashMap;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `Context`
+  --> src/orchestration/llm_clients/claude_client.rs:10:22
+   |
+10 | use anyhow::{Result, Context, bail};
+   |                      ^^^^^^^
+
+warning: unused import: `sleep`
+ --> src/orchestration/llm_clients/gemini_client.rs:7:19
+  |
+7 | use tokio::time::{sleep, timeout, Duration, Instant};
+  |                   ^^^^^
+
+warning: unused import: `Context`
+  --> src/orchestration/llm_clients/grok_client.rs:10:22
+   |
+10 | use anyhow::{Result, Context, bail};
+   |                      ^^^^^^^
+
+warning: unused import: `Duration`
+  --> src/orchestration/llm_clients/ensemble.rs:16:28
+   |
+16 | use tokio::time::{Instant, Duration};
+   |                            ^^^^^^^^
+
+warning: unused import: `anyhow::Result`
+  --> src/orchestration/thermodynamic/hamiltonian.rs:13:5
+   |
+13 | use anyhow::Result;
+   |     ^^^^^^^^^^^^^^
+
+warning: unused imports: `Array1` and `Array2`
+  --> src/orchestration/thermodynamic/advanced_energy.rs:20:15
+   |
+20 | use ndarray::{Array1, Array2};
+   |               ^^^^^^  ^^^^^^
+
+warning: unused import: `Context`
+  --> src/orchestration/thermodynamic/temperature_schedules.rs:17:22
+   |
+17 | use anyhow::{Result, Context};
+   |                      ^^^^^^^
+
+warning: unused import: `Context`
+  --> src/orchestration/thermodynamic/replica_exchange.rs:15:22
+   |
+15 | use anyhow::{Result, Context};
+   |                      ^^^^^^^
+
+warning: unused import: `std::collections::HashMap`
+  --> src/orchestration/thermodynamic/replica_exchange.rs:16:5
+   |
+16 | use std::collections::HashMap;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `Instant`
+  --> src/orchestration/active_inference/hierarchical_client.rs:16:29
+   |
+16 | use tokio::time::{Duration, Instant};
+   |                             ^^^^^^^
+
+warning: unused import: `DMatrix`
+  --> src/orchestration/integration/mission_charlie_integration.rs:20:25
+   |
+20 | use nalgebra::{DVector, DMatrix};
+   |                         ^^^^^^^
+
+warning: unused import: `std::sync::Arc`
+  --> src/orchestration/integration/mission_charlie_integration.rs:22:5
+   |
+22 | use std::sync::Arc;
+   |     ^^^^^^^^^^^^^^
+
+warning: unused import: `parking_lot::RwLock`
+  --> src/orchestration/integration/mission_charlie_integration.rs:23:5
+   |
+23 | use parking_lot::RwLock;
+   |     ^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `nalgebra as na`
+  --> src/orchestration/integration/prism_ai_integration.rs:14:5
+   |
+14 | use nalgebra as na;
+   |     ^^^^^^^^^^^^^^
+
+warning: unused import: `Array2`
+  --> src/orchestration/integration/prism_ai_integration.rs:15:15
+   |
+15 | use ndarray::{Array2, Array1};
+   |               ^^^^^^
+
+warning: unused import: `std::time::SystemTime`
+  --> src/orchestration/integration/prism_ai_integration.rs:17:5
+   |
+17 | use std::time::SystemTime;
+   |     ^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `ActiveInferenceController`, `CausalDirection`, `CouplingStrength`, `EvolutionResult`, `FreeEnergyComponents`, `GenerativeModel`, `InformationChannel`, `PhaseSynchronizer`, `PolicySelector`, `SystemState`, `TransferEntropyResult`, `TransferEntropy`, `VariationalInference`, and `detect_causal_direction`
+  --> src/orchestration/integration/prism_ai_integration.rs:23:9
+   |
+23 |         GenerativeModel, HierarchicalModel, VariationalInference,
+   |         ^^^^^^^^^^^^^^^                     ^^^^^^^^^^^^^^^^^^^^
+24 |         PolicySelector, ActiveInferenceController, FreeEnergyComponents,
+   |         ^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^
+...
+29 |         ThermodynamicMetrics, EvolutionResult,
+   |                               ^^^^^^^^^^^^^^^
+...
+33 |         TransferEntropy, TransferEntropyResult, CausalDirection,
+   |         ^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^
+34 |         detect_causal_direction,
+   |         ^^^^^^^^^^^^^^^^^^^^^^^
+...
+38 |         CrossDomainBridge, DomainState, CouplingStrength,
+   |                                         ^^^^^^^^^^^^^^^^
+39 |         InformationChannel, PhaseSynchronizer, UnifiedPlatform,
+   |         ^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^
+...
+44 |         HealthMonitor, ComponentHealth, HealthStatus, SystemState, SystemHealthState,
+   |                                                       ^^^^^^^^^^^
+
+warning: unused imports: `LLMResponse` and `OrchestrationError`
+  --> src/orchestration/integration/prism_ai_integration.rs:77:32
+   |
+77 |     MissionCharlieIntegration, OrchestrationError, LLMResponse,
+   |                                ^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^
+
+warning: unused import: `anyhow::Result`
+  --> src/orchestration/optimization/mdl_prompt_optimizer.rs:13:5
+   |
+13 | use anyhow::Result;
+   |     ^^^^^^^^^^^^^^
+
+warning: unused import: `std::io::Write`
+  --> src/orchestration/optimization/mdl_prompt_optimizer.rs:51:13
+   |
+51 |         use std::io::Write;
+   |             ^^^^^^^^^^^^^^
+
+warning: unused import: `SymmetricEigen`
+ --> src/orchestration/optimization/geometric_manifold.rs:8:39
+  |
+8 | use nalgebra::{DMatrix, DVector, SVD, SymmetricEigen};
+  |                                       ^^^^^^^^^^^^^^
+
+warning: unused import: `anyhow::Result`
+  --> src/orchestration/caching/quantum_semantic_cache.rs:16:5
+   |
+16 | use anyhow::Result;
+   |     ^^^^^^^^^^^^^^
+
+warning: unused import: `Array1`
+  --> src/orchestration/routing/te_embedding_gpu.rs:12:15
+   |
+12 | use ndarray::{Array1, Array2};
+   |               ^^^^^^
+
+warning: unused import: `Context as AnyhowContext`
+  --> src/orchestration/routing/ksg_transfer_entropy_gpu.rs:17:22
+   |
+17 | use anyhow::{Result, Context as AnyhowContext};
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `Array1`
+  --> src/orchestration/routing/ksg_transfer_entropy_gpu.rs:18:15
+   |
+18 | use ndarray::{Array1, Array2, Axis};
+   |               ^^^^^^
+
+warning: unused import: `ndarray::Array1`
+ --> src/orchestration/routing/te_validation.rs:7:5
+  |
+7 | use ndarray::Array1;
+  |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `anyhow::Result`
+  --> src/orchestration/validation/info_theoretic_validator.rs:12:5
+   |
+12 | use anyhow::Result;
+   |     ^^^^^^^^^^^^^^
+
+warning: unused imports: `Array1` and `Array2`
+  --> src/orchestration/semantic_analysis/distance_metrics.rs:14:15
+   |
+14 | use ndarray::{Array1, Array2};
+   |               ^^^^^^  ^^^^^^
+
+warning: unused import: `Normal`
+  --> src/orchestration/neuromorphic/unified_neuromorphic.rs:10:41
+   |
+10 | use rand_distr::{Distribution, Poisson, Normal};  // Fixed: rand_distr not rand
+   |                                         ^^^^^^
+
+warning: unused import: `ordered_float::OrderedFloat`
+  --> src/orchestration/neuromorphic/unified_neuromorphic.rs:11:5
+   |
+11 | use ordered_float::OrderedFloat;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::gpu::GpuKernelExecutor`
+ --> src/orchestration/neuromorphic/gpu_neuromorphic.rs:7:5
+  |
+7 | use crate::gpu::GpuKernelExecutor;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::gpu::neuromorphic_ffi::*`
+ --> src/orchestration/neuromorphic/gpu_neuromorphic.rs:8:5
+  |
+8 | use crate::gpu::neuromorphic_ffi::*;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `CudaSlice`
+ --> src/orchestration/neuromorphic/gpu_neuromorphic.rs:9:35
+  |
+9 | use cudarc::driver::{CudaContext, CudaSlice};
+  |                                   ^^^^^^^^^
+
+warning: unused imports: `DMatrix` and `DVector`
+  --> src/orchestration/neuromorphic/gpu_neuromorphic.rs:10:16
+   |
+10 | use nalgebra::{DMatrix, DVector};
+   |                ^^^^^^^  ^^^^^^^
+
+warning: unused import: `std::sync::Arc`
+  --> src/orchestration/local_llm/gpu_llm_inference.rs:15:5
+   |
+15 | use std::sync::Arc;
+   |     ^^^^^^^^^^^^^^
+
+warning: unused import: `cudarc::driver::CudaContext`
+  --> src/orchestration/local_llm/gpu_llm_inference.rs:16:5
+   |
+16 | use cudarc::driver::CudaContext;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `GpuTransformerLayer`
+  --> src/orchestration/local_llm/gpu_llm_inference.rs:18:30
+   |
+18 | use super::gpu_transformer::{GpuTransformerLayer, GpuLLMInference};
+   |                              ^^^^^^^^^^^^^^^^^^^
+
+warning: variant `Q2_K` should have an upper camel case name
+  --> src/orchestration/local_llm/gguf_loader.rs:45:5
+   |
+45 |     Q2_K = 10,
+   |     ^^^^ help: convert the identifier to upper camel case: `Q2K`
+   |
+   = note: `#[warn(non_camel_case_types)]` on by default
+
+warning: variant `Q3_K` should have an upper camel case name
+  --> src/orchestration/local_llm/gguf_loader.rs:46:5
+   |
+46 |     Q3_K = 11,
+   |     ^^^^ help: convert the identifier to upper camel case: `Q3K`
+
+warning: variant `Q4_K` should have an upper camel case name
+  --> src/orchestration/local_llm/gguf_loader.rs:47:5
+   |
+47 |     Q4_K = 12,
+   |     ^^^^ help: convert the identifier to upper camel case: `Q4K`
+
+warning: variant `Q5_K` should have an upper camel case name
+  --> src/orchestration/local_llm/gguf_loader.rs:48:5
+   |
+48 |     Q5_K = 13,
+   |     ^^^^ help: convert the identifier to upper camel case: `Q5K`
+
+warning: variant `Q6_K` should have an upper camel case name
+  --> src/orchestration/local_llm/gguf_loader.rs:49:5
+   |
+49 |     Q6_K = 14,
+   |     ^^^^ help: convert the identifier to upper camel case: `Q6K`
+
+warning: variant `Q8_K` should have an upper camel case name
+  --> src/orchestration/local_llm/gguf_loader.rs:50:5
+   |
+50 |     Q8_K = 15,
+   |     ^^^^ help: convert the identifier to upper camel case: `Q8K`
+
+warning: unused import: `anyhow::Result`
+  --> src/orchestration/local_llm/attention_analyzer.rs:23:5
+   |
+23 | use anyhow::Result;
+   |     ^^^^^^^^^^^^^^
+
+warning: unused import: `std::collections::HashMap`
+  --> src/orchestration/local_llm/transfer_entropy_llm.rs:31:5
+   |
+31 | use std::collections::HashMap;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `anyhow::Result`
+  --> src/orchestration/cache/quantum_cache.rs:16:5
+   |
+16 | use anyhow::Result;
+   |     ^^^^^^^^^^^^^^
+
+warning: unused import: `BTreeMap`
+ --> src/orchestration/decomposition/pid_synergy.rs:9:42
+  |
+9 | use std::collections::{HashMap, HashSet, BTreeMap};
+  |                                          ^^^^^^^^
+
+warning: unused import: `VecDeque`
+ --> src/orchestration/inference/hierarchical_active_inference.rs:9:33
+  |
+9 | use std::collections::{HashMap, VecDeque};
+  |                                 ^^^^^^^^
+
+warning: unused import: `rand_distr::Normal`
+  --> src/orchestration/inference/hierarchical_active_inference.rs:11:5
+   |
+11 | use rand_distr::Normal;
+   |     ^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `SVD`
+ --> src/orchestration/causality/bidirectional_causality.rs:8:34
+  |
+8 | use nalgebra::{DMatrix, DVector, SVD};
+  |                                  ^^^
+
+warning: unused import: `VecDeque`
+ --> src/orchestration/causality/bidirectional_causality.rs:9:42
+  |
+9 | use std::collections::{HashMap, HashSet, VecDeque};
+  |                                          ^^^^^^^^
+
+warning: unused import: `rand_distr::Normal`
+  --> src/orchestration/causality/bidirectional_causality.rs:12:5
+   |
+12 | use rand_distr::Normal;
+   |     ^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `Complex`
+ --> src/orchestration/quantum/quantum_entanglement_measures.rs:8:34
+  |
+8 | use nalgebra::{DMatrix, DVector, Complex, SymmetricEigen};
+  |                                  ^^^^^^^
+
+warning: unused import: `VecDeque`
+  --> src/orchestration/quantum/quantum_entanglement_measures.rs:10:33
+   |
+10 | use std::collections::{HashMap, VecDeque};
+   |                                 ^^^^^^^^
+
+warning: variant `Q2_K` should have an upper camel case name
+  --> src/assistant/local_llm/gguf_loader.rs:45:5
+   |
+45 |     Q2_K = 10,
+   |     ^^^^ help: convert the identifier to upper camel case: `Q2K`
+
+warning: variant `Q3_K` should have an upper camel case name
+  --> src/assistant/local_llm/gguf_loader.rs:46:5
+   |
+46 |     Q3_K = 11,
+   |     ^^^^ help: convert the identifier to upper camel case: `Q3K`
+
+warning: variant `Q4_K` should have an upper camel case name
+  --> src/assistant/local_llm/gguf_loader.rs:47:5
+   |
+47 |     Q4_K = 12,
+   |     ^^^^ help: convert the identifier to upper camel case: `Q4K`
+
+warning: variant `Q5_K` should have an upper camel case name
+  --> src/assistant/local_llm/gguf_loader.rs:48:5
+   |
+48 |     Q5_K = 13,
+   |     ^^^^ help: convert the identifier to upper camel case: `Q5K`
+
+warning: variant `Q6_K` should have an upper camel case name
+  --> src/assistant/local_llm/gguf_loader.rs:49:5
+   |
+49 |     Q6_K = 14,
+   |     ^^^^ help: convert the identifier to upper camel case: `Q6K`
+
+warning: variant `Q8_K` should have an upper camel case name
+  --> src/assistant/local_llm/gguf_loader.rs:50:5
+   |
+50 |     Q8_K = 15,
+   |     ^^^^ help: convert the identifier to upper camel case: `Q8K`
+
+error[E0119]: conflicting implementations of trait `Clone` for type `Box<(dyn for<'a> Fn(&'a nalgebra::Matrix<f64, Dyn, Const<1>, VecStorage<f64, Dyn, Const<1>>>) -> f64 + std::marker::Send + std::marker::Sync + 'static)>`
+  --> src/orchestration/optimization/geometric_manifold.rs:92:1
+   |
+77 | impl Clone for Box<dyn Fn(&DVector<f64>) -> f64 + Send + Sync> {
+   | -------------------------------------------------------------- first implementation here
+...
+92 | impl Clone for Box<dyn Fn(&DVector<f64>) -> f64 + Send + Sync> {
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ conflicting implementation for `Box<(dyn for<'a> Fn(&'a nalgebra::Matrix<f64, Dyn, Const<1>, VecStorage<f64, Dyn, Const<1>>>) -> f64 + std::marker::Send + std::marker::Sync + 'static)>`
+   |
+   = note: this behavior recently changed as a result of a bug fix; see rust-lang/rust#56105 for details
+
+error[E0117]: only traits defined in the current crate can be implemented for types defined outside of the crate
+  --> src/orchestration/optimization/geometric_manifold.rs:70:1
+   |
+70 | impl Clone for Box<dyn Fn(&DVector<f64>) -> DMatrix<f64> + Send + Sync> {
+   | ^^^^^-----^^^^^--------------------------------------------------------
+   |      |         |
+   |      |         `dyn Fn(&Matrix<f64, Dyn, Const<1>, ...>) -> ... + Send + Sync` is not defined in the current crate
+   |      `std::alloc::Global` is not defined in the current crate
+   |
+   = note: impl doesn't have any local type before any uncovered type parameters
+   = note: for more information see https://doc.rust-lang.org/reference/items/implementations.html#orphan-rules
+   = note: define and implement a trait or new type instead
+   = note: the full name for the type has been written to '/home/diddy/Desktop/PRISM-AI-DoD/03-Source-Code/target/release/deps/prism_ai-0ad1bac784900206.long-type-7885317740146338705.txt'
+   = note: consider using `--verbose` to print the full type name to the console
+
+error[E0117]: only traits defined in the current crate can be implemented for types defined outside of the crate
+  --> src/orchestration/optimization/geometric_manifold.rs:77:1
+   |
+77 | impl Clone for Box<dyn Fn(&DVector<f64>) -> f64 + Send + Sync> {
+   | ^^^^^-----^^^^^-----------------------------------------------
+   |      |         |
+   |      |         `dyn Fn(&Matrix<f64, Dyn, Const<1>, ...>) -> f64 + Send + Sync` is not defined in the current crate
+   |      `std::alloc::Global` is not defined in the current crate
+   |
+   = note: impl doesn't have any local type before any uncovered type parameters
+   = note: for more information see https://doc.rust-lang.org/reference/items/implementations.html#orphan-rules
+   = note: define and implement a trait or new type instead
+   = note: the full name for the type has been written to '/home/diddy/Desktop/PRISM-AI-DoD/03-Source-Code/target/release/deps/prism_ai-0ad1bac784900206.long-type-11764735977620358119.txt'
+   = note: consider using `--verbose` to print the full type name to the console
+
+error[E0117]: only traits defined in the current crate can be implemented for types defined outside of the crate
+  --> src/orchestration/optimization/geometric_manifold.rs:92:1
+   |
+92 | impl Clone for Box<dyn Fn(&DVector<f64>) -> f64 + Send + Sync> {
+   | ^^^^^-----^^^^^-----------------------------------------------
+   |      |         |
+   |      |         `dyn Fn(&Matrix<f64, Dyn, Const<1>, ...>) -> f64 + Send + Sync` is not defined in the current crate
+   |      `std::alloc::Global` is not defined in the current crate
+   |
+   = note: impl doesn't have any local type before any uncovered type parameters
+   = note: for more information see https://doc.rust-lang.org/reference/items/implementations.html#orphan-rules
+   = note: define and implement a trait or new type instead
+   = note: the full name for the type has been written to '/home/diddy/Desktop/PRISM-AI-DoD/03-Source-Code/target/release/deps/prism_ai-0ad1bac784900206.long-type-11764735977620358119.txt'
+   = note: consider using `--verbose` to print the full type name to the console
+
+warning: unused variable: `input`
+  --> src/api_server/graphql_schema.rs:55:9
+   |
+55 |         input: PortfolioOptimizationInput,
+   |         ^^^^^ help: if this is intentional, prefix it with an underscore: `_input`
+   |
+   = note: `#[warn(unused_variables)]` on by default
+
+warning: unused variable: `input`
+  --> src/api_server/graphql_schema.rs:82:9
+   |
+82 |         input: MotionPlanInput,
+   |         ^^^^^ help: if this is intentional, prefix it with an underscore: `_input`
+
+warning: unused variable: `input`
+   --> src/api_server/graphql_schema.rs:127:9
+    |
+127 |         input: HealthcareRiskInput,
+    |         ^^^^^ help: if this is intentional, prefix it with an underscore: `_input`
+
+warning: unused variable: `input`
+   --> src/api_server/graphql_schema.rs:198:9
+    |
+198 |         input: PortfolioOptimizationInput,
+    |         ^^^^^ help: if this is intentional, prefix it with an underscore: `_input`
+
+warning: unused variable: `input`
+   --> src/api_server/graphql_schema.rs:216:9
+    |
+216 |         input: MotionPlanInput,
+    |         ^^^^^ help: if this is intentional, prefix it with an underscore: `_input`
+
+warning: variable does not need to be mutable
+   --> src/orchestration/llm_clients/openai_client.rs:125:13
+    |
+125 |         let mut last = self.last_request.lock();
+    |             ----^^^^
+    |             |
+    |             help: remove this `mut`
+    |
+    = note: `#[warn(unused_mut)]` on by default
+
+warning: unused variable: `start`
+   --> src/orchestration/llm_clients/ensemble.rs:129:13
+    |
+129 |         let start = Instant::now();
+    |             ^^^^^ help: if this is intentional, prefix it with an underscore: `_start`
+
+error[E0061]: this function takes 4 arguments but 1 argument was supplied
+   --> src/orchestration/integration/mission_charlie_integration.rs:88:28
+    |
+ 88 |         let orchestrator = LLMOrchestrator::new(config.orchestrator_config).await?;
+    |                            ^^^^^^^^^^^^^^^^^^^^---------------------------- three arguments of type `Arc<(dyn LLMClient + 'static)>`, `Arc<(dyn LLMClient + 'static)>`, and `Arc<(dyn LLMClient + 'static)>` are missing
+    |
+note: expected `Arc<dyn LLMClient>`, found `MissionCharlieConfig`
+   --> src/orchestration/integration/mission_charlie_integration.rs:88:49
+    |
+ 88 |         let orchestrator = LLMOrchestrator::new(config.orchestrator_config).await?;
+    |                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+    = note: expected struct `Arc<(dyn LLMClient + 'static)>`
+               found struct `MissionCharlieConfig`
+note: associated function defined here
+   --> src/orchestration/llm_clients/ensemble.rs:417:12
+    |
+417 |     pub fn new(
+    |            ^^^
+418 |         openai: Arc<dyn LLMClient>,
+    |         --------------------------
+419 |         claude: Arc<dyn LLMClient>,
+    |         --------------------------
+420 |         gemini: Arc<dyn LLMClient>,
+    |         --------------------------
+421 |         grok: Arc<dyn LLMClient>,
+    |         ------------------------
+help: provide the arguments
+    |
+ 88 -         let orchestrator = LLMOrchestrator::new(config.orchestrator_config).await?;
+ 88 +         let orchestrator = LLMOrchestrator::new(/* Arc<(dyn LLMClient + 'static)> */, /* Arc<(dyn LLMClient + 'static)> */, /* Arc<(dyn LLMClient + 'static)> */, /* Arc<(dyn LLMClient + 'static)> */).await?;
+    |
+
+error[E0277]: `LLMOrchestrator` is not a future
+  --> src/orchestration/integration/mission_charlie_integration.rs:88:77
+   |
+88 |         let orchestrator = LLMOrchestrator::new(config.orchestrator_config).await?;
+   |                            ------------------------------------------------ ^^^^^ `LLMOrchestrator` is not a future
+   |                            |
+   |                            this call returns `LLMOrchestrator`
+   |
+   = help: the trait `futures::Future` is not implemented for `LLMOrchestrator`
+   = note: LLMOrchestrator must be a future or must implement `IntoFuture` to be awaited
+   = note: required for `LLMOrchestrator` to implement `std::future::IntoFuture`
+help: remove the `.await`
+   |
+88 -         let orchestrator = LLMOrchestrator::new(config.orchestrator_config).await?;
+88 +         let orchestrator = LLMOrchestrator::new(config.orchestrator_config)?;
+   |
+
+error[E0061]: this function takes 2 arguments but 1 argument was supplied
+  --> src/orchestration/integration/mission_charlie_integration.rs:98:30
+   |
+98 |         let quantum_voting = QuantumVotingConsensus::new(config.num_llms)?;
+   |                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^----------------- argument #2 of type `f64` is missing
+   |
+note: associated function defined here
+  --> src/orchestration/consensus/quantum_voting.rs:22:12
+   |
+22 |     pub fn new(n_llms: usize, temperature: f64) -> Self {
+   |            ^^^                ----------------
+help: provide the argument
+   |
+98 |         let quantum_voting = QuantumVotingConsensus::new(config.num_llms, /* f64 */)?;
+   |                                                                         +++++++++++
+
+error[E0277]: the `?` operator can only be applied to values that implement `Try`
+  --> src/orchestration/integration/mission_charlie_integration.rs:98:30
+   |
+98 |         let quantum_voting = QuantumVotingConsensus::new(config.num_llms)?;
+   |                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the `?` operator cannot be applied to type `consensus::quantum_voting::QuantumConsensusOptimizer`
+   |
+   = help: the trait `Try` is not implemented for `consensus::quantum_voting::QuantumConsensusOptimizer`
+
+error[E0061]: this function takes 2 arguments but 1 argument was supplied
+   --> src/orchestration/integration/mission_charlie_integration.rs:130:29
+    |
+130 |         let thermodynamic = ThermodynamicConsensus::new(config.num_llms)?;
+    |                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^----------------- argument #2 of type `f64` is missing
+    |
+note: associated function defined here
+   --> src/orchestration/thermodynamic/quantum_consensus.rs:22:12
+    |
+ 22 |     pub fn new(n_llms: usize, temperature: f64) -> Self {
+    |            ^^^                ----------------
+help: provide the argument
+    |
+130 |         let thermodynamic = ThermodynamicConsensus::new(config.num_llms, /* f64 */)?;
+    |                                                                        +++++++++++
+
+error[E0277]: the `?` operator can only be applied to values that implement `Try`
+   --> src/orchestration/integration/mission_charlie_integration.rs:130:29
+    |
+130 |         let thermodynamic = ThermodynamicConsensus::new(config.num_llms)?;
+    |                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the `?` operator cannot be applied to type `quantum_consensus::QuantumConsensusOptimizer`
+    |
+    = help: the trait `Try` is not implemented for `quantum_consensus::QuantumConsensusOptimizer`
+
+error[E0308]: mismatched types
+   --> src/orchestration/integration/mission_charlie_integration.rs:273:50
+    |
+273 |             self.thermodynamic.compute_consensus(&llm_responses)?
+    |                                ----------------- ^^^^^^^^^^^^^^ expected `&[LLMResponse]`, found `&Vec<LLMResponse>`
+    |                                |
+    |                                arguments to this method are incorrect
+    |
+    = note: expected reference `&[orchestration::LLMResponse]`
+               found reference `&Vec<openai_client::LLMResponse>`
+note: method defined here
+   --> src/orchestration/thermodynamic/quantum_consensus.rs:96:12
+    |
+ 96 |     pub fn compute_consensus(&self, llm_responses: &[crate::orchestration::LLMResponse]) -> Result<String> {
+    |            ^^^^^^^^^^^^^^^^^        ---------------------------------------------------
+
+error[E0063]: missing fields `cache_size`, `hidden_neurons`, `hierarchy_levels` and 13 other fields in initializer of `IntegrationConfig`
+   --> src/orchestration/integration/prism_ai_integration.rs:128:30
+    |
+128 |         let charlie_config = IntegrationConfig {
+    |                              ^^^^^^^^^^^^^^^^^ missing `cache_size`, `hidden_neurons`, `hierarchy_levels` and 13 other fields
+
+error[E0061]: this function takes 0 arguments but 2 arguments were supplied
+   --> src/orchestration/integration/prism_ai_integration.rs:136:32
+    |
+136 |         let active_inference = HierarchicalModel::new(
+    |                                ^^^^^^^^^^^^^^^^^^^^^^
+137 |             config.inference_levels,
+    |             ----------------------- unexpected argument #1 of type `usize`
+138 |             config.state_dimensions.clone(),
+    |             ------------------------------- unexpected argument #2 of type `Vec<usize>`
+    |
+note: associated function defined here
+   --> src/active_inference/hierarchical_model.rs:380:12
+    |
+380 |     pub fn new() -> Self {
+    |            ^^^
+help: remove the extra arguments
+    |
+137 -             config.inference_levels,
+137 +             );
+    |
+
+error[E0308]: mismatched types
+   --> src/orchestration/integration/prism_ai_integration.rs:159:13
+    |
+158 |         let bridge = CrossDomainBridge::new(
+    |                      ---------------------- arguments to this function are incorrect
+159 |             config.coupling_strength,
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^ expected `usize`, found `f64`
+    |
+note: associated function defined here
+   --> src/integration/cross_domain_bridge.rs:200:12
+    |
+200 |     pub fn new(n_dimensions: usize, coupling_strength: f64) -> Self {
+    |            ^^^ -------------------
+
+error[E0061]: this function takes 1 argument but 0 arguments were supplied
+   --> src/orchestration/integration/prism_ai_integration.rs:164:24
+    |
+164 |         let platform = UnifiedPlatform::new()?;
+    |                        ^^^^^^^^^^^^^^^^^^^^-- argument #1 of type `usize` is missing
+    |
+note: associated function defined here
+   --> src/integration/unified_platform.rs:185:12
+    |
+185 |     pub fn new(n_dimensions: usize) -> Result<Self> {
+    |            ^^^ -------------------
+help: provide the argument
+    |
+164 |         let platform = UnifiedPlatform::new(/* usize */)?;
+    |                                             +++++++++++
+
+error[E0061]: this function takes 3 arguments but 1 argument was supplied
+   --> src/orchestration/integration/prism_ai_integration.rs:180:30
+    |
+180 |           let health_monitor = HealthMonitor::new(
+    |  ______________________________^^^^^^^^^^^^^^^^^^-
+181 | |             std::time::Duration::from_secs(config.health_check_interval),
+182 | |         );
+    | |_________- two arguments of type `f64` and `f64` are missing
+    |
+note: associated function defined here
+   --> src/resilience/fault_tolerance.rs:190:12
+    |
+190 |     pub fn new(
+    |            ^^^
+191 |         stale_timeout: Duration,
+192 |         degraded_threshold: f64,
+    |         -----------------------
+193 |         critical_threshold: f64,
+    |         -----------------------
+help: provide the arguments
+    |
+180 -         let health_monitor = HealthMonitor::new(
+181 -             std::time::Duration::from_secs(config.health_check_interval),
+182 -         );
+180 +         let health_monitor = HealthMonitor::new(std::time::Duration::from_secs(config.health_check_interval), /* f64 */, /* f64 */);
+    |
+
+error[E0308]: mismatched types
+   --> src/orchestration/integration/prism_ai_integration.rs:186:32
+    |
+186 |             failure_threshold: config.failure_threshold,
+    |                                ^^^^^^^^^^^^^^^^^^^^^^^^ expected `f64`, found `usize`
+
+error[E0063]: missing fields `consecutive_failure_threshold`, `ema_alpha` and `min_calls` in initializer of `CircuitBreakerConfig`
+   --> src/orchestration/integration/prism_ai_integration.rs:185:30
+    |
+185 |         let breaker_config = CircuitBreakerConfig {
+    |                              ^^^^^^^^^^^^^^^^^^^^ missing `consecutive_failure_threshold`, `ema_alpha` and `min_calls`
+
+error[E0061]: this function takes 1 argument but 0 arguments were supplied
+   --> src/orchestration/integration/prism_ai_integration.rs:193:27
+    |
+193 |         let gpu_backend = GpuBackend::new()?;
+    |                           ^^^^^^^^^^^^^^^-- argument #1 of type `usize` is missing
+    |
+note: associated function defined here
+   --> src/quantum_mlir/runtime.rs:35:12
+    |
+ 35 |     pub fn new(num_qubits: usize) -> Result<Self> {
+    |            ^^^ -----------------
+help: provide the argument
+    |
+193 |         let gpu_backend = GpuBackend::new(/* usize */)?;
+    |                                           +++++++++++
+
+error[E0277]: `?` couldn't convert the error: `std::string::String: StdError` is not satisfied
+   --> src/orchestration/integration/prism_ai_integration.rs:225:64
+    |
+225 |         let breaker_state = self.circuit_breaker.read().check()?;
+    |                                                         -------^ the trait `StdError` is not implemented for `std::string::String`
+    |                                                         |
+    |                                                         this can't be annotated with `?` because it has type `Result<_, CircuitBreakerError<std::string::String>>`
+    |
+    = note: the question mark operation (`?`) implicitly performs a conversion on the error value using the `From` trait
+note: required for `CircuitBreakerError<std::string::String>` to implement `StdError`
+   --> src/resilience/circuit_breaker.rs:349:28
+    |
+349 | impl<E: std::error::Error> std::error::Error for CircuitBreakerError<E> {}
+    |         -----------------  ^^^^^^^^^^^^^^^^^     ^^^^^^^^^^^^^^^^^^^^^^
+    |         |
+    |         unsatisfied trait bound introduced here
+    = note: required for `anyhow::Error` to implement `From<CircuitBreakerError<std::string::String>>`
+
+error[E0599]: no method named `update` found for struct `parking_lot::lock_api::RwLockWriteGuard<'_, parking_lot::RawRwLock, HierarchicalModel>` in the current scope
+   --> src/orchestration/integration/prism_ai_integration.rs:248:24
+    |
+248 |             active_inf.update(observations)?
+    |                        ^^^^^^ method not found in `parking_lot::lock_api::RwLockWriteGuard<'_, parking_lot::RawRwLock, HierarchicalModel>`
+    |
+    = help: items from traits can only be used if the trait is implemented and in scope
+    = note: the following traits define an item `update`, perhaps you need to implement one of them:
+            candidate #1: `Digest`
+            candidate #2: `DynDigest`
+            candidate #3: `rayon::iter::ParallelIterator`
+            candidate #4: `sha2::digest::Mac`
+            candidate #5: `sha2::digest::Update`
+            candidate #6: `universal_hash::UniversalHash`
+
+error[E0061]: this method takes 1 argument but 2 arguments were supplied
+   --> src/orchestration/integration/prism_ai_integration.rs:261:20
+    |
+261 |             thermo.evolve(state, 100)?
+    |                    ^^^^^^ ----- unexpected argument #1 of type `thermodynamic_network::ThermodynamicState`
+    |
+note: method defined here
+   --> src/statistical_mechanics/thermodynamic_network.rs:410:12
+    |
+410 |     pub fn evolve(&mut self, n_steps: usize) -> EvolutionResult {
+    |            ^^^^^^
+help: remove the extra argument
+    |
+261 -             thermo.evolve(state, 100)?
+261 +             thermo.evolve(100)?
+    |
+
+error[E0277]: the `?` operator can only be applied to values that implement `Try`
+   --> src/orchestration/integration/prism_ai_integration.rs:261:13
+    |
+261 |             thermo.evolve(state, 100)?
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^ the `?` operator cannot be applied to type `EvolutionResult`
+    |
+    = help: the trait `Try` is not implemented for `EvolutionResult`
+
+error[E0277]: `?` couldn't convert the error: `std::string::String: StdError` is not satisfied
+   --> src/orchestration/integration/prism_ai_integration.rs:270:14
+    |
+267 |               bridge.transfer(
+    |  ____________________-
+268 | |                 DomainState::Quantum(charlie_response.quantum_state.clone()),
+269 | |                 DomainState::Neuromorphic(charlie_response.neuromorphic_state.clone()),
+270 | |             )?
+    | |             -^ the trait `StdError` is not implemented for `std::string::String`
+    | |_____________|
+    |               this has type `Result<_, std::string::String>`
+    |
+    = note: the question mark operation (`?`) implicitly performs a conversion on the error value using the `From` trait
+    = note: required for `anyhow::Error` to implement `From<std::string::String>`
+
+error[E0560]: struct `PlatformInput` has no field named `neuromorphic`
+   --> src/orchestration/integration/prism_ai_integration.rs:284:17
+    |
+284 |                 neuromorphic: charlie_response.neuromorphic_state.clone(),
+    |                 ^^^^^^^^^^^^ `PlatformInput` does not have this field
+    |
+    = note: available fields are: `sensory_data`, `targets`, `dt`
+
+error[E0560]: struct `PlatformInput` has no field named `quantum`
+   --> src/orchestration/integration/prism_ai_integration.rs:285:17
+    |
+285 |                 quantum: charlie_response.quantum_state.clone(),
+    |                 ^^^^^^^ `PlatformInput` does not have this field
+    |
+    = note: available fields are: `sensory_data`, `targets`, `dt`
+
+error[E0560]: struct `PlatformInput` has no field named `information`
+   --> src/orchestration/integration/prism_ai_integration.rs:286:17
+    |
+286 |                 information: bridged_result.mutual_information,
+    |                 ^^^^^^^^^^^ `PlatformInput` does not have this field
+    |
+    = note: available fields are: `sensory_data`, `targets`, `dt`
+
+error[E0560]: struct `PlatformInput` has no field named `thermodynamic`
+   --> src/orchestration/integration/prism_ai_integration.rs:287:17
+    |
+287 |                 thermodynamic: thermodynamic_result.final_state.clone(),
+    |                 ^^^^^^^^^^^^^ `PlatformInput` does not have this field
+    |
+    = note: available fields are: `sensory_data`, `targets`, `dt`
+
+error[E0277]: `std::result::Result<PlatformOutput, anyhow::Error>` is not a future
+   --> src/orchestration/integration/prism_ai_integration.rs:289:37
+    |
+289 |             platform.process(input).await?
+    |                                     ^^^^^ `std::result::Result<PlatformOutput, anyhow::Error>` is not a future
+    |
+    = help: the trait `futures::Future` is not implemented for `std::result::Result<PlatformOutput, anyhow::Error>`
+    = note: std::result::Result<PlatformOutput, anyhow::Error> must be a future or must implement `IntoFuture` to be awaited
+    = note: required for `std::result::Result<PlatformOutput, anyhow::Error>` to implement `std::future::IntoFuture`
+help: remove the `.await`
+    |
+289 -             platform.process(input).await?
+289 +             platform.process(input)?
+    |
+
+error[E0063]: missing fields `failure_count`, `last_update`, `total_failures` and 2 other fields in initializer of `ComponentHealth`
+   --> src/orchestration/integration/prism_ai_integration.rs:297:17
+    |
+297 |                 ComponentHealth {
+    |                 ^^^^^^^^^^^^^^^ missing `failure_count`, `last_update`, `total_failures` and 2 other fields
+
+error[E0061]: this function takes 0 arguments but 1 argument was supplied
+   --> src/orchestration/integration/prism_ai_integration.rs:371:27
+    |
+371 |         let mut circuit = QuantumCircuit::new(10)?;
+    |                           ^^^^^^^^^^^^^^^^^^^ -- unexpected argument of type `{integer}`
+    |
+note: associated function defined here
+   --> src/quantum_mlir/mod.rs:68:12
+    |
+ 68 |     pub fn new() -> Result<Self> {
+    |            ^^^
+help: remove the extra argument
+    |
+371 -         let mut circuit = QuantumCircuit::new(10)?;
+371 +         let mut circuit = QuantumCircuit::new()?;
+    |
+
+error[E0599]: no method named `add_gate` found for struct `QuantumCompiler` in the current scope
+   --> src/orchestration/integration/prism_ai_integration.rs:375:21
+    |
+375 |             circuit.add_gate(QuantumGate::Hadamard(0));
+    |                     ^^^^^^^^ method not found in `QuantumCompiler`
+    |
+   ::: src/quantum_mlir/mod.rs:27:1
+    |
+ 27 | pub struct QuantumCompiler {
+    | -------------------------- method `add_gate` not found for this struct
+
+error[E0533]: expected value, found struct variant `QuantumGate::Hadamard`
+   --> src/orchestration/integration/prism_ai_integration.rs:375:30
+    |
+375 |             circuit.add_gate(QuantumGate::Hadamard(0));
+    |                              ^^^^^^^^^^^^^^^^^^^^^ not a value
+    |
+help: you might have meant to create a new value of the struct
+    |
+375 -             circuit.add_gate(QuantumGate::Hadamard(0));
+375 +             circuit.add_gate(QuantumGate::Hadamard { qubit: /* value */ });
+    |
+
+error[E0599]: no method named `add_gate` found for struct `QuantumCompiler` in the current scope
+   --> src/orchestration/integration/prism_ai_integration.rs:376:21
+    |
+376 |             circuit.add_gate(QuantumGate::CNOT(0, 1));
+    |                     ^^^^^^^^ method not found in `QuantumCompiler`
+    |
+   ::: src/quantum_mlir/mod.rs:27:1
+    |
+ 27 | pub struct QuantumCompiler {
+    | -------------------------- method `add_gate` not found for this struct
+
+error[E0533]: expected value, found struct variant `QuantumGate::CNOT`
+   --> src/orchestration/integration/prism_ai_integration.rs:376:30
+    |
+376 |             circuit.add_gate(QuantumGate::CNOT(0, 1));
+    |                              ^^^^^^^^^^^^^^^^^ not a value
+    |
+help: you might have meant to create a new value of the struct
+    |
+376 -             circuit.add_gate(QuantumGate::CNOT(0, 1));
+376 +             circuit.add_gate(QuantumGate::CNOT { control: /* value */, target: /* value */ });
+    |
+
+error[E0599]: no method named `add_gate` found for struct `QuantumCompiler` in the current scope
+   --> src/orchestration/integration/prism_ai_integration.rs:378:21
+    |
+378 |             circuit.add_gate(QuantumGate::RX(0, response.confidence * std::f64::consts::PI));
+    |                     ^^^^^^^^ method not found in `QuantumCompiler`
+    |
+   ::: src/quantum_mlir/mod.rs:27:1
+    |
+ 27 | pub struct QuantumCompiler {
+    | -------------------------- method `add_gate` not found for this struct
+
+error[E0533]: expected value, found struct variant `QuantumGate::RX`
+   --> src/orchestration/integration/prism_ai_integration.rs:378:30
+    |
+378 |             circuit.add_gate(QuantumGate::RX(0, response.confidence * std::f64::consts::PI));
+    |                              ^^^^^^^^^^^^^^^ not a value
+    |
+help: you might have meant to create a new value of the struct
+    |
+378 -             circuit.add_gate(QuantumGate::RX(0, response.confidence * std::f64::consts::PI));
+378 +             circuit.add_gate(QuantumGate::RX { qubit: /* value */, angle: /* value */ });
+    |
+
+error[E0599]: no method named `add_gate` found for struct `QuantumCompiler` in the current scope
+   --> src/orchestration/integration/prism_ai_integration.rs:379:21
+    |
+379 |             circuit.add_gate(QuantumGate::RY(1, response.free_energy));
+    |                     ^^^^^^^^ method not found in `QuantumCompiler`
+    |
+   ::: src/quantum_mlir/mod.rs:27:1
+    |
+ 27 | pub struct QuantumCompiler {
+    | -------------------------- method `add_gate` not found for this struct
+
+error[E0533]: expected value, found struct variant `QuantumGate::RY`
+   --> src/orchestration/integration/prism_ai_integration.rs:379:30
+    |
+379 |             circuit.add_gate(QuantumGate::RY(1, response.free_energy));
+    |                              ^^^^^^^^^^^^^^^ not a value
+    |
+help: you might have meant to create a new value of the struct
+    |
+379 -             circuit.add_gate(QuantumGate::RY(1, response.free_energy));
+379 +             circuit.add_gate(QuantumGate::RY { qubit: /* value */, angle: /* value */ });
+    |
+
+error[E0599]: no function or associated item named `default` found for struct `ExecutionParams` in the current scope
+   --> src/orchestration/integration/prism_ai_integration.rs:384:39
+    |
+384 |         let config = ExecutionConfig::default().with_gpu(true);
+    |                                       ^^^^^^^ function or associated item not found in `ExecutionParams`
+    |
+   ::: src/quantum_mlir/mod.rs:359:1
+    |
+359 | pub struct ExecutionParams {
+    | -------------------------- function or associated item `default` not found for this struct
+    |
+    = help: items from traits can only be used if the trait is implemented and in scope
+    = note: the following trait defines an item `default`, perhaps you need to implement it:
+            candidate #1: `std::default::Default`
+
+error[E0061]: this function takes 2 arguments but 3 arguments were supplied
+   --> src/orchestration/integration/prism_ai_integration.rs:385:22
+    |
+385 |         let result = compile_and_execute(&circuit, &gpu, config)?;
+    |                      ^^^^^^^^^^^^^^^^^^^                 ------ unexpected argument #3
+    |
+note: expected `&ExecutionParams`, found `&RwLockReadGuard<'_, RawRwLock, ...>`
+   --> src/orchestration/integration/prism_ai_integration.rs:385:52
+    |
+385 |         let result = compile_and_execute(&circuit, &gpu, config)?;
+    |                                                    ^^^^
+    = note: expected reference `&ExecutionParams`
+               found reference `&parking_lot::lock_api::RwLockReadGuard<'_, parking_lot::RawRwLock, QuantumGpuRuntime>`
+note: function defined here
+   --> src/quantum_mlir/mod.rs:398:8
+    |
+398 | pub fn compile_and_execute(circuit: &QuantumCircuit, config: &ExecutionConfig) -> Result<QuantumState> {
+    |        ^^^^^^^^^^^^^^^^^^^                           ------------------------
+help: remove the extra argument
+    |
+385 -         let result = compile_and_execute(&circuit, &gpu, config)?;
+385 +         let result = compile_and_execute(&circuit, /* &ExecutionParams */)?;
+    |
+
+error[E0609]: no field `state_vector` on type `quantum_mlir::QuantumState`
+   --> src/orchestration/integration/prism_ai_integration.rs:388:32
+    |
+388 |             amplitudes: result.state_vector,
+    |                                ^^^^^^^^^^^^ unknown field
+    |
+    = note: available fields are: `dimension`, `amplitudes`
+
+error[E0609]: no field `entanglement_entropy` on type `quantum_mlir::QuantumState`
+   --> src/orchestration/integration/prism_ai_integration.rs:389:34
+    |
+389 |             entanglement: result.entanglement_entropy,
+    |                                  ^^^^^^^^^^^^^^^^^^^^ unknown field
+    |
+    = note: available fields are: `dimension`, `amplitudes`
+
+error[E0609]: no field `gpu_speedup` on type `quantum_mlir::QuantumState`
+   --> src/orchestration/integration/prism_ai_integration.rs:390:29
+    |
+390 |             speedup: result.gpu_speedup,
+    |                             ^^^^^^^^^^^ unknown field
+    |
+    = note: available fields are: `dimension`, `amplitudes`
+
+warning: unused variable: `state`
+  --> src/api_server/routes/pwsa.rs:95:11
+   |
+95 |     State(state): State<Arc<AppState>>,
+   |           ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+warning: unused variable: `state`
+   --> src/api_server/routes/pwsa.rs:159:11
+    |
+159 |     State(state): State<Arc<AppState>>,
+    |           ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+warning: unused variable: `state`
+   --> src/api_server/routes/pwsa.rs:179:11
+    |
+179 |     State(state): State<Arc<AppState>>,
+    |           ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+warning: unused variable: `state`
+   --> src/api_server/routes/finance.rs:195:11
+    |
+195 |     State(state): State<Arc<AppState>>,
+    |           ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+warning: unused variable: `state`
+   --> src/api_server/routes/finance.rs:215:11
+    |
+215 |     State(state): State<Arc<AppState>>,
+    |           ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+warning: unused variable: `state`
+   --> src/api_server/routes/finance.rs:233:11
+    |
+233 |     State(state): State<Arc<AppState>>,
+    |           ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+warning: unused variable: `state`
+   --> src/api_server/routes/finance.rs:299:11
+    |
+299 |     State(state): State<Arc<AppState>>,
+    |           ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+warning: unused variable: `request`
+   --> src/api_server/routes/finance.rs:300:10
+    |
+300 |     Json(request): Json<BacktestRequest>,
+    |          ^^^^^^^ help: if this is intentional, prefix it with an underscore: `_request`
+
+warning: unused variable: `req`
+   --> src/api_server/routes/finance_advanced.rs:258:10
+    |
+258 |     Json(req): Json<GnnPortfolioPredictionRequest>,
+    |          ^^^ help: if this is intentional, prefix it with an underscore: `_req`
+
+warning: unused variable: `req`
+   --> src/api_server/routes/finance_advanced.rs:293:10
+    |
+293 |     Json(req): Json<TransferEntropyCausalityRequest>,
+    |          ^^^ help: if this is intentional, prefix it with an underscore: `_req`
+
+warning: unused variable: `req`
+   --> src/api_server/routes/finance_advanced.rs:321:10
+    |
+321 |     Json(req): Json<PortfolioRebalancingRequest>,
+    |          ^^^ help: if this is intentional, prefix it with an underscore: `_req`
+
+warning: unused variable: `state`
+   --> src/api_server/routes/telecom.rs:101:11
+    |
+101 |     State(state): State<Arc<AppState>>,
+    |           ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+warning: unused variable: `state`
+   --> src/api_server/routes/telecom.rs:122:11
+    |
+122 |     State(state): State<Arc<AppState>>,
+    |           ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+warning: unused variable: `state`
+   --> src/api_server/routes/telecom.rs:142:11
+    |
+142 |     State(state): State<Arc<AppState>>,
+    |           ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+warning: unused variable: `state`
+   --> src/api_server/routes/telecom.rs:157:11
+    |
+157 |     State(state): State<Arc<AppState>>,
+    |           ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+warning: unused variable: `state`
+   --> src/api_server/routes/robotics.rs:168:11
+    |
+168 |     State(state): State<Arc<AppState>>,
+    |           ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+warning: unused variable: `state`
+   --> src/api_server/routes/robotics.rs:185:11
+    |
+185 |     State(state): State<Arc<AppState>>,
+    |           ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+warning: unused variable: `state`
+   --> src/api_server/routes/robotics.rs:208:11
+    |
+208 |     State(state): State<Arc<AppState>>,
+    |           ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+warning: unused variable: `state`
+  --> src/api_server/routes/llm.rs:85:11
+   |
+85 |     State(state): State<Arc<AppState>>,
+   |           ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+warning: unused variable: `state`
+   --> src/api_server/routes/llm.rs:105:11
+    |
+105 |     State(state): State<Arc<AppState>>,
+    |           ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+warning: unused variable: `state`
+   --> src/api_server/routes/llm.rs:125:11
+    |
+125 |     State(state): State<Arc<AppState>>,
+    |           ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+warning: unused variable: `state`
+   --> src/api_server/routes/llm.rs:161:11
+    |
+161 |     State(state): State<Arc<AppState>>,
+    |           ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+warning: unused variable: `state`
+   --> src/api_server/routes/llm.rs:180:11
+    |
+180 |     State(state): State<Arc<AppState>>,
+    |           ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+warning: unused variable: `state`
+   --> src/api_server/routes/time_series.rs:122:11
+    |
+122 |     State(state): State<Arc<AppState>>,
+    |           ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+warning: unused variable: `state`
+   --> src/api_server/routes/time_series.rs:241:11
+    |
+241 |     State(state): State<Arc<AppState>>,
+    |           ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+warning: unused variable: `state`
+   --> src/api_server/routes/time_series.rs:287:11
+    |
+287 |     State(state): State<Arc<AppState>>,
+    |           ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+warning: unused variable: `state`
+   --> src/api_server/routes/time_series.rs:306:11
+    |
+306 |     State(state): State<Arc<AppState>>,
+    |           ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+warning: unused variable: `state`
+   --> src/api_server/routes/pixels.rs:144:11
+    |
+144 |     State(state): State<Arc<AppState>>,
+    |           ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+warning: unused variable: `state`
+   --> src/api_server/routes/pixels.rs:201:11
+    |
+201 |     State(state): State<Arc<AppState>>,
+    |           ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+warning: unused variable: `state`
+   --> src/api_server/routes/pixels.rs:221:11
+    |
+221 |     State(state): State<Arc<AppState>>,
+    |           ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+warning: unused variable: `state`
+   --> src/api_server/routes/pixels.rs:240:11
+    |
+240 |     State(state): State<Arc<AppState>>,
+    |           ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+warning: unused variable: `state`
+   --> src/api_server/routes/pixels.rs:258:11
+    |
+258 |     State(state): State<Arc<AppState>>,
+    |           ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+warning: unused variable: `req`
+   --> src/api_server/routes/applications.rs:296:10
+    |
+296 |     Json(req): Json<HealthcareRiskRequest>,
+    |          ^^^ help: if this is intentional, prefix it with an underscore: `_req`
+
+warning: unused variable: `req`
+   --> src/api_server/routes/applications.rs:346:10
+    |
+346 |     Json(req): Json<ManufacturingMaintenanceRequest>,
+    |          ^^^ help: if this is intentional, prefix it with an underscore: `_req`
+
+warning: unused variable: `req`
+   --> src/api_server/routes/applications.rs:362:10
+    |
+362 |     Json(req): Json<SupplyChainDemandRequest>,
+    |          ^^^ help: if this is intentional, prefix it with an underscore: `_req`
+
+warning: unused variable: `req`
+   --> src/api_server/routes/applications.rs:377:10
+    |
+377 |     Json(req): Json<AgricultureYieldRequest>,
+    |          ^^^ help: if this is intentional, prefix it with an underscore: `_req`
+
+warning: unused variable: `req`
+   --> src/api_server/routes/applications.rs:394:10
+    |
+394 |     Json(req): Json<CybersecurityThreatRequest>,
+    |          ^^^ help: if this is intentional, prefix it with an underscore: `_req`
+
+warning: unused variable: `req`
+   --> src/api_server/routes/applications.rs:414:10
+    |
+414 |     Json(req): Json<ClimateForecastRequest>,
+    |          ^^^ help: if this is intentional, prefix it with an underscore: `_req`
+
+warning: unused variable: `req`
+   --> src/api_server/routes/applications.rs:427:10
+    |
+427 |     Json(req): Json<SmartCityOptimizationRequest>,
+    |          ^^^ help: if this is intentional, prefix it with an underscore: `_req`
+
+warning: unused variable: `req`
+   --> src/api_server/routes/applications.rs:443:10
+    |
+443 |     Json(req): Json<EducationPerformanceRequest>,
+    |          ^^^ help: if this is intentional, prefix it with an underscore: `_req`
+
+warning: unused variable: `req`
+   --> src/api_server/routes/applications.rs:468:10
+    |
+468 |     Json(req): Json<RetailInventoryRequest>,
+    |          ^^^ help: if this is intentional, prefix it with an underscore: `_req`
+
+warning: unused variable: `req`
+   --> src/api_server/routes/applications.rs:481:10
+    |
+481 |     Json(req): Json<ConstructionForecastRequest>,
+    |          ^^^ help: if this is intentional, prefix it with an underscore: `_req`
+
+warning: unused variable: `state`
+  --> src/api_server/websocket.rs:76:43
+   |
+76 | async fn handle_socket(socket: WebSocket, state: Arc<AppState>) {
+   |                                           ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+error[E0599]: no method named `arg` found for struct `LaunchArgs` in the current scope
+   --> src/orchestration/thermodynamic/advanced_energy.rs:269:18
+    |
+268 | /             stream.launch_builder(kernel)
+269 | |                 .arg(&costs_dev)
+    | |                 -^^^ method not found in `LaunchArgs<'_>`
+    | |_________________|
+    |
+    |
+   ::: /home/diddy/.cargo/git/checkouts/cudarc-bb725c562477d40e/fdf313c/src/driver/safe/launch.rs:89:8
+    |
+ 89 |       fn arg(&mut self, arg: T) -> &mut Self;
+    |          --- the method is available for `LaunchArgs<'_>` here
+    |
+    = help: items from traits can only be used if the trait is in scope
+help: trait `PushKernelArg` which provides `arg` is implemented but not in scope; perhaps you want to import it
+    |
+ 19 + use cudarc::driver::PushKernelArg;
+    |
+
+error[E0560]: struct `thermodynamic_network::ThermodynamicState` has no field named `positions`
+   --> src/orchestration/integration/prism_ai_integration.rs:350:13
+    |
+350 |             positions: response.quantum_state.clone(),
+    |             ^^^^^^^^^ `thermodynamic_network::ThermodynamicState` does not have this field
+    |
+    = note: available fields are: `phases`, `velocities`, `natural_frequencies`, `coupling_matrix`, `time`, `entropy`
+
+error[E0560]: struct `thermodynamic_network::ThermodynamicState` has no field named `momenta`
+   --> src/orchestration/integration/prism_ai_integration.rs:351:13
+    |
+351 |             momenta: response.neuromorphic_state.clone(),
+    |             ^^^^^^^ `thermodynamic_network::ThermodynamicState` does not have this field
+    |
+    = note: available fields are: `phases`, `velocities`, `natural_frequencies`, `coupling_matrix`, `time`, `entropy`
+
+error[E0560]: struct `thermodynamic_network::ThermodynamicState` has no field named `temperature`
+   --> src/orchestration/integration/prism_ai_integration.rs:352:13
+    |
+352 |             temperature: response.confidence,
+    |             ^^^^^^^^^^^ `thermodynamic_network::ThermodynamicState` does not have this field
+    |
+    = note: available fields are: `phases`, `velocities`, `natural_frequencies`, `coupling_matrix`, `time`, `entropy`
+
+error[E0277]: `dyn Fn(&Matrix<f64, Dyn, Const<1>, ...>) -> ... + Send + Sync` doesn't implement `std::fmt::Debug`
+  --> src/orchestration/optimization/geometric_manifold.rs:63:5
+   |
+60 | #[derive(Clone, Debug)]
+   |                 ----- in this derive macro expansion
+...
+63 |     g: Box<dyn Fn(&DVector<f64>) -> DMatrix<f64> + Send + Sync>,
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `std::fmt::Debug` is not implemented for `dyn Fn(&Matrix<f64, Dyn, Const<1>, ...>) -> ... + Send + Sync`
+   |
+   = note: the full name for the type has been written to '/home/diddy/Desktop/PRISM-AI-DoD/03-Source-Code/target/release/deps/prism_ai-0ad1bac784900206.long-type-14983481636052805573.txt'
+   = note: consider using `--verbose` to print the full type name to the console
+
+error[E0277]: `dyn Fn(&Matrix<f64, Dyn, Const<1>, ...>) -> ... + Send + Sync` doesn't implement `std::fmt::Debug`
+  --> src/orchestration/optimization/geometric_manifold.rs:65:5
+   |
+60 | #[derive(Clone, Debug)]
+   |                 ----- in this derive macro expansion
+...
+65 |     g_inv: Box<dyn Fn(&DVector<f64>) -> DMatrix<f64> + Send + Sync>,
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `std::fmt::Debug` is not implemented for `dyn Fn(&Matrix<f64, Dyn, Const<1>, ...>) -> ... + Send + Sync`
+   |
+   = note: the full name for the type has been written to '/home/diddy/Desktop/PRISM-AI-DoD/03-Source-Code/target/release/deps/prism_ai-0ad1bac784900206.long-type-8101350579829582565.txt'
+   = note: consider using `--verbose` to print the full type name to the console
+
+error[E0277]: `dyn Fn(&Matrix<f64, Dyn, Const<1>, ...>) -> f64 + Send + Sync` doesn't implement `std::fmt::Debug`
+  --> src/orchestration/optimization/geometric_manifold.rs:67:5
+   |
+60 | #[derive(Clone, Debug)]
+   |                 ----- in this derive macro expansion
+...
+67 |     det_g: Box<dyn Fn(&DVector<f64>) -> f64 + Send + Sync>,
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `std::fmt::Debug` is not implemented for `dyn Fn(&Matrix<f64, Dyn, Const<1>, ...>) -> f64 + Send + Sync`
+   |
+   = note: the full name for the type has been written to '/home/diddy/Desktop/PRISM-AI-DoD/03-Source-Code/target/release/deps/prism_ai-0ad1bac784900206.long-type-4967425531035928686.txt'
+   = note: consider using `--verbose` to print the full type name to the console
+
+error[E0277]: `dyn Fn(&Matrix<f64, Dyn, Const<1>, ...>) -> f64 + Send + Sync` doesn't implement `std::fmt::Debug`
+  --> src/orchestration/optimization/geometric_manifold.rs:87:5
+   |
+84 | #[derive(Clone, Debug)]
+   |                 ----- in this derive macro expansion
+...
+87 |     gamma: HashMap<(usize, usize, usize), Box<dyn Fn(&DVector<f64>) -> f64 + Send + Sync>>,
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `std::fmt::Debug` is not implemented for `dyn Fn(&Matrix<f64, Dyn, Const<1>, ...>) -> f64 + Send + Sync`
+   |
+   = note: the full name for the type has been written to '/home/diddy/Desktop/PRISM-AI-DoD/03-Source-Code/target/release/deps/prism_ai-0ad1bac784900206.long-type-1113593280881251048.txt'
+   = note: consider using `--verbose` to print the full type name to the console
+
+error[E0559]: variant `OrchestrationError::InvalidInput` has no field named `input`
+   --> src/orchestration/optimization/geometric_manifold.rs:768:25
+    |
+768 |                         input: "Zero vector cannot be projected onto sphere".to_string(),
+    |                         ^^^^^ field does not exist
+    |
+   ::: src/orchestration/errors.rs:66:5
+    |
+ 66 |     InvalidInput(String),
+    |     ------------ `OrchestrationError::InvalidInput` defined here
+    |
+help: `OrchestrationError::InvalidInput` is a tuple variant, use the appropriate syntax
+    |
+767 -                     Err(OrchestrationError::InvalidInput {
+768 -                         input: "Zero vector cannot be projected onto sphere".to_string(),
+769 -                     })
+767 +                     Err(OrchestrationError::InvalidInput(/* std::string::String */))
+    |
+
+error[E0599]: no method named `arg` found for struct `LaunchArgs` in the current scope
+   --> src/orchestration/routing/te_embedding_gpu.rs:112:18
+    |
+111 | /             stream.launch_builder(kernel)
+112 | |                 .arg(&ts_dev)
+    | |                 -^^^ method not found in `LaunchArgs<'_>`
+    | |_________________|
+    |
+    |
+   ::: /home/diddy/.cargo/git/checkouts/cudarc-bb725c562477d40e/fdf313c/src/driver/safe/launch.rs:89:8
+    |
+ 89 |       fn arg(&mut self, arg: T) -> &mut Self;
+    |          --- the method is available for `LaunchArgs<'_>` here
+    |
+    = help: items from traits can only be used if the trait is in scope
+help: trait `PushKernelArg` which provides `arg` is implemented but not in scope; perhaps you want to import it
+    |
+ 10 + use cudarc::driver::PushKernelArg;
+    |
+
+error[E0599]: no method named `arg` found for struct `LaunchArgs` in the current scope
+   --> src/orchestration/routing/gpu_kdtree.rs:191:18
+    |
+190 | /             stream.launch_builder(kernel)
+191 | |                 .arg(&dataset_dev)
+    | |                 -^^^ method not found in `LaunchArgs<'_>`
+    | |_________________|
+    |
+    |
+   ::: /home/diddy/.cargo/git/checkouts/cudarc-bb725c562477d40e/fdf313c/src/driver/safe/launch.rs:89:8
+    |
+ 89 |       fn arg(&mut self, arg: T) -> &mut Self;
+    |          --- the method is available for `LaunchArgs<'_>` here
+    |
+    = help: items from traits can only be used if the trait is in scope
+help: trait `PushKernelArg` which provides `arg` is implemented but not in scope; perhaps you want to import it
+    |
+ 10 + use cudarc::driver::PushKernelArg;
+    |
+
+error[E0599]: no method named `route` found for struct `SpikeRouter` in the current scope
+   --> src/orchestration/neuromorphic/unified_neuromorphic.rs:525:31
+    |
+254 | struct SpikeRouter {
+    | ------------------ method `route` not found for this struct
+...
+525 |             self.spike_router.route(&spikes)?;
+    |                               ^^^^^ method not found in `SpikeRouter`
+
+error[E0559]: variant `OrchestrationError::MissingData` has no field named `data_type`
+   --> src/orchestration/neuromorphic/unified_neuromorphic.rs:751:17
+    |
+751 |                 data_type: "output_layer".to_string()
+    |                 ^^^^^^^^^ `OrchestrationError::MissingData` does not have this field
+    |
+    = note: available fields are: `field`
+
+error[E0308]: mismatched types
+    --> src/orchestration/neuromorphic/unified_neuromorphic.rs:1102:33
+     |
+1102 |                     for _ in 0..n_spikes {
+     |                                 ^^^^^^^^ expected integer, found `f64`
+
+error[E0593]: closure is expected to take 2 arguments, but it takes 1 argument
+    --> src/orchestration/neuromorphic/unified_neuromorphic.rs:1148:21
+     |
+1148 |           let input = DVector::from_fn(self.reservoir.size, |i| {
+     |                       ^                                     --- takes 1 argument
+     |  _____________________|
+     | |
+1149 | |             if spikes.contains(&i) { 1.0 } else { 0.0 }
+1150 | |         });
+     | |__________^ expected closure that takes 2 arguments
+
+error[E0308]: mismatched types
+   --> src/orchestration/production/gpu_monitoring.rs:131:13
+    |
+131 |             device,
+    |             ^^^^^^ expected `Option<Arc<CudaContext>>`, found `Option<Arc<Arc<CudaContext>>>`
+    |
+    = note: expected enum `std::option::Option<Arc<cudarc::driver::CudaContext>>`
+               found enum `std::option::Option<Arc<Arc<cudarc::driver::CudaContext>>>`
+
+error[E0599]: the method `context` exists for enum `Result<MutexGuard<'_, Vec<KernelMetrics>>, PoisonError<...>>`, but its trait bounds were not satisfied
+   --> src/orchestration/production/gpu_monitoring.rs:156:14
+    |
+155 |           let mut buffer = self.metrics_buffer.lock()
+    |  __________________________-
+156 | |             .context("Failed to lock metrics buffer")?;
+    | |             -^^^^^^^ method cannot be called due to unsatisfied trait bounds
+    | |_____________|
+    |
+    |
+    = note: the following trait bounds were not satisfied:
+            `PoisonError<std::sync::MutexGuard<'_, Vec<KernelMetrics>>>: anyhow::context::ext::StdError`
+            which is required by `std::result::Result<std::sync::MutexGuard<'_, Vec<KernelMetrics>>, PoisonError<std::sync::MutexGuard<'_, Vec<KernelMetrics>>>>: anyhow::Context<std::sync::MutexGuard<'_, Vec<KernelMetrics>>, PoisonError<std::sync::MutexGuard<'_, Vec<KernelMetrics>>>>`
+            `PoisonError<std::sync::MutexGuard<'_, Vec<KernelMetrics>>>: std::marker::Send`
+            which is required by `std::result::Result<std::sync::MutexGuard<'_, Vec<KernelMetrics>>, PoisonError<std::sync::MutexGuard<'_, Vec<KernelMetrics>>>>: anyhow::Context<std::sync::MutexGuard<'_, Vec<KernelMetrics>>, PoisonError<std::sync::MutexGuard<'_, Vec<KernelMetrics>>>>`
+
+error[E0599]: the method `context` exists for enum `Result<MutexGuard<'_, Vec<KernelMetrics>>, PoisonError<...>>`, but its trait bounds were not satisfied
+   --> src/orchestration/production/gpu_monitoring.rs:176:14
+    |
+175 |           let buffer = self.metrics_buffer.lock()
+    |  ______________________-
+176 | |             .context("Failed to lock metrics buffer")?;
+    | |             -^^^^^^^ method cannot be called due to unsatisfied trait bounds
+    | |_____________|
+    |
+    |
+    = note: the following trait bounds were not satisfied:
+            `PoisonError<std::sync::MutexGuard<'_, Vec<KernelMetrics>>>: anyhow::context::ext::StdError`
+            which is required by `std::result::Result<std::sync::MutexGuard<'_, Vec<KernelMetrics>>, PoisonError<std::sync::MutexGuard<'_, Vec<KernelMetrics>>>>: anyhow::Context<std::sync::MutexGuard<'_, Vec<KernelMetrics>>, PoisonError<std::sync::MutexGuard<'_, Vec<KernelMetrics>>>>`
+            `PoisonError<std::sync::MutexGuard<'_, Vec<KernelMetrics>>>: std::marker::Send`
+            which is required by `std::result::Result<std::sync::MutexGuard<'_, Vec<KernelMetrics>>, PoisonError<std::sync::MutexGuard<'_, Vec<KernelMetrics>>>>: anyhow::Context<std::sync::MutexGuard<'_, Vec<KernelMetrics>>, PoisonError<std::sync::MutexGuard<'_, Vec<KernelMetrics>>>>`
+
+error[E0599]: the method `context` exists for enum `Result<MutexGuard<'_, Vec<KernelMetrics>>, PoisonError<...>>`, but its trait bounds were not satisfied
+   --> src/orchestration/production/gpu_monitoring.rs:359:14
+    |
+358 |           let mut buffer = self.metrics_buffer.lock()
+    |  __________________________-
+359 | |             .context("Failed to lock metrics buffer")?;
+    | |             -^^^^^^^ method cannot be called due to unsatisfied trait bounds
+    | |_____________|
+    |
+    |
+    = note: the following trait bounds were not satisfied:
+            `PoisonError<std::sync::MutexGuard<'_, Vec<KernelMetrics>>>: anyhow::context::ext::StdError`
+            which is required by `std::result::Result<std::sync::MutexGuard<'_, Vec<KernelMetrics>>, PoisonError<std::sync::MutexGuard<'_, Vec<KernelMetrics>>>>: anyhow::Context<std::sync::MutexGuard<'_, Vec<KernelMetrics>>, PoisonError<std::sync::MutexGuard<'_, Vec<KernelMetrics>>>>`
+            `PoisonError<std::sync::MutexGuard<'_, Vec<KernelMetrics>>>: std::marker::Send`
+            which is required by `std::result::Result<std::sync::MutexGuard<'_, Vec<KernelMetrics>>, PoisonError<std::sync::MutexGuard<'_, Vec<KernelMetrics>>>>: anyhow::Context<std::sync::MutexGuard<'_, Vec<KernelMetrics>>, PoisonError<std::sync::MutexGuard<'_, Vec<KernelMetrics>>>>`
+
+error[E0277]: the trait bound `production::gpu_monitoring::KernelStats: serde::Serialize` is not satisfied
+   --> src/orchestration/production/gpu_monitoring.rs:367:39
+    |
+367 |           serde_json::to_string_pretty(&serde_json::json!({
+    |  _______________________________________^
+368 | |             "total_kernel_calls": stats.total_kernel_calls,
+369 | |             "successful_calls": stats.successful_calls,
+370 | |             "failed_calls": stats.failed_calls,
+...   |
+375 | |             "per_kernel_stats": stats.per_kernel_stats,
+376 | |         })).context("Failed to serialize metrics to JSON")
+    | |          ^
+    | |          |
+    | |__________the trait `Serialize` is not implemented for `production::gpu_monitoring::KernelStats`
+    |            required by a bound introduced by this call
+    |
+    = note: for local types consider adding `#[derive(serde::Serialize)]` to your `production::gpu_monitoring::KernelStats` type
+    = note: for types from other crates check whether the crate offers a `serde` feature flag
+    = help: the following other types implement trait `Serialize`:
+              &'a T
+              &'a mut T
+              ()
+              (T,)
+              (T0, T1)
+              (T0, T1, T2)
+              (T0, T1, T2, T3)
+              (T0, T1, T2, T3, T4)
+            and 447 others
+    = note: required for `HashMap<std::string::String, production::gpu_monitoring::KernelStats>` to implement `Serialize`
+    = note: 1 redundant requirement hidden
+    = note: required for `&HashMap<std::string::String, production::gpu_monitoring::KernelStats>` to implement `Serialize`
+note: required by a bound in `serde_json::to_value`
+   --> /home/diddy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_json-1.0.145/src/value/mod.rs:997:8
+    |
+995 | pub fn to_value<T>(value: T) -> Result<Value, Error>
+    |        -------- required by a bound in this function
+996 | where
+997 |     T: Serialize,
+    |        ^^^^^^^^^ required by this bound in `to_value`
+    = note: this error originates in the macro `$crate::json_internal` which comes from the expansion of the macro `serde_json::json` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0061]: this function takes 0 arguments but 1 argument was supplied
+   --> src/orchestration/local_llm/gpu_llm_inference.rs:135:25
+    |
+135 |         let tokenizer = BPETokenizer::new(vocab_size);
+    |                         ^^^^^^^^^^^^^^^^^ ---------- unexpected argument of type `usize`
+    |
+note: associated function defined here
+   --> src/orchestration/local_llm/bpe_tokenizer.rs:73:12
+    |
+ 73 |     pub fn new() -> Self {
+    |            ^^^
+help: remove the extra argument
+    |
+135 -         let tokenizer = BPETokenizer::new(vocab_size);
+135 +         let tokenizer = BPETokenizer::new();
+    |
+
+error[E0061]: this function takes 0 arguments but 1 argument was supplied
+   --> src/orchestration/local_llm/gpu_llm_inference.rs:169:25
+    |
+169 |         let tokenizer = BPETokenizer::new(config.vocab_size);
+    |                         ^^^^^^^^^^^^^^^^^ ----------------- unexpected argument of type `usize`
+    |
+note: associated function defined here
+   --> src/orchestration/local_llm/bpe_tokenizer.rs:73:12
+    |
+ 73 |     pub fn new() -> Self {
+    |            ^^^
+help: remove the extra argument
+    |
+169 -         let tokenizer = BPETokenizer::new(config.vocab_size);
+169 +         let tokenizer = BPETokenizer::new();
+    |
+
+error[E0061]: this method takes 2 arguments but 1 argument was supplied
+   --> src/orchestration/local_llm/gpu_llm_inference.rs:196:42
+    |
+196 |         let output_text = self.tokenizer.decode(&output_tokens)?;
+    |                                          ^^^^^^---------------- argument #2 of type `bool` is missing
+    |
+note: method defined here
+   --> src/orchestration/local_llm/bpe_tokenizer.rs:244:12
+    |
+244 |     pub fn decode(&self, token_ids: &[i32], skip_special_tokens: bool) -> Result<String> {
+    |            ^^^^^^                           -------------------------
+help: provide the argument
+    |
+196 |         let output_text = self.tokenizer.decode(&output_tokens, /* bool */)?;
+    |                                                               ++++++++++++
+
+error[E0599]: no function or associated item named `entropy_guided` found for struct `orchestration::local_llm::sampling::SamplingConfig` in the current scope
+   --> src/orchestration/local_llm/gpu_llm_inference.rs:258:50
+    |
+258 |         self.set_sampling_config(SamplingConfig::entropy_guided());
+    |                                                  ^^^^^^^^^^^^^^ function or associated item not found in `orchestration::local_llm::sampling::SamplingConfig`
+    |
+   ::: src/orchestration/local_llm/sampling.rs:22:1
+    |
+ 22 | pub struct SamplingConfig {
+    | ------------------------- function or associated item `entropy_guided` not found for this struct
+    |
+note: if you're trying to build a new `orchestration::local_llm::sampling::SamplingConfig` consider using one of the following associated functions:
+      orchestration::local_llm::sampling::SamplingConfig::greedy
+      orchestration::local_llm::sampling::SamplingConfig::standard
+      orchestration::local_llm::sampling::SamplingConfig::creative
+      orchestration::local_llm::sampling::SamplingConfig::precise
+      orchestration::local_llm::sampling::SamplingConfig::min_p_recommended
+   --> src/orchestration/local_llm/sampling.rs:63:5
+    |
+ 63 |     pub fn greedy() -> Self {
+    |     ^^^^^^^^^^^^^^^^^^^^^^^
+...
+ 74 |     pub fn standard() -> Self {
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^
+...
+ 85 |     pub fn creative() -> Self {
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^
+...
+ 96 |     pub fn precise() -> Self {
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^
+...
+107 |     pub fn min_p_recommended() -> Self {
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error[E0308]: mismatched types
+   --> src/orchestration/local_llm/gpu_transformer.rs:335:27
+    |
+335 |             grid_dim: (1, (seq_len + 15) / 16, self.n_heads as u32),
+    |                           ^^^^^^^^^^^^^^^^^^^ expected `u32`, found `usize`
+    |
+help: you can convert a `usize` to a `u32` and panic if the converted value doesn't fit
+    |
+335 |             grid_dim: (1, ((seq_len + 15) / 16).try_into().unwrap(), self.n_heads as u32),
+    |                           +                   +++++++++++++++++++++
+
+error[E0599]: no method named `update_config` found for struct `orchestration::local_llm::sampling::TokenSampler` in the current scope
+   --> src/orchestration/local_llm/gpu_transformer.rs:727:22
+    |
+727 |         self.sampler.update_config(config);
+    |                      ^^^^^^^^^^^^^
+    |
+   ::: src/orchestration/local_llm/sampling.rs:119:1
+    |
+119 | pub struct TokenSampler {
+    | ----------------------- method `update_config` not found for this struct
+    |
+help: there is a method `set_config` with a similar name
+    |
+727 -         self.sampler.update_config(config);
+727 +         self.sampler.set_config(config);
+    |
+
+error[E0277]: the trait bound `orchestration::local_llm::gguf_loader::GgufType: Hash` is not satisfied
+   --> src/orchestration/local_llm/gguf_loader.rs:449:26
+    |
+449 |             *type_counts.entry(tensor.data_type).or_insert(0) += 1;
+    |                          ^^^^^ the trait `Hash` is not implemented for `orchestration::local_llm::gguf_loader::GgufType`
+    |
+note: required by a bound in `HashMap::<K, V, S>::entry`
+   --> /rustc/1159e78c4747b02ef996e55082b704c09b970588/library/std/src/collections/hash/map.rs:883:5
+help: consider annotating `orchestration::local_llm::gguf_loader::GgufType` with `#[derive(Hash)]`
+    |
+ 36 + #[derive(Hash)]
+ 37 | pub enum GgufType {
+    |
+
+error[E0308]: mismatched types
+  --> src/orchestration/local_llm/gguf_gpu_loader.rs:23:27
+   |
+23 |         Ok(Self { loader, context })
+   |                           ^^^^^^^ expected `Arc<CudaContext>`, found `Arc<Arc<CudaContext>>`
+   |
+   = note: expected struct `Arc<cudarc::driver::CudaContext>`
+              found struct `Arc<Arc<cudarc::driver::CudaContext>>`
+
+error[E0599]: no method named `discover_causal_topology` found for reference `&Box<(dyn TdaTopologyAdapter + 'static)>` in the current scope
+   --> src/orchestration/local_llm/transfer_entropy_llm.rs:254:23
+    |
+254 |             match tda.discover_causal_topology(&self.logit_history) {
+    |                       ^^^^^^^^^^^^^^^^^^^^^^^^ method not found in `&Box<(dyn TdaTopologyAdapter + 'static)>`
+
+error[E0277]: the trait bound `HashSet<usize>: Hash` is not satisfied
+   --> src/orchestration/decomposition/pid_synergy.rs:267:26
+    |
+267 |             redundancies.insert(node.sources.clone(), redundancy);
+    |                          ^^^^^^ the trait `Hash` is not implemented for `HashSet<usize>`
+    |
+note: required by a bound in `HashMap::<K, V, S>::insert`
+   --> /rustc/1159e78c4747b02ef996e55082b704c09b970588/library/std/src/collections/hash/map.rs:1203:5
+
+error[E0599]: the method `get` exists for reference `&HashMap<HashSet<usize>, f64>`, but its trait bounds were not satisfied
+   --> src/orchestration/decomposition/pid_synergy.rs:568:47
+    |
+568 |                 let redundancy = redundancies.get(&ancestor).unwrap_or(&0.0);
+    |                                               ^^^ method cannot be called on `&HashMap<HashSet<usize>, f64>` due to unsatisfied trait bounds
+    |
+    = note: the following trait bounds were not satisfied:
+            `HashSet<usize>: Hash`
+
+error[E0277]: the trait bound `HashSet<usize>: Hash` is not satisfied
+   --> src/orchestration/decomposition/pid_synergy.rs:572:27
+    |
+572 |             partial_infos.insert(node.sources.clone(), pi_value.max(0.0)); // Ensure non-negative
+    |                           ^^^^^^ the trait `Hash` is not implemented for `HashSet<usize>`
+    |
+note: required by a bound in `HashMap::<K, V, S>::insert`
+   --> /rustc/1159e78c4747b02ef996e55082b704c09b970588/library/std/src/collections/hash/map.rs:1203:5
+
+error[E0689]: can't call method `max` on ambiguous numeric type `{float}`
+   --> src/orchestration/decomposition/pid_synergy.rs:572:65
+    |
+572 |             partial_infos.insert(node.sources.clone(), pi_value.max(0.0)); // Ensure non-negative
+    |                                                                 ^^^
+    |
+help: you must specify a type for this binding, like `f32`
+    |
+563 |             let mut pi_value: f32 = 0.0;
+    |                             +++++
+
+error[E0277]: the trait bound `HashSet<usize>: Hash` is not satisfied
+   --> src/orchestration/decomposition/pid_synergy.rs:629:34
+    |
+629 |                     higher_order.insert(sources.clone(), pi_value);
+    |                                  ^^^^^^ the trait `Hash` is not implemented for `HashSet<usize>`
+    |
+note: required by a bound in `HashMap::<K, V, S>::insert`
+   --> /rustc/1159e78c4747b02ef996e55082b704c09b970588/library/std/src/collections/hash/map.rs:1203:5
+
+error[E0599]: no variant named `InvalidConfiguration` found for enum `OrchestrationError`
+   --> src/orchestration/inference/hierarchical_active_inference.rs:137:44
+    |
+137 |             return Err(OrchestrationError::InvalidConfiguration {
+    |                                            ^^^^^^^^^^^^^^^^^^^^ variant not found in `OrchestrationError`
+    |
+   ::: src/orchestration/errors.rs:7:1
+    |
+  7 | pub enum OrchestrationError {
+    | --------------------------- variant `InvalidConfiguration` not found here
+
+error[E0559]: variant `OrchestrationError::MissingData` has no field named `data_type`
+   --> src/orchestration/inference/hierarchical_active_inference.rs:380:17
+    |
+380 |                 data_type: "bottom_up_error".to_string()
+    |                 ^^^^^^^^^ `OrchestrationError::MissingData` does not have this field
+    |
+    = note: available fields are: `field`
+
+error[E0559]: variant `OrchestrationError::MissingData` has no field named `data_type`
+   --> src/orchestration/inference/hierarchical_active_inference.rs:430:21
+    |
+430 |                     data_type: "weighted_errors".to_string()
+    |                     ^^^^^^^^^ `OrchestrationError::MissingData` does not have this field
+    |
+    = note: available fields are: `field`
+
+error[E0599]: no variant named `InvalidConfiguration` found for enum `OrchestrationError`
+   --> src/orchestration/inference/joint_active_inference.rs:457:44
+    |
+457 |             return Err(OrchestrationError::InvalidConfiguration {
+    |                                            ^^^^^^^^^^^^^^^^^^^^ variant not found in `OrchestrationError`
+    |
+   ::: src/orchestration/errors.rs:7:1
+    |
+  7 | pub enum OrchestrationError {
+    | --------------------------- variant `InvalidConfiguration` not found here
+
+error[E0599]: no variant named `DimensionMismatch` found for enum `OrchestrationError`
+   --> src/orchestration/inference/joint_active_inference.rs:536:44
+    |
+536 |             return Err(OrchestrationError::DimensionMismatch {
+    |                                            ^^^^^^^^^^^^^^^^^ variant not found in `OrchestrationError`
+    |
+   ::: src/orchestration/errors.rs:7:1
+    |
+  7 | pub enum OrchestrationError {
+    | --------------------------- variant `DimensionMismatch` not found here
+
+error[E0599]: no variant named `NoSolution` found for enum `OrchestrationError`
+   --> src/orchestration/inference/joint_active_inference.rs:930:55
+    |
+930 |         best_policy.ok_or_else(|| OrchestrationError::NoSolution {
+    |                                                       ^^^^^^^^^^ variant not found in `OrchestrationError`
+    |
+   ::: src/orchestration/errors.rs:7:1
+    |
+  7 | pub enum OrchestrationError {
+    | --------------------------- variant `NoSolution` not found here
+
+error[E0599]: no variant named `DimensionMismatch` found for enum `OrchestrationError`
+   --> src/orchestration/causality/bidirectional_causality.rs:303:44
+    |
+303 |             return Err(OrchestrationError::DimensionMismatch {
+    |                                            ^^^^^^^^^^^^^^^^^ variant not found in `OrchestrationError`
+    |
+   ::: src/orchestration/errors.rs:7:1
+    |
+  7 | pub enum OrchestrationError {
+    | --------------------------- variant `DimensionMismatch` not found here
+
+error[E0277]: cannot divide `Matrix<Complex<f64>, Dyn, Dyn, VecStorage<Complex<f64>, Dyn, Dyn>>` by `{float}`
+   --> src/orchestration/quantum/quantum_entanglement_measures.rs:774:62
+    |
+774 |             sqrt_matrix = (&sqrt_matrix + &inverse * matrix) / 2.0;
+    |                                                              ^ no implementation for `Matrix<Complex<f64>, Dyn, Dyn, VecStorage<Complex<f64>, Dyn, Dyn>> / {float}`
+    |
+    = help: the trait `Div<{float}>` is not implemented for `Matrix<Complex<f64>, Dyn, Dyn, VecStorage<Complex<f64>, Dyn, Dyn>>`
+    = help: the following other types implement trait `Div<Rhs>`:
+              `&nalgebra::Matrix<T, R, C, S>` implements `Div<T>`
+              `&nalgebra::Matrix<T, R1, C1, SA>` implements `Div<&Rotation<T, D2>>`
+              `&nalgebra::Matrix<T, R1, C1, SA>` implements `Div<Rotation<T, D2>>`
+              `nalgebra::Matrix<T, R, C, S>` implements `Div<T>`
+              `nalgebra::Matrix<T, R1, C1, SA>` implements `Div<&Rotation<T, D2>>`
+              `nalgebra::Matrix<T, R1, C1, SA>` implements `Div<Rotation<T, D2>>`
+    = note: the full name for the type has been written to '/home/diddy/Desktop/PRISM-AI-DoD/03-Source-Code/target/release/deps/prism_ai-0ad1bac784900206.long-type-14594850415793713191.txt'
+    = note: consider using `--verbose` to print the full type name to the console
+
+error[E0277]: cannot divide `Matrix<Complex<f64>, Dyn, Dyn, VecStorage<Complex<f64>, Dyn, Dyn>>` by `f64`
+    --> src/orchestration/quantum/quantum_entanglement_measures.rs:1026:34
+     |
+1026 |             term = &term * &ih_t / (n as f64);
+     |                                  ^ no implementation for `Matrix<Complex<f64>, Dyn, Dyn, VecStorage<Complex<f64>, Dyn, Dyn>> / f64`
+     |
+     = help: the trait `Div<f64>` is not implemented for `Matrix<Complex<f64>, Dyn, Dyn, VecStorage<Complex<f64>, Dyn, Dyn>>`
+     = help: the following other types implement trait `Div<Rhs>`:
+               `&nalgebra::Matrix<T, R, C, S>` implements `Div<T>`
+               `&nalgebra::Matrix<T, R1, C1, SA>` implements `Div<&Rotation<T, D2>>`
+               `&nalgebra::Matrix<T, R1, C1, SA>` implements `Div<Rotation<T, D2>>`
+               `nalgebra::Matrix<T, R, C, S>` implements `Div<T>`
+               `nalgebra::Matrix<T, R1, C1, SA>` implements `Div<&Rotation<T, D2>>`
+               `nalgebra::Matrix<T, R1, C1, SA>` implements `Div<Rotation<T, D2>>`
+     = note: the full name for the type has been written to '/home/diddy/Desktop/PRISM-AI-DoD/03-Source-Code/target/release/deps/prism_ai-0ad1bac784900206.long-type-14594850415793713191.txt'
+     = note: consider using `--verbose` to print the full type name to the console
+

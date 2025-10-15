@@ -16,7 +16,7 @@ use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
 #[cfg(feature = "cuda")]
-use cudarc::driver::CudaDevice;
+use cudarc::driver::CudaContext;
 
 /// GPU performance metrics for a single kernel execution
 #[derive(Debug, Clone)]
@@ -60,7 +60,7 @@ pub struct GpuUtilizationStats {
 }
 
 /// Statistics for a specific kernel
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize)]
 pub struct KernelStats {
     pub call_count: u64,
     pub total_time_us: u64,
@@ -108,7 +108,7 @@ pub struct GpuMonitor {
     start_time: Instant,
 
     #[cfg(feature = "cuda")]
-    device: Option<Arc<CudaDevice>>,
+    device: Option<Arc<CudaContext>>,
 }
 
 impl GpuMonitor {
@@ -120,7 +120,7 @@ impl GpuMonitor {
     /// Create a new GPU monitor with custom configuration
     pub fn with_config(config: MonitoringConfig) -> Result<Self> {
         #[cfg(feature = "cuda")]
-        let device = CudaDevice::new(0).ok().map(Arc::new);
+        let device = CudaContext::new(0).ok();
 
         Ok(Self {
             config,
@@ -128,7 +128,7 @@ impl GpuMonitor {
             start_time: Instant::now(),
 
             #[cfg(feature = "cuda")]
-            device,
+            device: device.map(Arc::new),
         })
     }
 
@@ -153,7 +153,7 @@ impl GpuMonitor {
         };
 
         let mut buffer = self.metrics_buffer.lock()
-            .context("Failed to lock metrics buffer")?;
+            .map_err(|e| anyhow::anyhow!("Failed to lock metrics buffer in record: {}", e))?;
 
         // Maintain buffer size limit
         if buffer.len() >= self.config.max_metrics_buffer {
@@ -173,7 +173,7 @@ impl GpuMonitor {
     /// Get current GPU utilization statistics
     pub fn get_utilization_stats(&self) -> Result<GpuUtilizationStats> {
         let buffer = self.metrics_buffer.lock()
-            .context("Failed to lock metrics buffer")?;
+            .map_err(|e| anyhow::anyhow!("Failed to lock metrics buffer: {}", e))?;
 
         if buffer.is_empty() {
             return Ok(GpuUtilizationStats {
@@ -356,7 +356,7 @@ impl GpuMonitor {
     /// Reset all metrics
     pub fn reset(&self) -> Result<()> {
         let mut buffer = self.metrics_buffer.lock()
-            .context("Failed to lock metrics buffer")?;
+            .map_err(|e| anyhow::anyhow!("Failed to lock metrics buffer in reset: {}", e))?;
         buffer.clear();
         Ok(())
     }

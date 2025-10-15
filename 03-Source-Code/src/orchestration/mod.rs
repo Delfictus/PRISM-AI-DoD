@@ -42,10 +42,10 @@ pub mod quantum;
 pub use production::{ProductionErrorHandler, ProductionLogger, MissionCharlieConfig};
 
 // Algorithm exports
-pub use cache::quantum_cache::QuantumApproximateCache;
+pub use cache::QuantumApproximateCache;
 pub use consensus::quantum_voting::QuantumVotingConsensus;
 pub use thermodynamic::thermodynamic_consensus::ThermodynamicConsensus;
-pub use routing::transfer_entropy_router::TransferEntropyRouter;
+pub use routing::TransferEntropyRouter;
 pub use decomposition::pid_synergy::PIDSynergyDecomposition;
 pub use inference::hierarchical_active_inference::HierarchicalActiveInference;
 pub use inference::joint_active_inference::JointActiveInference;

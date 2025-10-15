@@ -47,7 +47,7 @@ use ndarray::{Array1, Array2, Array3};
 use std::sync::Arc;
 
 #[cfg(feature = "cuda")]
-use cudarc::driver::{CudaDevice, CudaContext, CudaSlice};
+use cudarc::driver::{CudaContext, CudaSlice};
 
 // Import PRISM components
 use crate::orchestration::local_llm::{
@@ -166,7 +166,7 @@ impl GpuProteinFoldingSystem {
     /// Create new GPU-accelerated protein folding system
     pub fn new() -> Result<Self> {
         #[cfg(feature = "cuda")]
-        let context = CudaDevice::new(0)
+        let context = CudaContext::new(0)
             .context("Failed to initialize CUDA device for protein folding")?;
 
         // Create CNN with protein-specific filters (5x5 for i,i+4 helix detection)

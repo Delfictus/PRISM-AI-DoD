@@ -110,7 +110,7 @@ use std::sync::Arc;
 use std::collections::{HashMap, HashSet};
 
 #[cfg(feature = "cuda")]
-use cudarc::driver::{CudaDevice, CudaContext, CudaSlice};
+use cudarc::driver::{CudaContext, CudaSlice};
 
 // Import PRISM components
 use crate::orchestration::local_llm::{
@@ -208,7 +208,7 @@ impl DeepGraphProteinFolder {
     /// Create new deep graph protein folding system
     pub fn new(config: DeepGraphConfig) -> Result<Self> {
         #[cfg(feature = "cuda")]
-        let context = CudaDevice::new(0)
+        let context = CudaContext::new(0)
             .context("Failed to initialize CUDA device")?;
 
         // Create CNN (5x5 kernel for proteins)

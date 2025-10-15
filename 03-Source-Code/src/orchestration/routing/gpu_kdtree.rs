@@ -187,13 +187,16 @@ impl GpuNearestNeighbors {
         };
 
         unsafe {
-            stream.launch_builder(kernel)
-                .arg(&dataset_dev)
-                .arg(&query_dev)
-                .arg(&mut distances_dev)
-                .arg(&(n_points as i32))
-                .arg(&(n_dims as i32))
-                .launch(cfg)?;
+            kernel.launch(
+                cfg,
+                (
+                    &dataset_dev,
+                    &query_dev,
+                    &mut distances_dev,
+                    n_points as i32,
+                    n_dims as i32,
+                ),
+            )?;
         }
 
         // Synchronize and download

@@ -302,7 +302,7 @@ impl BidirectionalCausalityAnalyzer {
         if x_data.len() != y_data.len() {
             return Err(OrchestrationError::DimensionMismatch {
                 expected: x_data.len(),
-                actual: y_data.len(),
+                got: y_data.len(),
             });
         }
 

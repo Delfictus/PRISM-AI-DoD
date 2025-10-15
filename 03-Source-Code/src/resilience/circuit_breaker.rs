@@ -71,6 +71,8 @@ pub struct CircuitBreakerConfig {
     pub ema_alpha: f64,
     /// Minimum number of calls before circuit can open
     pub min_calls: u32,
+    /// Maximum number of calls allowed in HalfOpen state before closing
+    pub half_open_max_calls: usize,
 }
 
 impl Default for CircuitBreakerConfig {
@@ -81,6 +83,7 @@ impl Default for CircuitBreakerConfig {
             recovery_timeout: Duration::from_secs(30),
             ema_alpha: 0.1,
             min_calls: 10,
+            half_open_max_calls: 3,
         }
     }
 }
@@ -258,6 +261,30 @@ impl CircuitBreaker {
                 state.last_transition = Instant::now();
             }
             CircuitState::Open => {}
+        }
+    }
+
+    /// Check if circuit allows calls (returns current state)
+    pub fn check(&self) -> Result<CircuitState, CircuitBreakerError<String>> {
+        let mut state = self.state.lock().unwrap();
+
+        match state.state {
+            CircuitState::Open => {
+                // Check if recovery timeout elapsed
+                if let Some(opened_at) = state.opened_at {
+                    if opened_at.elapsed() >= self.config.recovery_timeout {
+                        // Transition to HalfOpen for trial
+                        state.state = CircuitState::HalfOpen;
+                        state.last_transition = Instant::now();
+                        Ok(CircuitState::HalfOpen)
+                    } else {
+                        Err(CircuitBreakerError::Open)
+                    }
+                } else {
+                    Err(CircuitBreakerError::Open)
+                }
+            }
+            other => Ok(other),
         }
     }
 

@@ -42,6 +42,19 @@ pub struct NetworkConfig {
 
     /// Random seed for reproducibility
     pub seed: u64,
+
+    // Integration compatibility fields (aliases for integration layer)
+    /// Number of agents (alias for n_oscillators)
+    pub num_agents: usize,
+
+    /// Interaction strength (alias for coupling_strength)
+    pub interaction_strength: f64,
+
+    /// External field strength
+    pub external_field: f64,
+
+    /// Enable GPU acceleration
+    pub use_gpu: bool,
 }
 
 impl Default for NetworkConfig {
@@ -54,6 +67,11 @@ impl Default for NetworkConfig {
             coupling_strength: 0.5,
             enable_information_gating: true,
             seed: 42,
+            // Integration compatibility defaults
+            num_agents: 1024,
+            interaction_strength: 0.5,
+            external_field: 0.01,
+            use_gpu: false,
         }
     }
 }

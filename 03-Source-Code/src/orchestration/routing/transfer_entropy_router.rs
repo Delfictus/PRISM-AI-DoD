@@ -427,6 +427,22 @@ impl TransferEntropyPromptRouter {
             gpu_enabled: self.gpu_te_calculator.is_some(),
         }
     }
+
+    /// Route query (async wrapper for compatibility)
+    pub async fn route_query(&self, query: &str) -> Result<RoutingDecisionExtended> {
+        let decision = self.route_via_transfer_entropy(query)?;
+        Ok(RoutingDecisionExtended {
+            selected_llms: vec![decision.llm.clone()],
+            routing_decision: decision,
+        })
+    }
+}
+
+/// Extended routing decision with selected LLMs list
+#[derive(Debug, Clone)]
+pub struct RoutingDecisionExtended {
+    pub selected_llms: Vec<String>,
+    pub routing_decision: RoutingDecision,
 }
 
 /// Routing decision with confidence and diagnostics

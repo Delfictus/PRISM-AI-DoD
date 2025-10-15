@@ -135,9 +135,7 @@ impl HierarchicalActiveInference {
     pub fn new(level_dims: Vec<usize>, temporal_depth: usize) -> Result<Self, OrchestrationError> {
         if level_dims.is_empty() {
             return Err(OrchestrationError::InvalidConfiguration {
-                parameter: "level_dims".to_string(),
-                value: "empty".to_string(),
-                reason: "Need at least one level".to_string()
+                message: "level_dims: Need at least one level (got empty)".to_string()
             });
         }
 
@@ -377,7 +375,7 @@ impl HierarchicalActiveInference {
         // Get prediction errors
         let bottom_up_error = self.message_passing.bottom_up.get(&level_idx)
             .ok_or_else(|| OrchestrationError::MissingData {
-                data_type: "bottom_up_error".to_string()
+                field: "bottom_up_error".to_string()
             })?;
 
         // Variational update (gradient descent on free energy)
@@ -427,7 +425,7 @@ impl HierarchicalActiveInference {
         for level_idx in 0..self.levels.len() {
             let errors = self.message_passing.weighted_errors.get(&level_idx)
                 .ok_or_else(|| OrchestrationError::MissingData {
-                    data_type: "weighted_errors".to_string()
+                    field: "weighted_errors".to_string()
                 })?;
 
             // Estimate precision from prediction errors (inverse variance)

@@ -31,7 +31,7 @@ const MAX_KEY_LENGTH: usize = 65535;
 const MAX_TENSOR_NAME: usize = 64;
 
 /// GGUF data types (from ggml)
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[repr(u32)]
 pub enum GgufType {
     F32 = 0,

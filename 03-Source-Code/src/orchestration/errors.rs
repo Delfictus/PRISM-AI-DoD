@@ -61,6 +61,27 @@ pub enum OrchestrationError {
 
     #[error("Unknown error: {message}")]
     Unknown { message: String },
+
+    #[error("Invalid input: {0}")]
+    InvalidInput(String),
+
+    #[error("Invalid index: {index} (max: {max})")]
+    InvalidIndex { index: usize, max: usize },
+
+    #[error("Missing data: {field}")]
+    MissingData { field: String },
+
+    #[error("Invalid matrix: {reason}")]
+    InvalidMatrix { reason: String },
+
+    #[error("Invalid configuration: {message}")]
+    InvalidConfiguration { message: String },
+
+    #[error("Dimension mismatch: expected {expected}, got {got}")]
+    DimensionMismatch { expected: usize, got: usize },
+
+    #[error("No solution found: {reason}")]
+    NoSolution { reason: String },
 }
 
 impl From<anyhow::Error> for OrchestrationError {

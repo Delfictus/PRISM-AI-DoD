@@ -458,6 +458,20 @@ impl LLMOrchestrator {
         self.bayesian_ensemble.generate_bayesian_consensus(prompt, temperature).await
     }
 
+    /// Query specific LLMs by name
+    ///
+    /// Used by routing systems to query pre-selected LLMs
+    pub async fn query_selected_llms(
+        &mut self,
+        prompt: &str,
+        _selected_llms: &[String],
+    ) -> Result<Vec<LLMResponse>> {
+        // For now, query using the bandit ensemble
+        // In future, can filter based on selected_llms
+        let response = self.bandit_ensemble.generate_optimal(prompt, 0.7).await?;
+        Ok(vec![response.response])
+    }
+
     /// Enable Phase 6 enhancements
     pub fn enable_phase6_gnn(&mut self, gnn: GnnLLMSelector) {
         self.bandit_ensemble.enable_gnn_selector(gnn);

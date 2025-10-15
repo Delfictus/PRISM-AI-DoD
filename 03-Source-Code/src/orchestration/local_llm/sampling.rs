@@ -113,6 +113,17 @@ impl SamplingConfig {
             repetition_penalty: 1.1,
         }
     }
+
+    /// Create entropy-guided sampling config (adaptive)
+    pub fn entropy_guided() -> Self {
+        Self {
+            temperature: 0.8,
+            top_k: 40,
+            top_p: 0.92,
+            min_p: 0.03,
+            repetition_penalty: 1.15,
+        }
+    }
 }
 
 /// Token sampler for LLM generation
@@ -354,6 +365,11 @@ impl TokenSampler {
     /// Update config
     pub fn set_config(&mut self, config: SamplingConfig) {
         self.config = config;
+    }
+
+    /// Update config (alias for set_config)
+    pub fn update_config(&mut self, config: SamplingConfig) {
+        self.set_config(config);
     }
 }
 

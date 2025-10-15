@@ -340,6 +340,31 @@ impl OpenAIClient {
     pub fn get_total_tokens(&self) -> usize {
         self.token_counter.lock().get_total_tokens()
     }
+
+    /// Get model name
+    pub fn model_name(&self) -> &str {
+        "gpt-4-turbo-preview"
+    }
+}
+
+// Implement LLMClient trait
+#[async_trait::async_trait]
+impl crate::orchestration::llm_clients::LLMClient for OpenAIClient {
+    async fn generate(&self, prompt: &str, temperature: f32) -> anyhow::Result<LLMResponse> {
+        self.generate(prompt, temperature).await
+    }
+
+    fn model_name(&self) -> &str {
+        self.model_name()
+    }
+
+    fn get_total_cost(&self) -> f64 {
+        self.get_total_cost()
+    }
+
+    fn get_total_tokens(&self) -> usize {
+        self.get_total_tokens()
+    }
 }
 
 #[cfg(test)]

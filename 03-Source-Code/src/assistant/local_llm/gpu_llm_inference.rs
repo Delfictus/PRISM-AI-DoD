@@ -129,7 +129,7 @@ impl GpuLocalLLMSystem {
         let model = GpuLLMInference::from_gguf_file(path)?;
 
         // Create tokenizer with matching vocab size
-        let tokenizer = BPETokenizer::new(vocab_size);
+        let tokenizer = BPETokenizer::new();
 
         println!("\n✅ GPU LLM System Ready");
         println!("   {} layers on GPU", config.n_layers);
@@ -163,7 +163,7 @@ impl GpuLocalLLMSystem {
             config.max_seq_len,
         )?;
 
-        let tokenizer = BPETokenizer::new(config.vocab_size);
+        let tokenizer = BPETokenizer::new();
 
         println!("\n✅ GPU LLM System Ready");
         println!("   {} layers on GPU", config.n_layers);
@@ -190,7 +190,7 @@ impl GpuLocalLLMSystem {
         let output_tokens = self.model.generate(&input_tokens, max_tokens)?;
 
         // Detokenize with BPE (handles Unicode correctly)
-        let output_text = self.tokenizer.decode(&output_tokens)?;
+        let output_text = self.tokenizer.decode(&output_tokens, false)?;
 
         println!("   Generated {} total tokens", output_tokens.len());
         println!("✅ Generation complete\n");

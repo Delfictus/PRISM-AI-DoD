@@ -91,6 +91,20 @@ impl QuantumConsensusOptimizer {
             Array1::from_elem(weights.len(), 1.0 / weights.len() as f64)
         }
     }
+
+    /// Compute consensus from LLM responses (alias for find_consensus)
+    pub fn compute_consensus(&self, llm_responses: &[String]) -> Result<String> {
+        let consensus_state = self.find_consensus(llm_responses)?;
+
+        // Select response with highest weight
+        let max_idx = consensus_state.weights.iter()
+            .enumerate()
+            .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+            .map(|(idx, _)| idx)
+            .unwrap_or(0);
+
+        Ok(llm_responses[max_idx].clone())
+    }
 }
 
 #[derive(Debug)]

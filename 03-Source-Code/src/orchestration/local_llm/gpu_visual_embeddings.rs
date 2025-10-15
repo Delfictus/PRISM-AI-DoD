@@ -30,7 +30,7 @@ use ndarray::{Array1, Array2, Array3, Array4, Axis, s};
 use std::sync::Arc;
 
 #[cfg(feature = "cuda")]
-use cudarc::driver::{CudaDevice, CudaSlice};
+use cudarc::driver::{CudaContext, CudaSlice};
 
 /// GPU-accelerated ResNet-style CNN for visual feature extraction
 ///
@@ -52,7 +52,7 @@ pub struct GpuResNetVisual {
     fc: Array2<f32>,
 
     #[cfg(feature = "cuda")]
-    device: Arc<CudaDevice>,
+    device: Arc<CudaContext>,
 }
 
 /// Convolutional layer parameters
@@ -119,7 +119,7 @@ impl GpuResNetVisual {
             batch_norms,
             fc,
             #[cfg(feature = "cuda")]
-            device: CudaDevice::new(0).expect("Failed to create CUDA device"),
+            device: CudaContext::new(0).expect("Failed to create CUDA device"),
         }
     }
 
@@ -348,7 +348,7 @@ pub struct VisionTransformerPatches {
     patch_embed: Array2<f32>,  // [embedding_dim, patch_size * patch_size * channels]
 
     #[cfg(feature = "cuda")]
-    device: Arc<CudaDevice>,
+    device: Arc<CudaContext>,
 }
 
 impl VisionTransformerPatches {
@@ -365,7 +365,7 @@ impl VisionTransformerPatches {
             embedding_dim,
             patch_embed,
             #[cfg(feature = "cuda")]
-            device: CudaDevice::new(0).expect("Failed to create CUDA device"),
+            device: CudaContext::new(0).expect("Failed to create CUDA device"),
         }
     }
 
@@ -427,7 +427,7 @@ pub struct VisualTextAligner {
     temperature: f32,
 
     #[cfg(feature = "cuda")]
-    device: Arc<CudaDevice>,
+    device: Arc<CudaContext>,
 }
 
 impl VisualTextAligner {
@@ -440,7 +440,7 @@ impl VisualTextAligner {
             text_proj,
             temperature: 0.07,  // CLIP default
             #[cfg(feature = "cuda")]
-            device: CudaDevice::new(0).expect("Failed to create CUDA device"),
+            device: CudaContext::new(0).expect("Failed to create CUDA device"),
         }
     }
 

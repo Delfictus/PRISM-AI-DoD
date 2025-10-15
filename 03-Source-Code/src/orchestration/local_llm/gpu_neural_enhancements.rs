@@ -26,7 +26,7 @@ use ndarray::{Array1, Array2, Array3, Array4, Axis};
 use std::sync::Arc;
 
 #[cfg(feature = "cuda")]
-use cudarc::driver::{CudaDevice, CudaSlice, LaunchAsync, LaunchConfig};
+use cudarc::driver::{CudaContext, CudaSlice};
 
 /// GPU-accelerated CNN for attention analysis and protein folding prediction
 ///
@@ -42,7 +42,7 @@ use cudarc::driver::{CudaDevice, CudaSlice, LaunchAsync, LaunchConfig};
 pub struct GpuCnnAttentionProcessor {
     /// GPU device handle
     #[cfg(feature = "cuda")]
-    device: Arc<CudaDevice>,
+    device: Arc<CudaContext>,
 
     /// Convolution kernel size (typically 3x3 or 5x5)
     kernel_size: usize,
@@ -67,7 +67,7 @@ impl GpuCnnAttentionProcessor {
 
         Self {
             #[cfg(feature = "cuda")]
-            device: CudaDevice::new(0).expect("Failed to create CUDA device"),
+            device: CudaContext::new(0).expect("Failed to create CUDA device"),
             kernel_size,
             num_filters,
             stride: 1,
@@ -89,7 +89,7 @@ impl GpuCnnAttentionProcessor {
 
         Self {
             #[cfg(feature = "cuda")]
-            device: CudaDevice::new(0).expect("Failed to create CUDA device"),
+            device: CudaContext::new(0).expect("Failed to create CUDA device"),
             kernel_size,
             num_filters,
             stride: 1,
@@ -881,7 +881,7 @@ pub struct GpuEmbeddingTransformer {
     bias: Array1<f32>,
 
     #[cfg(feature = "cuda")]
-    device: Arc<CudaDevice>,
+    device: Arc<CudaContext>,
 }
 
 impl GpuEmbeddingTransformer {
@@ -899,7 +899,7 @@ impl GpuEmbeddingTransformer {
             weight,
             bias,
             #[cfg(feature = "cuda")]
-            device: CudaDevice::new(0).expect("Failed to create CUDA device"),
+            device: CudaContext::new(0).expect("Failed to create CUDA device"),
         }
     }
 
