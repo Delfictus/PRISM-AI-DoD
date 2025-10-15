@@ -92,9 +92,9 @@ zstd = "0.13"  # Kolmogorov complexity estimation
 toml = "0.8"  # Configuration file support
 half = "2.4"  # F16 support for GGUF quantization
 
-# Worker 7: Chemistry - RDKit Integration (Rust-only, no C++)
-# rdkit-sys = "0.4.12"  # DISABLED: Requires RDKit system libraries (sudo apt-get install librdkit-dev)
-# TODO: Enable after installing RDKit system libraries
+# Worker 7: Chemistry - Pure Rust Chemistry (NO C++ dependencies)
+chemcore = "0.4.1"  # Pure Rust cheminformatics
+petgraph = "0.6"    # Molecular graphs
 
 # Worker 8: API Server dependencies
 axum = { version = "0.7", features = ["ws"] }  # Web framework with WebSocket support
