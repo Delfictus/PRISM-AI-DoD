@@ -80,9 +80,6 @@ pub mod finance;
 // Worker 8: API Server
 pub mod api_server;
 
-// Worker 7: Chemistry - Pure Rust Chemistry (NO C++ dependencies)
-pub mod chemistry;
-
 // Re-export key components
 pub use mathematics::{
     MathematicalStatement, ProofResult, Assumption,
