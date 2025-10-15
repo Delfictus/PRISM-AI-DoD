@@ -10,6 +10,8 @@
 
 pub mod portfolio_optimizer;
 pub mod portfolio_forecaster;
+pub mod quantum_voting;
+pub mod thermodynamic_consensus;
 
 // Re-export main types
 pub use portfolio_optimizer::{
@@ -26,4 +28,18 @@ pub use portfolio_forecaster::{
     ForecastConfig,
     ForecastedPortfolio,
     RebalanceAction,
+};
+
+pub use quantum_voting::{
+    QuantumVotingEngine,
+    QuantumVotingConfig,
+    QuantumVotingResult,
+    QuantumPortfolioState,
+};
+
+pub use thermodynamic_consensus::{
+    ThermodynamicConsensusEngine,
+    ThermodynamicConfig,
+    ThermodynamicConsensusResult,
+    ThermodynamicState,
 };
