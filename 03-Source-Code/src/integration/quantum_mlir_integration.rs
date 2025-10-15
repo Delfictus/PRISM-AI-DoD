@@ -9,7 +9,7 @@ use parking_lot::Mutex;
 
 use crate::quantum_mlir::{
     QuantumCompiler, QuantumOp, Hamiltonian, Complex64,
-    QuantumState, ExecutionParams, CompiledQuantumKernel
+    QuantumState, ExecutionParams
 };
 use shared_types::{Graph, EvolutionParams};
 // use platform_foundation::types::{NeuroQuantumState, ProcessingConfig};  // TODO: Add these types

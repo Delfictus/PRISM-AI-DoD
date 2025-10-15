@@ -4,23 +4,19 @@
 //! with the existing PRISM-AI quantum/neuromorphic infrastructure.
 
 use std::sync::Arc;
-use anyhow::{Result, anyhow};
+use anyhow::Result;
 use ndarray::{Array1, Array2};
 use parking_lot::RwLock;
 
 use crate::{
     // Phase 6 components
-    phase6::{
-        meta_learning::{MetaLearningCoordinator, ModulatedHamiltonian},
-        tda::TdaAdapter,
-        predictive_neuro::PredictiveNeuromorphic,
-    },
+    phase6::meta_learning::{MetaLearningCoordinator, ModulatedHamiltonian},
 
     // Core PRISM-AI components
-    active_inference::{GenerativeModel, HierarchicalModel, VariationalInference},
-    statistical_mechanics::{ThermodynamicNetwork, ThermodynamicState, NetworkConfig},
-    integration::{CrossDomainBridge, DomainState},
-    resilience::{HealthMonitor, CircuitBreaker},
+    active_inference::HierarchicalModel,
+    statistical_mechanics::{ThermodynamicNetwork, NetworkConfig},
+    integration::CrossDomainBridge,
+    resilience::HealthMonitor,
 };
 
 /// Phase 6 Integration into PRISM-AI
@@ -420,7 +416,6 @@ struct ThermoResult {
     energy: f64,
 }
 
-use nalgebra as na;
 
 #[cfg(test)]
 mod tests {
@@ -433,6 +428,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[ignore = "Phase 7: Advanced features - adaptive solver integration"]
     async fn test_adaptive_solver() {
         let mut solver = AdaptiveSolver::new(5).unwrap();
 

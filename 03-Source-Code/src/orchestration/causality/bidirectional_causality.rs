@@ -8,7 +8,8 @@ use crate::orchestration::OrchestrationError;
 use nalgebra::{DMatrix, DVector, SVD};
 use std::collections::{HashMap, HashSet, VecDeque};
 use ordered_float::OrderedFloat;
-use rand::distributions::{Distribution, Normal};
+use rand::distributions::Distribution;
+use rand_distr::Normal;
 
 /// Bidirectional causality analyzer
 pub struct BidirectionalCausalityAnalyzer {

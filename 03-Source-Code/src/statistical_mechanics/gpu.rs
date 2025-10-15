@@ -11,9 +11,9 @@
 //! - Entropy production tracking (2nd Law verification)
 
 use std::sync::Arc;
-use ndarray::{Array1, Array2};
+use ndarray::Array2;
 use anyhow::{Result, anyhow, Context};
-use cudarc::driver::{CudaContext, CudaFunction, CudaSlice, LaunchConfig, DeviceRepr, ValidAsZeroBits, PushKernelArg};
+use cudarc::driver::{CudaContext, CudaFunction, CudaSlice, LaunchConfig, PushKernelArg};
 
 use super::{ThermodynamicState, NetworkConfig};
 
@@ -364,6 +364,7 @@ mod tests {
     use super::*;
 
     #[test]
+    #[cfg_attr(not(feature = "cuda"), ignore = "Requires CUDA")]
     fn test_thermodynamic_gpu_creation() {
         if let Ok(context) = CudaContext::new(0) {
             let config = NetworkConfig {
@@ -403,8 +404,7 @@ mod tests {
                     let s = state.unwrap();
                     assert!(s.energy.is_finite());
                     assert!(s.entropy.is_finite());
-                    // order_parameter is not a field of ThermodynamicState
-                    // It's computed separately via get_kuramoto_state()
+                    // Note: order_parameter is computed separately via get_kuramoto_state()
                 }
 
                 // Check 2nd law: entropy production ≥ 0

@@ -1,0 +1,36 @@
+{
+  "name": "@prism-ai/client",
+  "version": "0.1.0",
+  "description": "JavaScript/Node.js client library for PRISM-AI REST API",
+  "main": "src/index.js",
+  "types": "src/index.d.ts",
+  "scripts": {
+    "test": "jest",
+    "lint": "eslint src/",
+    "format": "prettier --write src/"
+  },
+  "keywords": [
+    "prism-ai",
+    "api-client",
+    "threat-detection",
+    "portfolio-optimization",
+    "llm"
+  ],
+  "author": "PRISM-AI Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-org/prism-ai.git"
+  },
+  "dependencies": {
+    "axios": "^1.6.0"
+  },
+  "devDependencies": {
+    "jest": "^29.0.0",
+    "eslint": "^8.0.0",
+    "prettier": "^3.0.0"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}

@@ -9,13 +9,11 @@
 //! - Article III: Active inference via variational free energy
 //! - Article I: Entropy production tracked through surprise metrics
 
-use std::sync::Arc;
 use anyhow::{Result, anyhow};
-use ndarray::{Array1, Array2, Array3, Axis};
-use parking_lot::RwLock;
+use ndarray::{Array1, Array2, Array3};
 use rand::Rng;
 
-use crate::active_inference::{GenerativeModel, VariationalInference};
+use crate::active_inference::GenerativeModel;
 
 /// Prediction error from active inference
 #[derive(Debug, Clone)]
@@ -485,7 +483,7 @@ impl PredictiveNeuromorphic {
         // Ridge regression: W = (X^T X + λI)^{-1} X^T Y
         let lambda = 1e-6;
         let xtx = state_matrix.t().dot(&state_matrix);
-        let mut xtx_reg = xtx + lambda * Array2::eye(self.reservoir_size);
+        let xtx_reg = xtx + lambda * Array2::eye(self.reservoir_size);
 
         // Solve using pseudo-inverse
         let xty = state_matrix.t().dot(targets);
@@ -505,7 +503,7 @@ impl PredictiveNeuromorphic {
         // Simplified pseudo-inverse
         // In production, use proper SVD from LAPACK
         let n = matrix.nrows();
-        let mut inv = Array2::eye(n);
+        let inv = Array2::eye(n);
 
         // Approximate using regularized inverse
         let reg = 1e-6;

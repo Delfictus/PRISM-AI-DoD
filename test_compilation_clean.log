@@ -1,0 +1,2540 @@
+warning: patch for `cudarc` uses the features mechanism. default-features and features will not take effect because the patch dependency does not support this mechanism
+warning: use of deprecated associated function `gpu_reservoir::GpuReservoirComputer::new`: Use new_shared() with shared CUDA context
+   --> src/neuromorphic/src/gpu_reservoir.rs:662:27
+    |
+662 |     GpuReservoirComputer::new(config, gpu_config)
+    |                           ^^^
+    |
+    = note: `#[warn(deprecated)]` on by default
+
+warning: unused import: `rayon::prelude`
+  --> src/neuromorphic/src/gpu_reservoir.rs:15:5
+   |
+15 | use rayon::prelude::*;
+   |     ^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` on by default
+
+warning: unused variable: `reason`
+   --> src/neuromorphic/src/pattern_detector.rs:357:30
+    |
+357 |     fn record_failure(&self, reason: &str) {
+    |                              ^^^^^^ help: if this is intentional, prefix it with an underscore: `_reason`
+    |
+    = note: `#[warn(unused_variables)]` on by default
+
+warning: unused variable: `bin_source_past`
+   --> src/neuromorphic/src/transfer_entropy.rs:109:17
+    |
+109 |             let bin_source_past = self.discretize_vector(&source_past);
+    |                 ^^^^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_bin_source_past`
+
+warning: type `ReservoirStatistics` is more private than the item `ReservoirComputer::get_statistics`
+   --> src/neuromorphic/src/reservoir.rs:224:5
+    |
+224 |     pub fn get_statistics(&self) -> &ReservoirStatistics {
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ method `ReservoirComputer::get_statistics` is reachable at visibility `pub`
+    |
+note: but type `ReservoirStatistics` is only usable at visibility `pub(self)`
+   --> src/neuromorphic/src/reservoir.rs:108:1
+    |
+108 | struct ReservoirStatistics {
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^
+    = note: `#[warn(private_interfaces)]` on by default
+
+warning: fields `max_pool_size` and `total_allocated_bytes` are never read
+  --> src/neuromorphic/src/gpu_memory.rs:17:5
+   |
+13 | pub struct GpuMemoryPool {
+   |            ------------- fields in this struct
+...
+17 |     max_pool_size: usize,
+   |     ^^^^^^^^^^^^^
+18 |     total_allocated_bytes: Arc<Mutex<usize>>,
+   |     ^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` on by default
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+   --> src/neuromorphic/src/gpu_memory.rs:302:29
+    |
+302 |     pub fn borrow_zero_copy(&mut self) -> Result<GpuBufferBorrow> {
+    |                             ^^^^^^^^^            --------------- the same lifetime is hidden here
+    |                             |
+    |                             the lifetime is elided here
+    |
+    = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+    = note: `#[warn(mismatched_lifetime_syntaxes)]` on by default
+help: use `'_` for type paths
+    |
+302 |     pub fn borrow_zero_copy(&mut self) -> Result<GpuBufferBorrow<'_>> {
+    |                                                                 ++++
+
+warning: `neuromorphic-engine` (lib) generated 7 warnings
+warning: prism-ai@0.1.0: Compiling CUDA kernels with nvcc: /usr/local/cuda/bin/nvcc
+warning: prism-ai@0.1.0: Detected Compute 12.0, using sm_90
+warning: prism-ai@0.1.0: Compiling for GPU architecture: sm_90
+warning: prism-ai@0.1.0: Successfully compiled Tensor Core kernels to PTX
+warning: prism-ai@0.1.0: PTX file: /home/diddy/Desktop/PRISM-AI-DoD/03-Source-Code/target/debug/build/prism-ai-1b86b216c088d9ca/out/tensor_core_matmul.ptx
+warning: unused import: `Array1`
+  --> src/quantum/src/prct_coloring.rs:12:15
+   |
+12 | use ndarray::{Array1, Array2};
+   |               ^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` on by default
+
+warning: unused import: `Context`
+  --> src/quantum/src/prct_coloring.rs:14:22
+   |
+14 | use anyhow::{Result, Context};
+   |                      ^^^^^^^
+
+warning: unused import: `Hamiltonian`
+  --> src/quantum/src/prct_coloring.rs:17:47
+   |
+17 | use crate::hamiltonian::{PhaseResonanceField, Hamiltonian};
+   |                                               ^^^^^^^^^^^
+
+warning: unused import: `HashMap`
+  --> src/quantum/src/gpu_coloring.rs:10:24
+   |
+10 | use std::collections::{HashMap, HashSet};
+   |                        ^^^^^^^
+
+warning: unused import: `Context`
+ --> src/quantum/src/prct_tsp.rs:8:22
+  |
+8 | use anyhow::{Result, Context};
+  |                      ^^^^^^^
+
+warning: unused import: `Context`
+  --> src/quantum/src/qubo.rs:10:22
+   |
+10 | use anyhow::{anyhow, Context, Result};
+   |                      ^^^^^^^
+
+warning: unused import: `std::sync::Arc`
+  --> src/quantum/src/qubo.rs:12:5
+   |
+12 | use std::sync::Arc;
+   |     ^^^^^^^^^^^^^^
+
+warning: variable does not need to be mutable
+   --> src/quantum/src/gpu_coloring.rs:287:13
+    |
+287 |         let mut gpu_priorities = stream.alloc_zeros::<f32>(n)
+    |             ----^^^^^^^^^^^^^^
+    |             |
+    |             help: remove this `mut`
+    |
+    = note: `#[warn(unused_mut)]` on by default
+
+warning: variable does not need to be mutable
+   --> src/quantum/src/gpu_coloring.rs:289:13
+    |
+289 |         let mut gpu_colors = stream.alloc_zeros::<u32>(n)
+    |             ----^^^^^^^^^^
+    |             |
+    |             help: remove this `mut`
+
+warning: variable does not need to be mutable
+   --> src/quantum/src/gpu_coloring.rs:291:13
+    |
+291 |         let mut gpu_can_color = stream.alloc_zeros::<u32>(n)
+    |             ----^^^^^^^^^^^^^
+    |             |
+    |             help: remove this `mut`
+
+warning: value assigned to `current_energy` is never read
+   --> src/quantum/src/qubo.rs:161:17
+    |
+161 |         let mut current_energy = self.best_energy;
+    |                 ^^^^^^^^^^^^^^
+    |
+    = help: maybe it is overwritten before being read?
+    = note: `#[warn(unused_assignments)]` on by default
+
+warning: variable `tour_gpu` is assigned to, but never used
+  --> src/quantum/src/gpu_k_opt.rs:86:17
+   |
+86 |         let mut tour_gpu = stream.memcpy_stod(&tour_i32)?;
+   |                 ^^^^^^^^
+   |
+   = note: consider using `_tour_gpu` instead
+   = note: `#[warn(unused_variables)]` on by default
+
+warning: unused variable: `dist_gpu`
+  --> src/quantum/src/gpu_k_opt.rs:89:13
+   |
+89 |         let dist_gpu = stream.memcpy_stod(&dist_flat)?;
+   |             ^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_dist_gpu`
+
+warning: unused variable: `best_i_gpu`
+  --> src/quantum/src/gpu_k_opt.rs:92:17
+   |
+92 |         let mut best_i_gpu = stream.alloc_zeros::<i32>(1)?;
+   |                 ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_best_i_gpu`
+
+warning: unused variable: `best_j_gpu`
+  --> src/quantum/src/gpu_k_opt.rs:93:17
+   |
+93 |         let mut best_j_gpu = stream.alloc_zeros::<i32>(1)?;
+   |                 ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_best_j_gpu`
+
+warning: variable `best_delta_gpu` is assigned to, but never used
+  --> src/quantum/src/gpu_k_opt.rs:94:17
+   |
+94 |         let mut best_delta_gpu = stream.memcpy_stod(&[f32::INFINITY])?;
+   |                 ^^^^^^^^^^^^^^
+   |
+   = note: consider using `_best_delta_gpu` instead
+
+warning: value assigned to `tour_gpu` is never read
+   --> src/quantum/src/gpu_k_opt.rs:104:13
+    |
+104 |             tour_gpu = stream.memcpy_stod(&tour_i32)?;
+    |             ^^^^^^^^
+    |
+    = help: maybe it is overwritten before being read?
+
+warning: value assigned to `best_delta_gpu` is never read
+   --> src/quantum/src/gpu_k_opt.rs:108:13
+    |
+108 |             best_delta_gpu = stream.memcpy_stod(&[f32::INFINITY])?;
+    |             ^^^^^^^^^^^^^^
+    |
+    = help: maybe it is overwritten before being read?
+
+warning: unused variable: `block_size`
+   --> src/quantum/src/gpu_k_opt.rs:111:17
+    |
+111 |             let block_size = 16;
+    |                 ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_block_size`
+
+warning: unused variable: `cfg`
+   --> src/quantum/src/gpu_k_opt.rs:112:17
+    |
+112 |             let cfg = LaunchConfig {
+    |                 ^^^ help: if this is intentional, prefix it with an underscore: `_cfg`
+
+warning: variable does not need to be mutable
+  --> src/quantum/src/gpu_k_opt.rs:92:13
+   |
+92 |         let mut best_i_gpu = stream.alloc_zeros::<i32>(1)?;
+   |             ----^^^^^^^^^^
+   |             |
+   |             help: remove this `mut`
+
+warning: variable does not need to be mutable
+  --> src/quantum/src/gpu_k_opt.rs:93:13
+   |
+93 |         let mut best_j_gpu = stream.alloc_zeros::<i32>(1)?;
+   |             ----^^^^^^^^^^
+   |             |
+   |             help: remove this `mut`
+
+warning: methods `generate_chromatic_coloring` and `optimize_tsp_ordering` are never used
+   --> src/quantum/src/hamiltonian.rs:196:8
+    |
+137 | impl PhaseResonanceField {
+    | ------------------------ methods in this implementation
+...
+196 |     fn generate_chromatic_coloring(&mut self, n_atoms: usize) {
+    |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+...
+220 |     fn optimize_tsp_ordering(&mut self, n_atoms: usize) {
+    |        ^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` on by default
+
+warning: fields `masses`, `stencil_order`, and `energy_tolerance` are never read
+   --> src/quantum/src/hamiltonian.rs:529:5
+    |
+522 | pub struct Hamiltonian {
+    |            ----------- fields in this struct
+...
+529 |     masses: Array1<f64>,
+    |     ^^^^^^
+...
+545 |     stencil_order: usize,   // Finite difference stencil order (9-point)
+    |     ^^^^^^^^^^^^^
+...
+575 |     energy_tolerance: f64,
+    |     ^^^^^^^^^^^^^^^^
+    |
+    = note: `Hamiltonian` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: methods `calculate_coupling_strength` and `pauli_dot_product` are never used
+    --> src/quantum/src/hamiltonian.rs:1183:8
+     |
+ 581 | impl Hamiltonian {
+     | ---------------- methods in this implementation
+...
+1183 |     fn calculate_coupling_strength(&self, i: usize, j: usize, _t: f64) -> Complex64 {
+     |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+...
+1194 |     fn pauli_dot_product(&self, _i: usize, _j: usize) -> Complex64 {
+     |        ^^^^^^^^^^^^^^^^^
+
+warning: field `coupling` is never read
+  --> src/quantum/src/prct_coloring.rs:33:5
+   |
+21 | pub struct ChromaticColoring {
+   |            ----------------- field in this struct
+...
+33 |     coupling: Box<Array2<Complex64>>,
+   |     ^^^^^^^^
+   |
+   = note: `ChromaticColoring` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: field `max_k` is never read
+  --> src/quantum/src/gpu_k_opt.rs:14:5
+   |
+12 | pub struct GpuKOpt {
+   |            ------- field in this struct
+13 |     context: Arc<CudaContext>,
+14 |     max_k: usize,
+   |     ^^^^^
+
+warning: unused import: `HashMap`
+  --> src/prct-core/src/coloring.rs:10:24
+   |
+10 | use std::collections::{HashMap, HashSet};
+   |                        ^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` on by default
+
+warning: unused import: `rayon::prelude`
+ --> src/prct-core/src/coloring.rs:9:5
+  |
+9 | use rayon::prelude::*;
+  |     ^^^^^^^^^^^^^^
+
+warning: unused variable: `neuro_state`
+   --> src/prct-core/src/drpp_algorithm.rs:194:9
+    |
+194 |         neuro_state: &NeuroState,
+    |         ^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_neuro_state`
+    |
+    = note: `#[warn(unused_variables)]` on by default
+
+warning: unused variable: `quantum_state`
+   --> src/prct-core/src/drpp_algorithm.rs:195:9
+    |
+195 |         quantum_state: &QuantumState,
+    |         ^^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_quantum_state`
+
+warning: unused variable: `phase_field`
+   --> src/prct-core/src/drpp_algorithm.rs:196:9
+    |
+196 |         phase_field: &mut PhaseField,
+    |         ^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_phase_field`
+
+warning: unused variable: `n`
+  --> src/prct-core/src/simulated_annealing.rs:31:9
+   |
+31 |     let n = graph.num_vertices;
+   |         ^ help: if this is intentional, prefix it with an underscore: `_n`
+
+warning: `quantum-engine` (lib) generated 27 warnings (run `cargo fix --lib -p quantum-engine` to apply 12 suggestions)
+warning: `prct-core` (lib) generated 6 warnings (run `cargo fix --lib -p prct-core` to apply 1 suggestion)
+warning: unused variable: `state`
+   --> src/foundation/src/adp/decision_processor.rs:182:34
+    |
+182 |     fn generate_reasoning(&self, state: &State, action: Action, features: &[f64]) -> String {
+    |                                  ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+    |
+    = note: `#[warn(unused_variables)]` on by default
+
+warning: field `quantum_hamiltonian` is never read
+  --> src/foundation/src/platform.rs:33:5
+   |
+26 | pub struct NeuromorphicQuantumPlatform {
+   |            --------------------------- field in this struct
+...
+33 |     quantum_hamiltonian: Arc<RwLock<Option<Hamiltonian>>>,
+   |     ^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `NeuromorphicQuantumPlatform` has a derived impl for the trait `Debug`, but this is intentionally ignored during dead code analysis
+   = note: `#[warn(dead_code)]` on by default
+
+warning: field `state_to_reservoir` is never read
+   --> src/foundation/src/platform.rs:101:5
+    |
+ 95 | struct BidirectionalCoupling {
+    |        --------------------- field in this struct
+...
+101 |     state_to_reservoir: f64,
+    |     ^^^^^^^^^^^^^^^^^^
+    |
+    = note: `BidirectionalCoupling` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: methods `ensure_quantum_initialized`, `extract_quantum_features`, and `initialize_quantum_state` are never used
+   --> src/foundation/src/platform.rs:758:14
+    |
+167 | impl NeuromorphicQuantumPlatform {
+    | -------------------------------- methods in this implementation
+...
+758 |     async fn ensure_quantum_initialized(&self, input: &PlatformInput) -> Result<()> {
+    |              ^^^^^^^^^^^^^^^^^^^^^^^^^^
+...
+782 |     async fn extract_quantum_features(&self, _input: &PlatformInput, neuro_results: &NeuromorphicResults) -> Vec<f64> {
+    |              ^^^^^^^^^^^^^^^^^^^^^^^^
+...
+822 |     async fn initialize_quantum_state(&self, hamiltonian: &mut Hamiltonian, features: &[f64]) -> Array1<Complex64> {
+    |              ^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: associated function `ingest_from_source` is never used
+   --> src/foundation/src/ingestion/engine.rs:325:14
+    |
+ 69 | impl IngestionEngine {
+    | -------------------- associated function in this implementation
+...
+325 |     async fn ingest_from_source(
+    |              ^^^^^^^^^^^^^^^^^^
+
+warning: `platform-foundation` (lib) generated 5 warnings
+warning: unused import: `crate::active_inference::hierarchical_model::constants`
+   --> src/active_inference/policy_search_gpu.rs:408:9
+    |
+408 |     use crate::active_inference::hierarchical_model::constants;
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(unused_imports)]` on by default
+
+warning: unused import: `super::*`
+   --> src/cma/mod.rs:234:9
+    |
+234 |     use super::*;
+    |         ^^^^^^^^
+
+warning: unused variable: `input`
+  --> src/api_server/graphql_schema.rs:55:9
+   |
+55 |         input: PortfolioOptimizationInput,
+   |         ^^^^^ help: if this is intentional, prefix it with an underscore: `_input`
+   |
+   = note: `#[warn(unused_variables)]` on by default
+
+warning: unused variable: `input`
+  --> src/api_server/graphql_schema.rs:82:9
+   |
+82 |         input: MotionPlanInput,
+   |         ^^^^^ help: if this is intentional, prefix it with an underscore: `_input`
+
+warning: unused variable: `input`
+   --> src/api_server/graphql_schema.rs:127:9
+    |
+127 |         input: HealthcareRiskInput,
+    |         ^^^^^ help: if this is intentional, prefix it with an underscore: `_input`
+
+warning: unused variable: `input`
+   --> src/api_server/graphql_schema.rs:140:9
+    |
+140 |         input: EnergyForecastInput,
+    |         ^^^^^ help: if this is intentional, prefix it with an underscore: `_input`
+
+warning: unused variable: `input`
+   --> src/api_server/graphql_schema.rs:198:9
+    |
+198 |         input: PortfolioOptimizationInput,
+    |         ^^^^^ help: if this is intentional, prefix it with an underscore: `_input`
+
+warning: unused variable: `input`
+   --> src/api_server/graphql_schema.rs:216:9
+    |
+216 |         input: MotionPlanInput,
+    |         ^^^^^ help: if this is intentional, prefix it with an underscore: `_input`
+
+warning: unused variable: `hamiltonian`
+   --> src/phase6/integration.rs:236:9
+    |
+236 |         hamiltonian: &ModulatedHamiltonian,
+    |         ^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_hamiltonian`
+
+warning: unused variable: `n`
+   --> src/phase6/integration.rs:238:13
+    |
+238 |         let n = adjacency.nrows();
+    |             ^ help: if this is intentional, prefix it with an underscore: `_n`
+
+warning: unused variable: `initial_state`
+   --> src/phase6/integration.rs:263:9
+    |
+263 |         initial_state: &Array1<f64>,
+    |         ^^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_initial_state`
+
+warning: unused variable: `avg_temp`
+   --> src/phase6/integration.rs:267:13
+    |
+267 |         let avg_temp = hamiltonian.local_temperature.mean().unwrap_or(1.0);
+    |             ^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_avg_temp`
+
+warning: unused variable: `state`
+  --> src/api_server/routes/pwsa.rs:95:11
+   |
+95 |     State(state): State<Arc<AppState>>,
+   |           ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+warning: unused variable: `state`
+   --> src/api_server/routes/pwsa.rs:140:11
+    |
+140 |     State(state): State<Arc<AppState>>,
+    |           ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+warning: unused variable: `state`
+   --> src/api_server/routes/pwsa.rs:159:11
+    |
+159 |     State(state): State<Arc<AppState>>,
+    |           ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+warning: unused variable: `state`
+   --> src/api_server/routes/pwsa.rs:179:11
+    |
+179 |     State(state): State<Arc<AppState>>,
+    |           ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+warning: unused variable: `state`
+   --> src/api_server/routes/finance.rs:103:11
+    |
+103 |     State(state): State<Arc<AppState>>,
+    |           ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+warning: unused variable: `state`
+   --> src/api_server/routes/finance.rs:195:11
+    |
+195 |     State(state): State<Arc<AppState>>,
+    |           ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+warning: unused variable: `state`
+   --> src/api_server/routes/finance.rs:215:11
+    |
+215 |     State(state): State<Arc<AppState>>,
+    |           ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+warning: unused variable: `state`
+   --> src/api_server/routes/finance.rs:233:11
+    |
+233 |     State(state): State<Arc<AppState>>,
+    |           ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+warning: unused variable: `state`
+   --> src/api_server/routes/finance.rs:299:11
+    |
+299 |     State(state): State<Arc<AppState>>,
+    |           ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+warning: unused variable: `request`
+   --> src/api_server/routes/finance.rs:300:10
+    |
+300 |     Json(request): Json<BacktestRequest>,
+    |          ^^^^^^^ help: if this is intentional, prefix it with an underscore: `_request`
+
+warning: unused variable: `req`
+   --> src/api_server/routes/finance_advanced.rs:258:10
+    |
+258 |     Json(req): Json<GnnPortfolioPredictionRequest>,
+    |          ^^^ help: if this is intentional, prefix it with an underscore: `_req`
+
+warning: unused variable: `req`
+   --> src/api_server/routes/finance_advanced.rs:293:10
+    |
+293 |     Json(req): Json<TransferEntropyCausalityRequest>,
+    |          ^^^ help: if this is intentional, prefix it with an underscore: `_req`
+
+warning: unused variable: `req`
+   --> src/api_server/routes/finance_advanced.rs:321:10
+    |
+321 |     Json(req): Json<PortfolioRebalancingRequest>,
+    |          ^^^ help: if this is intentional, prefix it with an underscore: `_req`
+
+warning: unused variable: `state`
+   --> src/api_server/routes/telecom.rs:101:11
+    |
+101 |     State(state): State<Arc<AppState>>,
+    |           ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+warning: unused variable: `state`
+   --> src/api_server/routes/telecom.rs:122:11
+    |
+122 |     State(state): State<Arc<AppState>>,
+    |           ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+warning: unused variable: `state`
+   --> src/api_server/routes/telecom.rs:142:11
+    |
+142 |     State(state): State<Arc<AppState>>,
+    |           ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+warning: unused variable: `state`
+   --> src/api_server/routes/telecom.rs:157:11
+    |
+157 |     State(state): State<Arc<AppState>>,
+    |           ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+warning: unused variable: `state`
+  --> src/api_server/routes/robotics.rs:83:11
+   |
+83 |     State(state): State<Arc<AppState>>,
+   |           ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+warning: unused variable: `state`
+   --> src/api_server/routes/robotics.rs:168:11
+    |
+168 |     State(state): State<Arc<AppState>>,
+    |           ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+warning: unused variable: `state`
+   --> src/api_server/routes/robotics.rs:185:11
+    |
+185 |     State(state): State<Arc<AppState>>,
+    |           ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+warning: unused variable: `state`
+   --> src/api_server/routes/robotics.rs:208:11
+    |
+208 |     State(state): State<Arc<AppState>>,
+    |           ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+warning: unused variable: `state`
+  --> src/api_server/routes/llm.rs:85:11
+   |
+85 |     State(state): State<Arc<AppState>>,
+   |           ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+warning: unused variable: `state`
+   --> src/api_server/routes/llm.rs:105:11
+    |
+105 |     State(state): State<Arc<AppState>>,
+    |           ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+warning: unused variable: `state`
+   --> src/api_server/routes/llm.rs:125:11
+    |
+125 |     State(state): State<Arc<AppState>>,
+    |           ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+warning: unused variable: `state`
+   --> src/api_server/routes/llm.rs:161:11
+    |
+161 |     State(state): State<Arc<AppState>>,
+    |           ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+warning: unused variable: `state`
+   --> src/api_server/routes/llm.rs:180:11
+    |
+180 |     State(state): State<Arc<AppState>>,
+    |           ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+warning: unused variable: `state`
+   --> src/api_server/routes/time_series.rs:122:11
+    |
+122 |     State(state): State<Arc<AppState>>,
+    |           ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+warning: unused variable: `state`
+   --> src/api_server/routes/time_series.rs:241:11
+    |
+241 |     State(state): State<Arc<AppState>>,
+    |           ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+warning: unused variable: `state`
+   --> src/api_server/routes/time_series.rs:263:11
+    |
+263 |     State(state): State<Arc<AppState>>,
+    |           ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+warning: unused variable: `state`
+   --> src/api_server/routes/time_series.rs:287:11
+    |
+287 |     State(state): State<Arc<AppState>>,
+    |           ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+warning: unused variable: `state`
+   --> src/api_server/routes/time_series.rs:306:11
+    |
+306 |     State(state): State<Arc<AppState>>,
+    |           ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+warning: unused variable: `state`
+   --> src/api_server/routes/pixels.rs:144:11
+    |
+144 |     State(state): State<Arc<AppState>>,
+    |           ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+warning: unused variable: `state`
+   --> src/api_server/routes/pixels.rs:201:11
+    |
+201 |     State(state): State<Arc<AppState>>,
+    |           ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+warning: unused variable: `state`
+   --> src/api_server/routes/pixels.rs:221:11
+    |
+221 |     State(state): State<Arc<AppState>>,
+    |           ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+warning: unused variable: `state`
+   --> src/api_server/routes/pixels.rs:240:11
+    |
+240 |     State(state): State<Arc<AppState>>,
+    |           ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+warning: unused variable: `state`
+   --> src/api_server/routes/pixels.rs:258:11
+    |
+258 |     State(state): State<Arc<AppState>>,
+    |           ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+warning: unused variable: `req`
+   --> src/api_server/routes/applications.rs:296:10
+    |
+296 |     Json(req): Json<HealthcareRiskRequest>,
+    |          ^^^ help: if this is intentional, prefix it with an underscore: `_req`
+
+warning: unused variable: `req`
+   --> src/api_server/routes/applications.rs:329:10
+    |
+329 |     Json(req): Json<EnergyForecastRequest>,
+    |          ^^^ help: if this is intentional, prefix it with an underscore: `_req`
+
+warning: unused variable: `req`
+   --> src/api_server/routes/applications.rs:346:10
+    |
+346 |     Json(req): Json<ManufacturingMaintenanceRequest>,
+    |          ^^^ help: if this is intentional, prefix it with an underscore: `_req`
+
+warning: unused variable: `req`
+   --> src/api_server/routes/applications.rs:362:10
+    |
+362 |     Json(req): Json<SupplyChainDemandRequest>,
+    |          ^^^ help: if this is intentional, prefix it with an underscore: `_req`
+
+warning: unused variable: `req`
+   --> src/api_server/routes/applications.rs:377:10
+    |
+377 |     Json(req): Json<AgricultureYieldRequest>,
+    |          ^^^ help: if this is intentional, prefix it with an underscore: `_req`
+
+warning: unused variable: `req`
+   --> src/api_server/routes/applications.rs:394:10
+    |
+394 |     Json(req): Json<CybersecurityThreatRequest>,
+    |          ^^^ help: if this is intentional, prefix it with an underscore: `_req`
+
+warning: unused variable: `req`
+   --> src/api_server/routes/applications.rs:414:10
+    |
+414 |     Json(req): Json<ClimateForecastRequest>,
+    |          ^^^ help: if this is intentional, prefix it with an underscore: `_req`
+
+warning: unused variable: `req`
+   --> src/api_server/routes/applications.rs:427:10
+    |
+427 |     Json(req): Json<SmartCityOptimizationRequest>,
+    |          ^^^ help: if this is intentional, prefix it with an underscore: `_req`
+
+warning: unused variable: `req`
+   --> src/api_server/routes/applications.rs:443:10
+    |
+443 |     Json(req): Json<EducationPerformanceRequest>,
+    |          ^^^ help: if this is intentional, prefix it with an underscore: `_req`
+
+warning: unused variable: `req`
+   --> src/api_server/routes/applications.rs:468:10
+    |
+468 |     Json(req): Json<RetailInventoryRequest>,
+    |          ^^^ help: if this is intentional, prefix it with an underscore: `_req`
+
+warning: unused variable: `req`
+   --> src/api_server/routes/applications.rs:481:10
+    |
+481 |     Json(req): Json<ConstructionForecastRequest>,
+    |          ^^^ help: if this is intentional, prefix it with an underscore: `_req`
+
+warning: unused variable: `state`
+  --> src/api_server/websocket.rs:76:43
+   |
+76 | async fn handle_socket(socket: WebSocket, state: Arc<AppState>) {
+   |                                           ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+
+warning: unused import: `Context`
+  --> src/statistical_mechanics/gpu.rs:15:30
+   |
+15 | use anyhow::{Result, anyhow, Context};
+   |                              ^^^^^^^
+
+warning: unused import: `Context`
+  --> src/active_inference/gpu.rs:16:30
+   |
+16 | use anyhow::{Result, anyhow, Context};
+   |                              ^^^^^^^
+
+warning: unused import: `gpu_integration::GpuSolvable`
+   --> src/cma/mod.rs:127:13
+    |
+127 |         use gpu_integration::GpuSolvable;
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `Read`
+  --> src/resilience/checkpoint_manager.rs:38:15
+   |
+38 | use std::io::{Read, Write};
+   |               ^^^^
+
+warning: unused import: `Context`
+ --> src/quantum_mlir/runtime.rs:6:22
+  |
+6 | use anyhow::{Result, Context};
+  |                      ^^^^^^^
+
+warning: unused import: `sha2::Digest`
+  --> src/cma/guarantees/mod.rs:16:5
+   |
+16 | use sha2::Digest;
+   |     ^^^^^^^^^^^^
+
+warning: unused variable: `psi_n`
+   --> src/information_theory/transfer_entropy.rs:391:13
+    |
+391 |         let psi_n = digamma(n as f64);
+    |             ^^^^^ help: if this is intentional, prefix it with an underscore: `_psi_n`
+
+warning: value assigned to `count_greater` is never read
+   --> src/information_theory/transfer_entropy.rs:487:17
+    |
+487 |         let mut count_greater = 0;
+    |                 ^^^^^^^^^^^^^
+    |
+    = help: maybe it is overwritten before being read?
+    = note: `#[warn(unused_assignments)]` on by default
+
+warning: unused variable: `rng`
+   --> src/information_theory/transfer_entropy.rs:491:17
+    |
+491 |             let rng = rand::thread_rng();
+    |                 ^^^ help: if this is intentional, prefix it with an underscore: `_rng`
+
+warning: unused variable: `lag_xy`
+   --> src/information_theory/transfer_entropy.rs:672:10
+    |
+672 |     let (lag_xy, result_xy) = te_calc.find_optimal_lag(x, y, max_lag);
+    |          ^^^^^^ help: if this is intentional, prefix it with an underscore: `_lag_xy`
+
+warning: unused variable: `lag_yx`
+   --> src/information_theory/transfer_entropy.rs:675:10
+    |
+675 |     let (lag_yx, result_yx) = te_calc.find_optimal_lag(y, x, max_lag);
+    |          ^^^^^^ help: if this is intentional, prefix it with an underscore: `_lag_yx`
+
+warning: unused variable: `source_i`
+   --> src/information_theory/advanced_transfer_entropy.rs:614:38
+    |
+614 |     pub fn unique_information(&self, source_i: &Array1<f64>,
+    |                                      ^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_source_i`
+
+warning: unused variable: `other_sources`
+   --> src/information_theory/advanced_transfer_entropy.rs:615:30
+    |
+615 | ...                   other_sources: &[Array1<f64>],
+    |                       ^^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_other_sources`
+
+warning: unused variable: `target`
+   --> src/information_theory/advanced_transfer_entropy.rs:616:30
+    |
+616 | ...                   target: &Array1<f64>) -> f64 {
+    |                       ^^^^^^ help: if this is intentional, prefix it with an underscore: `_target`
+
+warning: unused variable: `sources`
+   --> src/information_theory/advanced_transfer_entropy.rs:640:43
+    |
+640 |     pub fn synergistic_information(&self, sources: &[Array1<f64>],
+    |                                           ^^^^^^^ help: if this is intentional, prefix it with an underscore: `_sources`
+
+warning: unused variable: `target`
+   --> src/information_theory/advanced_transfer_entropy.rs:641:35
+    |
+641 | ...                   target: &Array1<f64>) -> f64 {
+    |                       ^^^^^^ help: if this is intentional, prefix it with an underscore: `_target`
+
+warning: unused variable: `n`
+  --> src/information_theory/ksg_estimator.rs:66:13
+   |
+66 |         let n = source.len();
+   |             ^ help: if this is intentional, prefix it with an underscore: `_n`
+
+warning: unused variable: `tree_dim_plus`
+   --> src/information_theory/ksg_estimator.rs:349:13
+    |
+349 |         let tree_dim_plus = KdTree::new(&points_dim_plus);
+    |             ^^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_tree_dim_plus`
+
+warning: unused variable: `n`
+  --> src/information_theory/conditional_te.rs:89:13
+   |
+89 |         let n = source.len();
+   |             ^ help: if this is intentional, prefix it with an underscore: `_n`
+
+warning: unused variable: `x_embed`
+   --> src/information_theory/transfer_entropy_gpu.rs:161:26
+    |
+161 |     fn gpu_ksg_te(&self, x_embed: &[Vec<f64>], y_embed: &[Vec<f64>], y_future: &[f64]) -> Result<f64> {
+    |                          ^^^^^^^ help: if this is intentional, prefix it with an underscore: `_x_embed`
+
+warning: unused variable: `y_embed`
+   --> src/information_theory/transfer_entropy_gpu.rs:161:48
+    |
+161 |     fn gpu_ksg_te(&self, x_embed: &[Vec<f64>], y_embed: &[Vec<f64>], y_future: &[f64]) -> Result<f64> {
+    |                                                ^^^^^^^ help: if this is intentional, prefix it with an underscore: `_y_embed`
+
+warning: unused variable: `y_future`
+   --> src/information_theory/transfer_entropy_gpu.rs:161:70
+    |
+161 |     fn gpu_ksg_te(&self, x_embed: &[Vec<f64>], y_embed: &[Vec<f64>], y_future: &[f64]) -> Result<f64> {
+    |                                                                      ^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_y_future`
+
+warning: unused variable: `source`
+   --> src/information_theory/transfer_entropy_gpu.rs:168:36
+    |
+168 |     fn gpu_permutation_test(&self, source: &Array1<f64>, target: &Array1<f64>, observed_te: f64) -> Result<f64> {
+    |                                    ^^^^^^ help: if this is intentional, prefix it with an underscore: `_source`
+
+warning: unused variable: `target`
+   --> src/information_theory/transfer_entropy_gpu.rs:168:58
+    |
+168 |     fn gpu_permutation_test(&self, source: &Array1<f64>, target: &Array1<f64>, observed_te: f64) -> Result<f64> {
+    |                                                          ^^^^^^ help: if this is intentional, prefix it with an underscore: `_target`
+
+warning: unused variable: `observed_te`
+   --> src/information_theory/transfer_entropy_gpu.rs:168:80
+    |
+168 |     fn gpu_permutation_test(&self, source: &Array1<f64>, target: &Array1<f64>, observed_te: f64) -> Result<f64> {
+    |                                                                                ^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_observed_te`
+
+warning: unused variable: `source`
+   --> src/information_theory/transfer_entropy_gpu.rs:174:36
+    |
+174 |     fn gpu_ksg_significance(&self, source: &Array1<f64>, target: &Array1<f64>, observed_te: f64) -> Result<f64> {
+    |                                    ^^^^^^ help: if this is intentional, prefix it with an underscore: `_source`
+
+warning: unused variable: `target`
+   --> src/information_theory/transfer_entropy_gpu.rs:174:58
+    |
+174 |     fn gpu_ksg_significance(&self, source: &Array1<f64>, target: &Array1<f64>, observed_te: f64) -> Result<f64> {
+    |                                                          ^^^^^^ help: if this is intentional, prefix it with an underscore: `_target`
+
+warning: unused variable: `observed_te`
+   --> src/information_theory/transfer_entropy_gpu.rs:174:80
+    |
+174 |     fn gpu_ksg_significance(&self, source: &Array1<f64>, target: &Array1<f64>, observed_te: f64) -> Result<f64> {
+    |                                                                                ^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_observed_te`
+
+warning: unused variable: `mi_y_x1`
+   --> src/information_theory/pid.rs:227:13
+    |
+227 |         let mi_y_x1 = self.mutual_information(y, x1)?;
+    |             ^^^^^^^ help: if this is intentional, prefix it with an underscore: `_mi_y_x1`
+
+warning: unused variable: `mi_y_x2`
+   --> src/information_theory/pid.rs:228:13
+    |
+228 |         let mi_y_x2 = self.mutual_information(y, x2)?;
+    |             ^^^^^^^ help: if this is intentional, prefix it with an underscore: `_mi_y_x2`
+
+warning: unused variable: `mi_y_x1x2`
+   --> src/information_theory/pid.rs:229:13
+    |
+229 |         let mi_y_x1x2 = self.mutual_information_joint(y, x1, x2)?;
+    |             ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_mi_y_x1x2`
+
+warning: unused variable: `dtheta`
+   --> src/statistical_mechanics/thermodynamic_network.rs:255:13
+    |
+255 |         let dtheta = 2.0 * PI / 10.0; // 10 bins in phase
+    |             ^^^^^^ help: if this is intentional, prefix it with an underscore: `_dtheta`
+
+warning: unused variable: `dv`
+   --> src/statistical_mechanics/thermodynamic_network.rs:256:13
+    |
+256 |         let dv = (KB * temperature).sqrt() / 5.0; // 5 bins in velocity
+    |             ^^ help: if this is intentional, prefix it with an underscore: `_dv`
+
+warning: unused variable: `natural_frequencies`
+   --> src/statistical_mechanics/thermodynamic_network.rs:278:9
+    |
+278 |         natural_frequencies: &[f64],
+    |         ^^^^^^^^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_natural_frequencies`
+
+warning: unused variable: `initial_entropy`
+   --> src/statistical_mechanics/thermodynamic_network.rs:398:13
+    |
+398 |         let initial_entropy = self.state.entropy;
+    |             ^^^^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_initial_entropy`
+
+warning: unused variable: `order_r`
+   --> src/statistical_mechanics/gpu.rs:266:13
+    |
+266 |         let order_r = (order_real_vec[0]*order_real_vec[0] + order_imag_vec[0]*order_imag_vec[0]).sqrt() / (n as f64);
+    |             ^^^^^^^ help: if this is intentional, prefix it with an underscore: `_order_r`
+
+warning: unused variable: `horizon`
+   --> src/active_inference/hierarchical_model.rs:434:31
+    |
+434 |     pub fn predict(&mut self, horizon: f64) {
+    |                               ^^^^^^^ help: if this is intentional, prefix it with an underscore: `_horizon`
+
+warning: unused variable: `weighted_dynamical`
+   --> src/active_inference/variational_inference.rs:225:13
+    |
+225 |         let weighted_dynamical = &dynamical_error * &model.level1.belief.precision;
+    |             ^^^^^^^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_weighted_dynamical`
+
+warning: variable does not need to be mutable
+   --> src/active_inference/variational_inference.rs:420:25
+    |
+420 |         let (inference, mut model) = create_test_setup();
+    |                         ----^^^^^
+    |                         |
+    |                         help: remove this `mut`
+    |
+    = note: `#[warn(unused_mut)]` on by default
+
+warning: unused variable: `initial_error`
+  --> src/active_inference/recognition_model.rs:93:13
+   |
+93 |         let initial_error = (&model.level1.belief.mean - &true_state).mapv(|x| x*x).sum().sqrt();
+   |             ^^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_initial_error`
+
+warning: unused variable: `action`
+  --> src/active_inference/controller.rs:43:17
+   |
+43 |             let action = self.controller.control(&test_model);
+   |                 ^^^^^^ help: if this is intentional, prefix it with an underscore: `_action`
+
+warning: unused variable: `obs`
+  --> src/active_inference/controller.rs:46:17
+   |
+46 |             let obs = Array1::<f64>::ones(100);  // Simplified
+   |                 ^^^ help: if this is intentional, prefix it with an underscore: `_obs`
+
+warning: unused variable: `num_steps`
+  --> src/active_inference/controller.rs:66:9
+   |
+66 |         num_steps: usize,
+   |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_num_steps`
+
+warning: unused variable: `model`
+   --> src/active_inference/controller.rs:113:26
+    |
+113 |         let (controller, model) = create_test_controller();
+    |                          ^^^^^ help: if this is intentional, prefix it with an underscore: `_model`
+
+warning: unused variable: `diffusion`
+   --> src/active_inference/gpu_inference.rs:236:13
+    |
+236 |         let diffusion = level.diffusion;
+    |             ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_diffusion`
+
+warning: unused variable: `predicted`
+   --> src/active_inference/gpu_inference.rs:301:17
+    |
+301 |             let predicted = self.predict_observations_gpu(
+    |                 ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_predicted`
+
+warning: unused variable: `model`
+   --> src/active_inference/gpu_policy_eval.rs:684:42
+    |
+684 |     fn compute_efe_components(&mut self, model: &HierarchicalModel) -> Result<()> {
+    |                                          ^^^^^ help: if this is intentional, prefix it with an underscore: `_model`
+
+warning: unused variable: `t`
+   --> src/active_inference/policy_search_gpu.rs:380:18
+    |
+380 |             for (t, base_action) in base_policy.actions.iter().enumerate() {
+    |                  ^ help: if this is intentional, prefix it with an underscore: `_t`
+
+warning: unused variable: `j`
+  --> src/integration/information_channel.rs:60:22
+   |
+60 |                 for (j, &p_y_given_x) in self.transition_matrix.column(i).iter().enumerate() {
+   |                      ^ help: if this is intentional, prefix it with an underscore: `_j`
+
+warning: unused variable: `performance`
+   --> src/integration/unified_platform.rs:101:13
+    |
+101 |         let performance = self.total_latency_ms < 500.0;
+    |             ^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_performance`
+
+warning: unused variable: `exec`
+   --> src/integration/multi_modal_reasoner.rs:216:13
+    |
+216 |         let exec = self.executor.lock().unwrap();
+    |             ^^^^ help: if this is intentional, prefix it with an underscore: `_exec`
+
+warning: unused variable: `conf_gpu`
+   --> src/integration/multi_modal_reasoner.rs:220:13
+    |
+220 |         let conf_gpu = stream.memcpy_stod(&confidences)?;
+    |             ^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_conf_gpu`
+
+warning: unused variable: `reasoner`
+   --> src/integration/multi_modal_reasoner.rs:247:13
+    |
+247 |         let reasoner = MultiModalReasoner::new()?;
+    |             ^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_reasoner`
+
+warning: unused variable: `op`
+   --> src/quantum_mlir/dialect.rs:117:42
+    |
+117 |             verification: Some(Box::new(|op| {
+    |                                          ^^ help: if this is intentional, prefix it with an underscore: `_op`
+
+warning: unused variable: `op`
+   --> src/quantum_mlir/dialect.rs:166:42
+    |
+166 |             verification: Some(Box::new(|op| {
+    |                                          ^^ help: if this is intentional, prefix it with an underscore: `_op`
+
+warning: unused variable: `block_size`
+  --> src/gpu/gpu_tensor_optimized.rs:69:13
+   |
+69 |         let block_size = 16;
+   |             ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_block_size`
+
+warning: unused variable: `regulated`
+   --> src/phase6/predictive_neuro.rs:510:13
+    |
+510 |         let regulated = matrix + reg * Array2::eye(n);
+    |             ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_regulated`
+
+warning: unused variable: `block_size`
+   --> src/phase6/gpu_tda.rs:179:13
+    |
+179 |         let block_size = 16;
+    |             ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_block_size`
+
+warning: unused variable: `tda`
+   --> src/phase6/gpu_tda.rs:233:13
+    |
+233 |         let tda = GpuTDA::new()?;
+    |             ^^^ help: if this is intentional, prefix it with an underscore: `_tda`
+
+warning: unused variable: `delay`
+   --> src/cma/causal_discovery.rs:131:13
+    |
+131 |         let delay = 1;
+    |             ^^^^^ help: if this is intentional, prefix it with an underscore: `_delay`
+
+warning: unused variable: `beta`
+   --> src/cma/quantum/path_integral.rs:143:9
+    |
+143 |         beta: f64,
+    |         ^^^^ help: if this is intentional, prefix it with an underscore: `_beta`
+
+warning: unused variable: `hamiltonian`
+   --> src/cma/quantum/pimc_gpu.rs:168:37
+    |
+168 |     fn hamiltonian_to_matrix(&self, hamiltonian: &ProblemHamiltonian, n_dim: usize) -> Vec<f32> {
+    |                                     ^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_hamiltonian`
+
+warning: unused variable: `hamiltonian`
+   --> src/cma/neural/neural_quantum.rs:511:9
+    |
+511 |         hamiltonian: &ProblemHamiltonian,
+    |         ^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_hamiltonian`
+
+warning: unused variable: `hamiltonian`
+   --> src/cma/neural/neural_quantum.rs:526:9
+    |
+526 |         hamiltonian: &ProblemHamiltonian,
+    |         ^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_hamiltonian`
+
+warning: unused variable: `batch_size`
+   --> src/cma/neural/gnn_training.rs:296:9
+    |
+296 |         batch_size: usize,
+    |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_batch_size`
+
+warning: unused variable: `learning_rate`
+   --> src/cma/neural/gnn_training.rs:777:9
+    |
+777 |         learning_rate: f64,
+    |         ^^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_learning_rate`
+
+warning: unused variable: `source_model`
+   --> src/cma/neural/gnn_transfer_learning.rs:434:9
+    |
+434 |         source_model: &E3EquivariantGNN,
+    |         ^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_source_model`
+
+warning: unused variable: `trained_model`
+   --> src/cma/neural/gnn_transfer_learning.rs:518:13
+    |
+518 |         let trained_model = trainer.get_model();
+    |             ^^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_trained_model`
+
+warning: unused variable: `ensembles`
+   --> src/cma/neural/gnn_transfer_learning.rs:702:9
+    |
+702 |         ensembles: &[Ensemble],
+    |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_ensembles`
+
+warning: unused variable: `manifolds`
+   --> src/cma/neural/gnn_transfer_learning.rs:703:9
+    |
+703 |         manifolds: &[CausalManifold],
+    |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_manifolds`
+
+warning: unused variable: `model`
+   --> src/cma/neural/gnn_training_pipeline.rs:478:9
+    |
+478 |         model: &E3EquivariantGNN,
+    |         ^^^^^ help: if this is intentional, prefix it with an underscore: `_model`
+
+warning: unused variable: `i`
+   --> src/cma/neural/gnn_training_pipeline.rs:674:14
+    |
+674 |         for (i, metric) in metrics.iter().enumerate() {
+    |              ^ help: if this is intentional, prefix it with an underscore: `_i`
+
+warning: unused variable: `learner`
+   --> src/cma/neural/mod.rs:294:13
+    |
+294 |         let learner = GeometricManifoldLearner::new();
+    |             ^^^^^^^ help: if this is intentional, prefix it with an underscore: `_learner`
+
+warning: unused variable: `refiner`
+   --> src/cma/neural/mod.rs:301:13
+    |
+301 |         let refiner = DiffusionRefinement::new();
+    |             ^^^^^^^ help: if this is intentional, prefix it with an underscore: `_refiner`
+
+warning: unused variable: `nqs`
+   --> src/cma/neural/mod.rs:308:13
+    |
+308 |         let nqs = NeuralQuantumState::new();
+    |             ^^^ help: if this is intentional, prefix it with an underscore: `_nqs`
+
+warning: unused variable: `rng`
+  --> src/cma/gpu_integration.rs:76:13
+   |
+76 |         let rng = ChaCha20Rng::seed_from_u64(seed);
+   |             ^^^ help: if this is intentional, prefix it with an underscore: `_rng`
+
+warning: unused variable: `n`
+  --> src/cma/transfer_entropy_gpu.rs:63:13
+   |
+63 |         let n = source.len();
+   |             ^ help: if this is intentional, prefix it with an underscore: `_n`
+
+warning: unused variable: `psi`
+   --> src/cma/pac_bayes.rs:208:13
+    |
+208 |         let psi = |x: f64| -> f64 {
+    |             ^^^ help: if this is intentional, prefix it with an underscore: `_psi`
+
+warning: unused variable: `train_data`
+   --> src/cma/conformal_prediction.rs:210:14
+    |
+210 |         let (train_data, calib_data) = proper_training_data.split_at(split_point);
+    |              ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_train_data`
+
+warning: unused variable: `candidates`
+   --> src/cma/conformal_prediction.rs:389:58
+    |
+389 |     fn compute_efficiency(&self, prediction_set: &[f64], candidates: &[f64]) -> f64 {
+    |                                                          ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_candidates`
+
+warning: unused variable: `x`
+   --> src/cma/conformal_prediction.rs:474:35
+    |
+474 |     fn predict_uncertainty(&self, x: &Array1<f64>) -> Result<f64> {
+    |                                   ^ help: if this is intentional, prefix it with an underscore: `_x`
+
+warning: unused variable: `history`
+   --> src/applications/robotics/trajectory_forecasting.rs:253:17
+    |
+253 |             let history = vec![TrajectoryPoint {
+    |                 ^^^^^^^ help: if this is intentional, prefix it with an underscore: `_history`
+
+warning: unused variable: `historical_interactions`
+   --> src/applications/robotics/trajectory_forecasting.rs:240:9
+    |
+240 |         historical_interactions: &[InteractionHistory],
+    |         ^^^^^^^^^^^^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_historical_interactions`
+
+warning: unused variable: `optimizer`
+   --> src/applications/drug_discovery/optimization.rs:170:13
+    |
+170 |         let optimizer = MolecularOptimizer::new(config, &mut gen_model);
+    |             ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_optimizer`
+
+warning: unused variable: `predictor`
+   --> src/applications/drug_discovery/prediction.rs:212:13
+    |
+212 |         let predictor = BindingPredictor::new();
+    |             ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_predictor`
+
+warning: unused variable: `x_arr`
+   --> src/time_series/lstm_forecaster.rs:362:13
+    |
+362 |         let x_arr = Array1::from(input_vec);
+    |             ^^^^^ help: if this is intentional, prefix it with an underscore: `_x_arr`
+
+warning: unused variable: `variance`
+   --> src/finance/portfolio_optimizer.rs:288:17
+    |
+288 |             let variance = self.compute_portfolio_variance(&weights, covariance);
+    |                 ^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_variance`
+
+warning: unused variable: `key`
+   --> src/api_server/advanced_info_theory.rs:140:13
+    |
+140 |         let key = (hash_sequence(&x_history), hash_sequence(&y_prev_history), y_current);
+    |             ^^^ help: if this is intentional, prefix it with an underscore: `_key`
+
+warning: unused variable: `y_recent`
+   --> src/api_server/advanced_info_theory.rs:345:9
+    |
+345 |     let y_recent = if y_history.is_empty() {
+    |         ^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_y_recent`
+
+warning: unused variable: `sharpe`
+  --> src/api_server/portfolio.rs:86:17
+   |
+86 |             let sharpe = (portfolio_return - self.risk_free_rate) / portfolio_risk;
+   |                 ^^^^^^ help: if this is intentional, prefix it with an underscore: `_sharpe`
+
+warning: type `GpuEmbeddings` is more private than the item `cma::transfer_entropy_gpu::GpuKSGEstimator::create_embeddings`
+   --> src/cma/transfer_entropy_gpu.rs:223:5
+    |
+223 |     pub fn create_embeddings(&self, source: &TimeSeries, target: &TimeSeries) -> Result<GpuEmbeddings> {
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ method `cma::transfer_entropy_gpu::GpuKSGEstimator::create_embeddings` is reachable at visibility `pub`
+    |
+note: but type `GpuEmbeddings` is only usable at visibility `pub(self)`
+   --> src/cma/transfer_entropy_gpu.rs:303:1
+    |
+303 | struct GpuEmbeddings {
+    | ^^^^^^^^^^^^^^^^^^^^
+    = note: `#[warn(private_interfaces)]` on by default
+
+warning: field `dimensions` is never read
+  --> src/information_theory/memory_efficient.rs:32:5
+   |
+26 | pub struct SparseHistogram {
+   |            --------------- field in this struct
+...
+32 |     dimensions: usize,
+   |     ^^^^^^^^^^
+   |
+   = note: `SparseHistogram` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+   = note: `#[warn(dead_code)]` on by default
+
+warning: field `dimensions` is never read
+   --> src/information_theory/memory_efficient.rs:264:5
+    |
+258 | pub struct CompressedHistogram {
+    |            ------------------- field in this struct
+...
+264 |     dimensions: usize,
+    |     ^^^^^^^^^^
+
+warning: field `config` is never read
+  --> src/information_theory/gpu_transfer_entropy.rs:17:5
+   |
+16 | pub struct GpuTransferEntropy {
+   |            ------------------ field in this struct
+17 |     config: TransferEntropy,
+   |     ^^^^^^
+
+warning: field `init_kernel` is never read
+  --> src/statistical_mechanics/gpu.rs:27:5
+   |
+23 | pub struct ThermodynamicGpu {
+   |            ---------------- field in this struct
+...
+27 |     init_kernel: Arc<CudaFunction>,
+   |     ^^^^^^^^^^^
+
+warning: fields `precision_weight_kernel`, `axpby_kernel`, `velocity_update_kernel`, and `hierarchical_project_kernel` are never read
+  --> src/active_inference/gpu.rs:31:5
+   |
+24 | pub struct ActiveInferenceGpu {
+   |            ------------------ fields in this struct
+...
+31 |     precision_weight_kernel: Arc<CudaFunction>,
+   |     ^^^^^^^^^^^^^^^^^^^^^^^
+...
+35 |     axpby_kernel: Arc<CudaFunction>,
+   |     ^^^^^^^^^^^^
+36 |     velocity_update_kernel: Arc<CudaFunction>,
+   |     ^^^^^^^^^^^^^^^^^^^^^^
+37 |     hierarchical_project_kernel: Arc<CudaFunction>,
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: field `rng_init_kernel` is never read
+   --> src/active_inference/gpu_policy_eval.rs:105:5
+    |
+ 96 | pub struct GpuPolicyEvaluator {
+    |            ------------------ field in this struct
+...
+105 |     rng_init_kernel: Arc<CudaFunction>,
+    |     ^^^^^^^^^^^^^^^
+    |
+    = note: `GpuPolicyEvaluator` has a derived impl for the trait `Debug`, but this is intentionally ignored during dead code analysis
+
+warning: field `config` is never read
+   --> src/active_inference/hierarchical_inference_gpu.rs:111:5
+    |
+107 | pub struct HierarchicalActiveInferenceGpu {
+    |            ------------------------------ field in this struct
+...
+111 |     config: HierarchicalConfig,
+    |     ^^^^^^
+
+warning: field `cuda_context` is never read
+   --> src/integration/unified_platform.rs:162:5
+    |
+160 | pub struct UnifiedPlatform {
+    |            --------------- field in this struct
+161 |     /// Shared CUDA context (GPU resources)
+162 |     cuda_context: Arc<CudaContext>,
+    |     ^^^^^^^^^^^^
+
+warning: field `num_qubits` is never read
+  --> src/integration/quantum_mlir_integration.rs:24:5
+   |
+18 | pub struct QuantumMlirIntegration {
+   |            ---------------------- field in this struct
+...
+24 |     num_qubits: usize,
+   |     ^^^^^^^^^^
+
+warning: method `calculate_coherence` is never used
+   --> src/integration/quantum_mlir_integration.rs:204:8
+    |
+ 37 | impl QuantumMlirIntegration {
+    | --------------------------- method in this implementation
+...
+204 |     fn calculate_coherence(&self, state: &QuantumState) -> f64 {
+    |        ^^^^^^^^^^^^^^^^^^^
+
+warning: fields `constraint_weights_gpu`, `gnn_weights_gpu`, and `hamiltonian_gpu` are never read
+  --> src/integration/multi_modal_reasoner.rs:49:5
+   |
+44 | pub struct MultiModalReasoner {
+   |            ------------------ fields in this struct
+...
+49 |     constraint_weights_gpu: Option<CudaSlice<f32>>,
+   |     ^^^^^^^^^^^^^^^^^^^^^^
+...
+52 |     gnn_weights_gpu: Option<Vec<CudaSlice<f32>>>,
+   |     ^^^^^^^^^^^^^^^
+...
+55 |     hamiltonian_gpu: Option<CudaSlice<f32>>,
+   |     ^^^^^^^^^^^^^^^
+
+warning: fields `buffer_size` and `num_buffers` are never read
+  --> src/optimization/memory_optimizer.rs:92:5
+   |
+86 | pub struct PinnedMemoryPool {
+   |            ---------------- fields in this struct
+...
+92 |     buffer_size: usize,
+   |     ^^^^^^^^^^^
+93 |     /// Total number of buffers
+94 |     num_buffers: usize,
+   |     ^^^^^^^^^^^
+
+warning: fields `optimization_level` and `target_arch` are never read
+  --> src/quantum_mlir/mod.rs:31:5
+   |
+27 | pub struct QuantumCompiler {
+   |            --------------- fields in this struct
+...
+31 |     optimization_level: OptimizationLevel,
+   |     ^^^^^^^^^^^^^^^^^^
+32 |     /// Target GPU architecture
+33 |     target_arch: GpuArchitecture,
+   |     ^^^^^^^^^^^
+
+warning: methods `build_mlir_module`, `optimize_module`, `lower_to_gpu`, and `generate_ptx` are never used
+   --> src/quantum_mlir/mod.rs:127:8
+    |
+ 66 | impl QuantumCompiler {
+    | -------------------- methods in this implementation
+...
+127 |     fn build_mlir_module(&self, operations: &[QuantumOp]) -> Result<mlir::Module> {
+    |        ^^^^^^^^^^^^^^^^^
+...
+156 |     fn optimize_module(&self, module: mlir::Module) -> Result<mlir::Module> {
+    |        ^^^^^^^^^^^^^^^
+...
+193 |     fn lower_to_gpu(&self, module: mlir::Module) -> Result<mlir::Module> {
+    |        ^^^^^^^^^^^^
+...
+200 |     fn generate_ptx(&self, module: mlir::Module) -> Result<String> {
+    |        ^^^^^^^^^^^^
+
+warning: field `high_precision` is never read
+   --> src/quantum_mlir/mod.rs:283:5
+    |
+279 | pub struct CompiledQuantumKernel {
+    |            --------------------- field in this struct
+...
+283 |     high_precision: bool,
+    |     ^^^^^^^^^^^^^^
+
+warning: methods `size`, `as_ptr`, and `as_mut_ptr` are never used
+   --> src/quantum_mlir/mod.rs:345:8
+    |
+344 | impl QuantumState {
+    | ----------------- methods in this implementation
+345 |     fn size(&self) -> usize {
+    |        ^^^^
+...
+349 |     fn as_ptr(&self) -> *const u8 {
+    |        ^^^^^^
+...
+353 |     fn as_mut_ptr(&mut self) -> *mut u8 {
+    |        ^^^^^^^^^^
+
+warning: field `namespace` is never read
+  --> src/quantum_mlir/dialect.rs:21:5
+   |
+19 | pub struct QuantumDialect {
+   |            -------------- field in this struct
+20 |     /// Dialect namespace
+21 |     namespace: &'static str,
+   |     ^^^^^^^^^
+
+warning: fields `name`, `qubit`, and `target` are never read
+  --> src/quantum_mlir/ops.rs:24:5
+   |
+23 | pub struct Operation {
+   |            --------- fields in this struct
+24 |     name: &'static str,
+   |     ^^^^
+25 |     qubit: usize,
+   |     ^^^^^
+26 |     target: Option<usize>,
+   |     ^^^^^^
+
+warning: field `target_arch` is never read
+   --> src/quantum_mlir/passes.rs:136:5
+    |
+135 | pub struct LowerQuantumToGpu {
+    |            ----------------- field in this struct
+136 |     target_arch: super::GpuArchitecture,
+    |     ^^^^^^^^^^^
+
+warning: field `cuda_context` is never read
+  --> src/gpu/gpu_enabled.rs:14:5
+   |
+13 | struct GpuState {
+   |        -------- field in this struct
+14 |     cuda_context: Arc<CudaContext>,
+   |     ^^^^^^^^^^^^
+
+warning: fields `in_features` and `out_features` are never read
+   --> src/gpu/gpu_enabled.rs:251:5
+    |
+248 | pub struct GpuLinear {
+    |            --------- fields in this struct
+...
+251 |     in_features: usize,
+    |     ^^^^^^^^^^^
+252 |     out_features: usize,
+    |     ^^^^^^^^^^^^
+
+warning: method `convert_f16_to_f32_gpu` is never used
+    --> src/gpu/kernel_executor.rs:3198:8
+     |
+1975 | impl GpuKernelExecutor {
+     | ---------------------- method in this implementation
+...
+3198 |     fn convert_f16_to_f32_gpu(&self, data: &[u16]) -> Result<Vec<f32>> {
+     |        ^^^^^^^^^^^^^^^^^^^^^^
+
+warning: fields `size_bytes` and `timestamp_ns` are never read
+   --> src/gpu/memory_pool.rs:154:5
+    |
+153 | struct AllocationRecord {
+    |        ---------------- fields in this struct
+154 |     size_bytes: usize,
+    |     ^^^^^^^^^^
+155 |     timestamp_ns: u64,
+    |     ^^^^^^^^^^^^
+    |
+    = note: `AllocationRecord` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: fields `allocated_at` and `last_used` are never read
+  --> src/gpu/active_memory_pool.rs:90:5
+   |
+87 | struct BufferMetadata {
+   |        -------------- fields in this struct
+...
+90 |     allocated_at: u64,
+   |     ^^^^^^^^^^^^
+91 |     last_used: u64,
+   |     ^^^^^^^^^
+   |
+   = note: `BufferMetadata` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: field `config` is never read
+  --> src/gpu/kernel_autotuner.rs:44:5
+   |
+43 | struct ConfigPerformance {
+   |        ----------------- field in this struct
+44 |     config: LaunchConfig,
+   |     ^^^^^^
+   |
+   = note: `ConfigPerformance` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: fields `device` and `max_simplices` are never read
+   --> src/phase6/tda.rs:113:5
+    |
+110 | pub struct TdaAdapter {
+    |            ---------- fields in this struct
+...
+113 |     device: Arc<()>,
+    |     ^^^^^^
+...
+117 |     max_simplices: usize,
+    |     ^^^^^^^^^^^^^
+
+warning: field `max_dimension` is never read
+   --> src/phase6/tda.rs:557:5
+    |
+554 | struct VietorisRipsComplex {
+    |        ------------------- field in this struct
+...
+557 |     max_dimension: usize,
+    |     ^^^^^^^^^^^^^
+
+warning: fields `spectral_radius`, `generative_model`, and `prediction_history` are never read
+   --> src/phase6/predictive_neuro.rs:87:5
+    |
+ 83 | pub struct PredictiveNeuromorphic {
+    |            ---------------------- fields in this struct
+...
+ 87 |     spectral_radius: f64,
+    |     ^^^^^^^^^^^^^^^
+...
+101 |     generative_model: GenerativeModel,
+    |     ^^^^^^^^^^^^^^^^
+...
+105 |     prediction_history: Vec<Array1<f64>>,
+    |     ^^^^^^^^^^^^^^^^^^
+
+warning: field `gnn` is never read
+   --> src/phase6/meta_learning.rs:126:5
+    |
+121 | pub struct MetaLearningCoordinator {
+    |            ----------------------- field in this struct
+...
+126 |     gnn: Arc<RwLock<E3EquivariantGNN>>,
+    |     ^^^
+
+warning: fields `active_inference` and `health_monitor` are never read
+  --> src/phase6/integration.rs:28:5
+   |
+23 | pub struct Phase6Integration {
+   |            ----------------- fields in this struct
+...
+28 |     active_inference: Arc<RwLock<HierarchicalModel>>,
+   |     ^^^^^^^^^^^^^^^^
+...
+37 |     health_monitor: Arc<RwLock<HealthMonitor>>,
+   |     ^^^^^^^^^^^^^^
+
+warning: field `free_energy` is never read
+   --> src/phase6/integration.rs:411:5
+    |
+409 | struct InferenceResult {
+    |        --------------- field in this struct
+410 |     state: Array1<f64>,
+411 |     free_energy: f64,
+    |     ^^^^^^^^^^^
+
+warning: field `energy` is never read
+   --> src/phase6/integration.rs:416:5
+    |
+414 | struct ThermoResult {
+    |        ------------ field in this struct
+415 |     state: Array1<f64>,
+416 |     energy: f64,
+    |     ^^^^^^
+
+warning: field `max_dimension` is never read
+  --> src/phase6/gpu_tda.rs:16:5
+   |
+13 | pub struct GpuTDA {
+   |            ------ field in this struct
+...
+16 |     max_dimension: usize,
+   |     ^^^^^^^^^^^^^
+
+warning: fields `transfer_entropy` and `active_inference` are never read
+  --> src/cma/mod.rs:56:5
+   |
+39 | pub struct CausalManifoldAnnealing {
+   |            ----------------------- fields in this struct
+...
+56 |     transfer_entropy: Arc<crate::information_theory::transfer_entropy::TransferEntropy>,
+   |     ^^^^^^^^^^^^^^^^
+57 |     active_inference: Arc<crate::active_inference::ActiveInferenceController>,
+   |     ^^^^^^^^^^^^^^^^
+
+warning: multiple methods are never used
+   --> src/cma/causal_discovery.rs:121:8
+    |
+ 28 | impl CausalManifoldDiscovery {
+    | ---------------------------- methods in this implementation
+...
+121 |     fn ksg_transfer_entropy(&self, source: &[f64], target: &[f64]) -> (f64, f64) {
+    |        ^^^^^^^^^^^^^^^^^^^^
+...
+285 |     fn compute_distance(
+    |        ^^^^^^^^^^^^^^^^
+...
+304 |     fn count_neighbors_marginal(
+    |        ^^^^^^^^^^^^^^^^^^^^^^^^
+...
+328 |     fn count_neighbors_joint(
+    |        ^^^^^^^^^^^^^^^^^^^^^
+...
+353 |     fn count_neighbors_marginal_past(
+    |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+...
+376 |     fn digamma(&self, x: f64) -> f64 {
+    |        ^^^^^^^
+...
+385 |     fn bootstrap_p_value(&self, source: &[f64], target: &[f64], observed_te: f64) -> f64 {
+    |        ^^^^^^^^^^^^^^^^^
+
+warning: field `dimension` is never read
+   --> src/cma/quantum_annealer.rs:479:5
+    |
+477 | struct QuantumState {
+    |        ------------ field in this struct
+478 |     amplitudes: Vec<Complex64>,
+479 |     dimension: usize,
+    |     ^^^^^^^^^
+
+warning: field `manifold_penalty` is never read
+   --> src/cma/quantum_annealer.rs:486:5
+    |
+483 | struct QuantumHamiltonian {
+    |        ------------------ field in this struct
+...
+486 |     manifold_penalty: f64,
+    |     ^^^^^^^^^^^^^^^^
+
+warning: field `device` is never read
+  --> src/cma/neural/mod.rs:75:5
+   |
+73 | pub struct GeometricManifoldLearner {
+   |            ------------------------ field in this struct
+74 |     gnn: E3EquivariantGNN,
+75 |     device: Device,
+   |     ^^^^^^
+
+warning: field `solution_dim` is never read
+   --> src/cma/neural/mod.rs:155:5
+    |
+153 | pub struct DiffusionRefinement {
+    |            ------------------- field in this struct
+154 |     diffusion: ConsistencyDiffusion,
+155 |     solution_dim: usize,
+    |     ^^^^^^^^^^^^
+
+warning: field `solution_dim` is never read
+   --> src/cma/neural/mod.rs:206:5
+    |
+204 | pub struct NeuralQuantumState {
+    |            ------------------ field in this struct
+205 |     vmc: VariationalMonteCarlo,
+206 |     solution_dim: usize,
+    |     ^^^^^^^^^^^^
+
+warning: fields `device`, `embed_dim`, and `num_heads` are never read
+   --> src/cma/neural/mod.rs:254:5
+    |
+253 | pub struct MetaOptimizationTransformer {
+    |            --------------------------- fields in this struct
+254 |     device: Device,
+    |     ^^^^^^
+255 |     embed_dim: usize,
+    |     ^^^^^^^^^
+256 |     num_heads: usize,
+    |     ^^^^^^^^^
+
+warning: fields `device`, `node_dim`, `edge_dim`, `hidden_dim`, and `num_layers` are never read
+  --> src/cma/neural/gnn_integration.rs:14:5
+   |
+13 | pub struct E3EquivariantGNN {
+   |            ---------------- fields in this struct
+14 |     device: Device,
+   |     ^^^^^^
+15 |     node_dim: usize,
+   |     ^^^^^^^^
+16 |     edge_dim: usize,
+   |     ^^^^^^^^
+17 |     hidden_dim: usize,
+   |     ^^^^^^^^^^
+18 |     num_layers: usize,
+   |     ^^^^^^^^^^
+
+warning: fields `solution_dim`, `hidden_dim`, `num_steps`, and `device` are never read
+  --> src/cma/neural/diffusion.rs:13:5
+   |
+12 | pub struct ConsistencyDiffusion {
+   |            -------------------- fields in this struct
+13 |     solution_dim: usize,
+   |     ^^^^^^^^^^^^
+14 |     hidden_dim: usize,
+   |     ^^^^^^^^^^
+15 |     num_steps: usize,
+   |     ^^^^^^^^^
+16 |     device: Device,
+   |     ^^^^^^
+
+warning: field `normalized_shape` is never read
+   --> src/cma/neural/neural_quantum.rs:138:5
+    |
+137 | pub struct LayerNorm {
+    |            --------- field in this struct
+138 |     normalized_shape: usize,
+    |     ^^^^^^^^^^^^^^^^
+
+warning: fields `device`, `hidden_dim`, and `num_layers` are never read
+   --> src/cma/neural/neural_quantum.rs:161:5
+    |
+159 | pub struct NeuralQuantumState {
+    |            ------------------ fields in this struct
+160 |     network: ResNet,
+161 |     device: Device,
+    |     ^^^^^^
+162 |     hidden_dim: usize,
+    |     ^^^^^^^^^^
+163 |     num_layers: usize,
+    |     ^^^^^^^^^^
+
+warning: fields `input_dim`, `hidden_dim`, `num_layers`, and `device` are never read
+   --> src/cma/neural/neural_quantum.rs:370:5
+    |
+369 | pub struct ResNet {
+    |            ------ fields in this struct
+370 |     input_dim: usize,
+    |     ^^^^^^^^^
+371 |     hidden_dim: usize,
+    |     ^^^^^^^^^^
+372 |     num_layers: usize,
+    |     ^^^^^^^^^^
+373 |     device: Device,
+    |     ^^^^^^
+
+warning: fields `hidden_dim` and `device` are never read
+   --> src/cma/neural/neural_quantum.rs:438:5
+    |
+437 | struct ResidualLayer {
+    |        ------------- fields in this struct
+438 |     hidden_dim: usize,
+    |     ^^^^^^^^^^
+439 |     device: Device,
+    |     ^^^^^^
+
+warning: field `num_iterations` is never read
+   --> src/cma/neural/neural_quantum.rs:484:5
+    |
+481 | pub struct VariationalMonteCarlo {
+    |            --------------------- field in this struct
+...
+484 |     num_iterations: usize,
+    |     ^^^^^^^^^^^^^^
+
+warning: fields `optimizer` and `device` are never read
+   --> src/cma/neural/gnn_training.rs:665:5
+    |
+663 | pub struct GNNTrainer {
+    |            ---------- fields in this struct
+664 |     model: E3EquivariantGNN,
+665 |     optimizer: Optimizer,
+    |     ^^^^^^^^^
+...
+669 |     device: Device,
+    |     ^^^^^^
+
+warning: field `device` is never read
+   --> src/cma/neural/gnn_training.rs:922:5
+    |
+920 | pub struct GpuBatchGNNTrainer {
+    |            ------------------ field in this struct
+921 |     trainers: Vec<GNNTrainer>,
+922 |     device: Device,
+    |     ^^^^^^
+
+warning: fields `teacher` and `device` are never read
+   --> src/cma/neural/gnn_transfer_learning.rs:686:5
+    |
+685 | pub struct KnowledgeDistiller {
+    |            ------------------ fields in this struct
+686 |     teacher: E3EquivariantGNN,
+    |     ^^^^^^^
+687 |     config: DistillationConfig,
+688 |     device: Device,
+    |     ^^^^^^
+
+warning: method `distillation_loss` is never used
+   --> src/cma/neural/gnn_transfer_learning.rs:730:8
+    |
+691 | impl KnowledgeDistiller {
+    | ----------------------- method in this implementation
+...
+730 |     fn distillation_loss(
+    |        ^^^^^^^^^^^^^^^^^
+
+warning: field `augmenter` is never read
+   --> src/cma/neural/gnn_training_pipeline.rs:614:5
+    |
+612 | pub struct GNNTrainingPipeline {
+    |            ------------------- field in this struct
+613 |     preprocessor: DataPreprocessor,
+614 |     augmenter: Option<DataAugmenter>,
+    |     ^^^^^^^^^
+
+warning: methods `estimate_kl_divergence`, `non_conformity_score`, and `verify_proof_internal` are never used
+   --> src/cma/guarantees/mod.rs:198:8
+    |
+ 36 | impl PrecisionFramework {
+    | ----------------------- methods in this implementation
+...
+198 |     fn estimate_kl_divergence(&self, solution: &super::Solution, ensemble: &super::Ensemble) -> f64 {
+    |        ^^^^^^^^^^^^^^^^^^^^^^
+...
+244 |     fn non_conformity_score(&self, solution: &super::Solution, calibration: &CalibrationPoint) -> f64 {
+    |        ^^^^^^^^^^^^^^^^^^^^
+...
+270 |     fn verify_proof_internal(&self, _commitment: &str, _proof: &str) -> bool {
+    |        ^^^^^^^^^^^^^^^^^^^^^
+
+warning: fields `empirical_risk`, `kl_divergence`, and `sample_size` are never read
+   --> src/cma/guarantees/mod.rs:290:5
+    |
+289 | struct PacBayesBound {
+    |        ------------- fields in this struct
+290 |     empirical_risk: f64,
+    |     ^^^^^^^^^^^^^^
+291 |     kl_divergence: f64,
+    |     ^^^^^^^^^^^^^
+292 |     error_bound: f64,
+293 |     sample_size: usize,
+    |     ^^^^^^^^^^^
+    |
+    = note: `PacBayesBound` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: field `recent_scores` is never read
+   --> src/cma/guarantees/conformal.rs:340:5
+    |
+337 | pub struct AdaptiveConformalPredictor {
+    |            -------------------------- field in this struct
+...
+340 |     recent_scores: std::collections::VecDeque<f64>,
+    |     ^^^^^^^^^^^^^
+
+warning: field `binding_affinity_cutoff` is never read
+   --> src/cma/applications/mod.rs:104:5
+    |
+102 | pub struct BiomolecularAdapter {
+    |            ------------------- field in this struct
+103 |     rmsd_threshold: f64,
+104 |     binding_affinity_cutoff: f64,
+    |     ^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: field `synthesis_confidence_min` is never read
+   --> src/cma/applications/mod.rs:254:5
+    |
+252 | pub struct MaterialsAdapter {
+    |            ---------------- field in this struct
+253 |     property_r2_threshold: f64,
+254 |     synthesis_confidence_min: f64,
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: field `solver_pool` is never read
+  --> src/cma/gpu_integration.rs:46:5
+   |
+44 | pub struct GpuTspBridge {
+   |            ------------ field in this struct
+45 |     /// Pre-allocated solvers for batch processing
+46 |     solver_pool: Vec<Arc<parking_lot::Mutex<GpuTspSolver>>>,
+   |     ^^^^^^^^^^^
+
+warning: fields `namespace` and `control_frequency` are never read
+  --> src/applications/robotics/ros_bridge.rs:91:5
+   |
+89 | pub struct RosInterface {
+   |            ------------ fields in this struct
+90 |     /// Robot namespace
+91 |     namespace: String,
+   |     ^^^^^^^^^
+92 |     /// Control frequency (Hz)
+93 |     control_frequency: f64,
+   |     ^^^^^^^^^^^^^^^^^
+
+warning: field `config` is never read
+  --> src/applications/scientific/mod.rs:40:5
+   |
+39 | pub struct ScientificDiscovery {
+   |            ------------------- field in this struct
+40 |     config: ScientificConfig,
+   |     ^^^^^^
+
+warning: field `n_candidates` is never read
+  --> src/applications/scientific/experiment_design.rs:30:5
+   |
+28 | pub struct ExperimentDesigner {
+   |            ------------------ field in this struct
+29 |     /// Number of candidate experiments to evaluate
+30 |     n_candidates: usize,
+   |     ^^^^^^^^^^^^
+
+warning: field `config` is never read
+  --> src/applications/scientific/parameter_optimization.rs:27:5
+   |
+26 | pub struct ParameterOptimizer {
+   |            ------------------ field in this struct
+27 |     config: OptimizationConfig,
+   |     ^^^^^^
+
+warning: field `confidence_level` is never read
+  --> src/applications/scientific/hypothesis_testing.rs:25:5
+   |
+24 | pub struct HypothesisTester {
+   |            ---------------- field in this struct
+25 |     confidence_level: f64,
+   |     ^^^^^^^^^^^^^^^^
+
+warning: fields `last_hidden_states` and `last_cell_states` are never read
+  --> src/time_series/lstm_forecaster.rs:81:5
+   |
+70 | pub struct LstmForecaster {
+   |            -------------- fields in this struct
+...
+81 |     last_hidden_states: Option<Vec<Array1<f64>>>,
+   |     ^^^^^^^^^^^^^^^^^^
+82 |     last_cell_states: Option<Vec<Array1<f64>>>,
+   |     ^^^^^^^^^^^^^^^^
+
+warning: field `gpu_available` is never read
+  --> src/time_series/kalman_filter.rs:72:5
+   |
+56 | pub struct KalmanFilter {
+   |            ------------ field in this struct
+...
+72 |     gpu_available: bool,
+   |     ^^^^^^^^^^^^^
+
+warning: fields `ar_coefficients` and `state_buffer` are never read
+   --> src/time_series/kalman_filter.rs:389:5
+    |
+385 | pub struct ArimaKalmanFusion {
+    |            ----------------- fields in this struct
+...
+389 |     ar_coefficients: Vec<f64>,
+    |     ^^^^^^^^^^^^^^^
+390 |     /// State buffer for AR(p) model
+391 |     state_buffer: Vec<f64>,
+    |     ^^^^^^^^^^^^
+
+warning: field `workspace` is never read
+  --> src/time_series/optimizations.rs:30:5
+   |
+22 | pub struct OptimizedGruCell {
+   |            ---------------- field in this struct
+...
+30 |     workspace: Vec<f64>,
+   |     ^^^^^^^^^
+
+warning: fields `ar_coefficients`, `ma_coefficients`, `constant`, and `config` are never read
+   --> src/time_series/optimizations.rs:136:5
+    |
+135 | struct CachedArimaModel {
+    |        ---------------- fields in this struct
+136 |     ar_coefficients: Vec<f64>,
+    |     ^^^^^^^^^^^^^^^
+137 |     ma_coefficients: Vec<f64>,
+    |     ^^^^^^^^^^^^^^^
+138 |     constant: f64,
+    |     ^^^^^^^^
+139 |     config: ArimaConfig,
+    |     ^^^^^^
+    |
+    = note: `CachedArimaModel` has a derived impl for the trait `Clone`, but this is intentionally ignored during dead code analysis
+
+warning: field `num_threads` is never read
+   --> src/time_series/optimizations.rs:254:5
+    |
+250 | pub struct BatchForecaster {
+    |            --------------- field in this struct
+...
+254 |     num_threads: usize,
+    |     ^^^^^^^^^^^
+
+warning: field `gpu_available` is never read
+  --> src/time_series/arima_gpu_optimized.rs:34:5
+   |
+20 | pub struct ArimaGpuOptimized {
+   |            ----------------- field in this struct
+...
+34 |     gpu_available: bool,
+   |     ^^^^^^^^^^^^^
+
+warning: field `gpu_available` is never read
+  --> src/time_series/lstm_gpu_optimized.rs:31:5
+   |
+22 | pub struct LstmGpuOptimized {
+   |            ---------------- field in this struct
+...
+31 |     gpu_available: bool,
+   |     ^^^^^^^^^^^^^
+
+warning: field `num_gates` is never read
+  --> src/time_series/lstm_gpu_optimized.rs:45:5
+   |
+35 | struct GpuWeightSet {
+   |        ------------ field in this struct
+...
+45 |     num_gates: usize,
+   |     ^^^^^^^^^
+
+warning: field `gpu_available` is never read
+  --> src/time_series/uncertainty_gpu_optimized.rs:23:5
+   |
+17 | pub struct UncertaintyGpuOptimized {
+   |            ----------------------- field in this struct
+...
+23 |     gpu_available: bool,
+   |     ^^^^^^^^^^^^^
+
+warning: field `gpu_pool` is never read
+   --> src/finance/portfolio_optimizer.rs:103:5
+    |
+101 | pub struct PortfolioOptimizer {
+    |            ------------------ field in this struct
+102 |     /// GPU memory pool for covariance computation
+103 |     gpu_pool: GpuMemoryPool,
+    |     ^^^^^^^^
+
+warning: method `remove_last` is never used
+   --> src/api_server/rate_limit.rs:358:8
+    |
+325 | impl SlidingWindow {
+    | ------------------ method in this implementation
+...
+358 |     fn remove_last(&mut self) {
+    |        ^^^^^^^^^^^
+
+warning: calls to `std::mem::drop` with a reference instead of an owned value does nothing
+   --> src/cma/conformal_prediction.rs:326:13
+    |
+326 |             drop(weights);  // Explicitly drop mutable borrow
+    |             ^^^^^-------^
+    |                  |
+    |                  argument has type `&mut Vec<f64>`
+    |
+    = note: `#[warn(dropping_references)]` on by default
+help: use `let _ = ...` to ignore the expression or result
+    |
+326 -             drop(weights);  // Explicitly drop mutable borrow
+326 +             let _ = weights;  // Explicitly drop mutable borrow
+    |
+
+warning: variable `X_flat` should have a snake case name
+   --> src/time_series/arima_gpu_optimized.rs:102:17
+    |
+102 |         let mut X_flat: Vec<f32> = Vec::with_capacity(num_samples * p);
+    |                 ^^^^^^ help: convert the identifier to snake case (notice the capitalization): `x_flat`
+    |
+    = note: `#[warn(non_snake_case)]` on by default
+
+warning: variable `X_transpose` should have a snake case name
+   --> src/time_series/arima_gpu_optimized.rs:115:17
+    |
+115 |         let mut X_transpose: Vec<f32> = vec![0.0; p * num_samples];
+    |                 ^^^^^^^^^^^ help: convert the identifier to snake case (notice the capitalization): `x_transpose`
+
+warning: variable `XtX` should have a snake case name
+   --> src/time_series/arima_gpu_optimized.rs:125:13
+    |
+125 |         let XtX = executor.tensor_core_matmul_wmma(
+    |             ^^^ help: convert the identifier to snake case: `xt_x`
+
+warning: variable `Xty` should have a snake case name
+   --> src/time_series/arima_gpu_optimized.rs:136:13
+    |
+136 |         let Xty = executor.tensor_core_matmul_wmma(
+    |             ^^^ help: convert the identifier to snake case (notice the capitalization): `xty`
+
+warning: variable `A` should have a snake case name
+   --> src/time_series/arima_gpu_optimized.rs:169:39
+    |
+169 |     fn solve_linear_system_cpu(&self, A: &[f32], b: &[f32], n: usize) -> Result<Vec<f32>> {
+    |                                       ^ help: convert the identifier to snake case: `a`
+
+warning: variable `A_copy` should have a snake case name
+   --> src/time_series/arima_gpu_optimized.rs:170:17
+    |
+170 |         let mut A_copy = A.to_vec();
+    |                 ^^^^^^ help: convert the identifier to snake case: `a_copy`
+
+warning: `prism-ai` (lib test) generated 234 warnings (run `cargo fix --lib -p prism-ai --tests` to apply 3 suggestions)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.11s
+     Running unittests src/lib.rs (target/debug/deps/prism_ai-79f31b75c16a6472)
+
+running 562 tests
+test active_inference::gpu_policy_eval::tests::test_dimensions ... ok
+test active_inference::generative_model::tests::test_prediction_rmse ... ok
+test active_inference::controller::tests::test_system_achieves_goals ... ok
+test active_inference::generative_model::tests::test_state_estimation ... ok
+test active_inference::generative_model::tests::test_generative_model_creation ... ok
+test active_inference::generative_model::tests::test_learning_detection ... ok
+test active_inference::generative_model::tests::test_goal_setting ... ok
+test active_inference::generative_model::tests::test_performance_metrics ... ok
+test active_inference::hierarchical_model::tests::test_atmospheric_fried_parameter ... ok
+test active_inference::hierarchical_model::tests::test_gaussian_belief_entropy ... ok
+test active_inference::hierarchical_model::tests::test_gaussian_kl_divergence ... ok
+test active_inference::hierarchical_model::tests::test_generalized_coordinates_prediction ... ok
+test active_inference::hierarchical_model::tests::test_kolmogorov_spectrum ... ok
+test active_inference::hierarchical_model::tests::test_satellite_orbital_period ... ok
+test active_inference::hierarchical_model::tests::test_window_phase_level_creation ... ok
+test active_inference::observation_model::tests::test_log_likelihood_perfect_match ... ok
+test active_inference::observation_model::tests::test_measurement_pattern_adaptive ... ok
+test active_inference::observation_model::tests::test_measurement_pattern_uniform ... ok
+test active_inference::observation_model::tests::test_observation_prediction ... ok
+test active_inference::observation_model::tests::test_observation_variance_includes_noise ... ok
+test active_inference::observation_model::tests::test_photon_count_scaling ... ok
+test active_inference::observation_model::tests::test_surprise_increases_with_error ... ok
+test active_inference::generative_model::tests::test_online_parameter_learning ... ok
+test active_inference::gpu_policy_eval::tests::test_gpu_policy_evaluator_creation ... FAILED
+test active_inference::gpu::tests::test_active_inference_gpu_creation ... FAILED
+test active_inference::gpu::tests::test_belief_update_gpu ... ok
+test active_inference::gpu_inference::tests::test_gpu_observation_prediction ... ok
+test active_inference::gpu_inference::tests::test_gpu_jacobian_transpose ... ok
+test active_inference::controller::tests::test_phase_correction_magnitude ... ok
+test active_inference::controller::tests::test_adaptive_sensing_selects_uncertain_regions ... ok
+test active_inference::generative_model::tests::test_single_step_inference ... ok
+test active_inference::hierarchical_inference_gpu::tests::test_hierarchical_inference_creation ... ok
+test active_inference::hierarchical_inference_gpu::tests::test_precision_weighted_error_cpu ... ok
+test active_inference::hierarchical_inference_gpu::tests::test_projection ... ok
+test active_inference::hierarchical_inference_gpu::tests::test_bottom_up_pass ... ok
+test active_inference::hierarchical_inference_gpu::tests::test_top_down_pass ... ok
+test active_inference::hierarchical_inference_gpu::tests::test_free_energy_computation ... ok
+test active_inference::policy_search_gpu::tests::test_adaptive_measurement ... ok
+test active_inference::policy_search_gpu::tests::test_uniform_measurement ... ok
+test active_inference::policy_selection::tests::test_adaptive_measurement_prioritizes_uncertainty ... ok
+test active_inference::policy_search_gpu::tests::test_policy_search_creation ... ok
+test active_inference::policy_search_gpu::tests::test_policy_generation ... ok
+test active_inference::hierarchical_inference_gpu::tests::test_full_step ... ok
+test active_inference::policy_search_gpu::tests::test_policy_variations ... ok
+test active_inference::policy_selection::tests::test_phase_correction_opposes_aberration ... ok
+test active_inference::policy_selection::tests::test_sensing_strategies ... ok
+test active_inference::policy_selection::tests::test_policy_generation ... ok
+test active_inference::hierarchical_inference_gpu::tests::test_free_energy_decreases ... ok
+test active_inference::recognition_model::tests::test_converges_within_100_iterations ... ok
+test active_inference::transition_model::tests::test_projection_atmosphere_to_windows ... ok
+test active_inference::transition_model::tests::test_satellite_evolution_conserves_energy ... ok
+test active_inference::transition_model::tests::test_transition_model_creation ... ok
+test active_inference::transition_model::tests::test_control_action_reduces_phase ... ok
+test active_inference::variational_inference::tests::test_complexity_is_nonnegative ... ok
+test active_inference::variational_inference::tests::test_free_energy_decreases_with_inference ... ok
+test active_inference::variational_inference::tests::test_free_energy_is_finite ... ok
+test active_inference::recognition_model::tests::test_posterior_matches_true_state ... ok
+test active_inference::variational_inference::tests::test_inference_convergence ... ok
+test active_inference::variational_inference::tests::test_perfect_observation_has_low_surprise ... ok
+test active_inference::variational_inference::tests::test_projection_and_inversion_are_approximate_inverses ... ok
+test active_inference::recognition_model::tests::test_free_energy_monotonically_decreases ... ok
+test api_server::advanced_info_theory::tests::test_directed_information ... ok
+test api_server::advanced_info_theory::tests::test_adaptive_kde ... FAILED
+test api_server::advanced_info_theory::tests::test_information_bottleneck ... ok
+test api_server::advanced_info_theory::tests::test_renyi_entropy ... ok
+test api_server::advanced_info_theory::tests::test_log_sum_exp ... ok
+test api_server::advanced_kalman::tests::test_cholesky_decomposition ... ok
+test api_server::advanced_kalman::tests::test_ukf_sigma_points ... FAILED
+test api_server::auth::tests::test_role_permissions ... ok
+test api_server::dual_api::tests::test_get_api_capabilities ... ok
+test api_server::dual_api::tests::test_get_usage_examples ... ok
+test api_server::dual_api::tests::test_graphql_schema_creation ... ok
+test api_server::advanced_kalman::tests::test_square_root_filter_stability ... ok
+test api_server::graphql_schema::tests::test_gpu_status_query ... ok
+test api_server::graphql_schema::tests::test_forecast_mutation ... ok
+test api_server::graphql_schema::tests::test_health_query ... ok
+test api_server::info_theory::tests::test_channel_capacity ... ok
+test api_server::info_theory::tests::test_estimate_sensor_metrics ... ok
+test api_server::info_theory::tests::test_kl_divergence ... ok
+test api_server::info_theory::tests::test_shannon_entropy ... ok
+test api_server::kalman::tests::test_kalman_predict ... ok
+test api_server::kalman::tests::test_kalman_update ... ok
+test api_server::kalman::tests::test_multi_sensor_fusion ... ok
+test api_server::middleware::tests::test_rate_limiter ... ok
+test api_server::performance::tests::test_bottleneck_identification ... ok
+test api_server::performance::tests::test_percentile ... FAILED
+test api_server::performance::tests::test_performance_optimizer ... ok
+test api_server::performance::tests::test_recommendations ... ok
+test api_server::portfolio::tests::test_equal_weight_portfolio ... ok
+test api_server::portfolio::tests::test_sharpe_optimization ... ok
+test api_server::portfolio::tests::test_var_calculation ... ok
+test api_server::rate_limit::tests::test_backoff_escalation ... ok
+test api_server::rate_limit::tests::test_per_client_isolation ... ok
+test api_server::rate_limit::tests::test_token_bucket_burst ... ok
+test api_server::portfolio::tests::test_efficient_frontier ... ok
+test api_server::routes::applications::tests::test_energy_load_forecast ... ok
+test api_server::routes::applications::tests::test_healthcare_risk_prediction ... ok
+test api_server::routes::finance_advanced::tests::test_advanced_portfolio_optimization ... ok
+test api_server::routes::finance_advanced::tests::test_gnn_portfolio_prediction ... ok
+test api_server::routes::gpu_monitoring::tests::test_benchmark_types_serialization ... ok
+test api_server::routes::gpu_monitoring::tests::test_check_cuda_available ... ok
+test api_server::routes::pixels::tests::test_pixel_processing_request ... ok
+test api_server::routes::pwsa::tests::test_sensor_input_serialization ... ok
+test api_server::routes::worker7_apps::tests::test_molecular_screening ... ok
+test api_server::routes::worker7_apps::tests::test_motion_planning ... ok
+test api_server::tests::test_default_config ... ok
+test api_server::tests::test_health_check ... ok
+test api_server::websocket::tests::test_ws_event_serialization ... ok
+test applications::drug_discovery::molecular::tests::test_amino_acid_properties ... ok
+test applications::drug_discovery::molecular::tests::test_atom_properties ... ok
+test applications::drug_discovery::molecular::tests::test_molecule_creation ... ok
+test active_inference::transition_model::tests::test_atmospheric_evolution_stationarity ... ok
+test applications::drug_discovery::optimization::tests::test_binding_affinity_estimation ... ok
+test applications::drug_discovery::optimization::tests::test_optimizer_creation ... ok
+test applications::drug_discovery::prediction::tests::test_affinity_to_ic50_conversion ... FAILED
+test applications::drug_discovery::prediction::tests::test_binding_prediction ... ok
+test applications::drug_discovery::prediction::tests::test_drug_likeness_score ... ok
+test applications::drug_discovery::optimization::tests::test_molecule_to_observations ... ok
+test applications::drug_discovery::prediction::tests::test_lipinski_rule_of_five ... ok
+test applications::drug_discovery::prediction::tests::test_predictor_creation ... ok
+test applications::drug_discovery::tests::test_config_defaults ... ok
+test applications::drug_discovery::tests::test_controller_creation ... ok
+test applications::information_metrics::tests::test_digamma_function ... ok
+test applications::information_metrics::tests::test_information_gain_non_negative ... ok
+test applications::information_metrics::tests::test_molecular_similarity ... ok
+test applications::information_metrics::tests::test_differential_entropy ... ok
+test applications::information_metrics_optimized::tests::test_kl_divergence_optimized ... ok
+test applications::information_metrics_optimized::tests::test_optimized_differential_entropy ... ok
+test applications::information_metrics::tests::test_mutual_information_bounds ... ok
+test applications::information_metrics_optimized::tests::test_optimized_mutual_information ... ok
+test applications::robotics::environment_model::tests::test_add_obstacle ... ok
+test applications::robotics::environment_model::tests::test_collision_detection ... ok
+test applications::robotics::environment_model::tests::test_environment_model_creation ... ok
+test applications::robotics::environment_model::tests::test_obstacle_prediction ... ok
+test applications::robotics::environment_model::tests::test_static_obstacle_prediction ... ok
+test applications::robotics::motion_planning::tests::test_check_goal_reached ... ok
+test applications::robotics::motion_planning::tests::test_curved_policy_avoids_obstacles ... ok
+test active_inference::recognition_model::tests::test_recognition_with_noisy_observations ... ok
+test applications::information_metrics_optimized::tests::test_optimized_vs_baseline_consistency ... ok
+test applications::robotics::motion_planning::tests::test_motion_plan_path_length ... ok
+test applications::robotics::motion_planning::tests::test_full_planning_integration ... ok
+test applications::robotics::motion_planning::tests::test_motion_planner_creation ... ok
+test applications::robotics::motion_planning::tests::test_obstacle_repulsion_increases_with_proximity ... ok
+test active_inference::variational_inference::tests::test_parameter_learning_updates_jacobian ... ok
+test applications::robotics::ros_bridge::tests::test_laser_scan_to_obstacles ... ok
+test applications::robotics::ros_bridge::tests::test_robot_command_stop ... ok
+test applications::robotics::motion_planning::tests::test_straight_line_policy ... FAILED
+test applications::robotics::motion_planning::tests::test_policy_to_trajectory_conversion ... ok
+test applications::robotics::ros_bridge::tests::test_robot_state_creation ... ok
+test applications::robotics::ros_bridge::tests::test_ros_interface_creation ... ok
+test applications::robotics::trajectory::tests::test_trajectory_creation ... ok
+test applications::robotics::trajectory::tests::test_trajectory_interpolation ... ok
+test applications::robotics::trajectory::tests::test_trajectory_predictor ... ok
+test applications::robotics::trajectory::tests::test_uncertainty_growth ... ok
+test applications::robotics::tests::test_robotics_config_default ... ok
+test applications::robotics::trajectory_forecasting::tests::test_config_defaults ... ok
+test applications::robotics::trajectory_forecasting::tests::test_environment_dynamics_forecast ... FAILED
+test applications::robotics::trajectory_forecasting::tests::test_forecaster_creation ... ok
+test applications::robotics::trajectory_forecasting::tests::test_multi_agent_forecast ... ok
+test applications::robotics::trajectory_forecasting::tests::test_obstacle_trajectory_forecast ... FAILED
+test applications::scientific::tests::test_scientific_discovery_creation ... ok
+test applications::tests::test_responsibilities_defined ... ok
+test applications::robotics::motion_planning::tests::test_uncertainty_weighted_repulsion ... ok
+test applications::tests::test_worker_identity ... ok
+test cma::applications::tests::test_biomolecular_adapter ... ok
+test applications::robotics::tests::test_robotics_controller_creation ... ok
+test applications::scientific::tests::test_scientific_config_default ... ok
+test cma::applications::tests::test_hft_adapter ... ok
+test cma::applications::tests::test_materials_adapter ... ok
+test cma::conformal_prediction::tests::test_conformal_calibration ... FAILED
+test cma::conformal_prediction::tests::test_prediction_interval ... FAILED
+test cma::ensemble_generator::tests::test_ensemble_generator ... ok
+test cma::gpu_integration::tests::test_gpu_bridge_creation ... ok
+test cma::gpu_integration::tests::test_gpu_properties ... ok
+test cma::gpu_integration::tests::test_solve_with_seed_deterministic ... FAILED
+test cma::guarantees::conformal::tests::test_calibration ... ok
+test cma::guarantees::conformal::tests::test_conformal_predictor_creation ... ok
+test cma::guarantees::conformal::tests::test_prediction_interval ... ok
+test cma::guarantees::conformal::tests::test_quantile_computation ... ok
+test cma::guarantees::pac_bayes::tests::test_kl_divergence ... ok
+test cma::guarantees::pac_bayes::tests::test_mcallester_bound ... ok
+test cma::guarantees::pac_bayes::tests::test_pac_bayes_creation ... ok
+test cma::guarantees::pac_bayes::tests::test_posterior_update ... ok
+test cma::guarantees::tests::test_approximation_ratio ... ok
+test cma::guarantees::tests::test_precision_framework ... ok
+test cma::guarantees::tests::test_zero_knowledge_proof ... ok
+test cma::guarantees::zkp::tests::test_commitment ... ok
+test cma::guarantees::zkp::tests::test_computation_proof ... ok
+test cma::guarantees::zkp::tests::test_manifold_proof ... ok
+test cma::guarantees::zkp::tests::test_proof_bundle ... ok
+test cma::guarantees::zkp::tests::test_quality_proof ... ok
+test cma::guarantees::zkp::tests::test_zkp_system_creation ... ok
+test cma::neural::diffusion::tests::test_diffusion_creation ... ok
+test cma::neural::gnn_integration::tests::test_gnn_creation ... ok
+test cma::neural::gnn_training::tests::test_batch_sampling ... ok
+test cma::neural::gnn_training::tests::test_combined_loss ... ok
+test cma::neural::gnn_training::tests::test_contrastive_loss ... ok
+test cma::neural::gnn_training::tests::test_gpu_batch_trainer_creation ... ok
+test cma::neural::gnn_training::tests::test_graph_similarity ... ok
+test cma::neural::gnn_training::tests::test_lr_schedule_constant ... ok
+test cma::neural::gnn_training::tests::test_lr_schedule_cosine_annealing ... ok
+test cma::neural::gnn_training::tests::test_lr_schedule_step_decay ... ok
+test cma::neural::gnn_training::tests::test_supervised_loss ... ok
+test cma::neural::gnn_training::tests::test_train_val_split ... ok
+test cma::neural::gnn_training::tests::test_trainer_creation ... ok
+test cma::neural::gnn_training::tests::test_training_config_default ... ok
+test cma::neural::gnn_training::tests::test_training_metrics ... ok
+test cma::neural::gnn_training::tests::test_unsupervised_loss ... ok
+test cma::neural::gnn_training_pipeline::tests::test_augmentation_config_default ... ok
+test cma::neural::gnn_training_pipeline::tests::test_checkpoint ... ok
+test cma::neural::gnn_training_pipeline::tests::test_checkpoint_config_default ... ok
+test cma::neural::gnn_training_pipeline::tests::test_data_augmenter ... ok
+test cma::neural::gnn_training_pipeline::tests::test_data_preprocessor ... ok
+test cma::neural::gnn_training_pipeline::tests::test_dataset_creation ... ok
+test cma::neural::gnn_training_pipeline::tests::test_dataset_splitter ... ok
+test cma::neural::gnn_training_pipeline::tests::test_dataset_subset ... ok
+test cma::neural::gnn_training_pipeline::tests::test_preprocessing_config_default ... ok
+test cma::neural::gnn_training_pipeline::tests::test_split_config_validation ... ok
+test cma::neural::gnn_transfer_learning::tests::test_adaptation_strategy_recommendation ... ok
+test cma::neural::gnn_transfer_learning::tests::test_barabasi_albert_generation ... ok
+test cma::neural::gnn_transfer_learning::tests::test_distillation_config_default ... ok
+test cma::neural::gnn_transfer_learning::tests::test_distillation_metrics ... ok
+test cma::neural::gnn_transfer_learning::tests::test_domain_config_creation ... ok
+test cma::neural::gnn_transfer_learning::tests::test_domain_similarity ... ok
+test cma::neural::gnn_transfer_learning::tests::test_fine_tuning_config_default ... ok
+test cma::neural::gnn_transfer_learning::tests::test_knowledge_distiller_creation ... ok
+test cma::neural::gnn_transfer_learning::tests::test_synthetic_graph_config ... ok
+test cma::neural::gnn_transfer_learning::tests::test_synthetic_graph_generation ... ok
+test cma::neural::gnn_transfer_learning::tests::test_transfer_learner_creation ... ok
+test cma::neural::gnn_transfer_learning::tests::test_watts_strogatz_generation ... ok
+test cma::neural::neural_quantum::tests::test_neural_quantum_state_creation ... ok
+test cma::neural::neural_quantum::tests::test_resnet_creation ... ok
+test cma::neural::neural_quantum::tests::test_resnet_forward ... ok
+test active_inference::transition_model::tests::test_window_evolution_with_damping ... ok
+test cma::neural::tests::test_diffusion_refinement ... ok
+test cma::neural::tests::test_geometric_learner ... ok
+test cma::neural::tests::test_meta_transformer ... ok
+test cma::neural::neural_quantum::tests::test_vmc_creation ... ok
+test cma::pac_bayes::tests::test_bound_tightness ... ok
+test cma::pac_bayes::tests::test_pac_bayes_computation ... ok
+test cma::quantum::path_integral::tests::test_annealing_schedule ... ok
+test cma::quantum::path_integral::tests::test_end_to_end_distance ... ok
+test cma::quantum::path_integral::tests::test_kinetic_action ... ok
+test cma::quantum::path_integral::tests::test_path_initialization ... ok
+test cma::quantum::path_integral::tests::test_pimc_creation ... ok
+test api_server::rate_limit::tests::test_token_refill ... ok
+test cma::quantum::path_integral::tests::test_simple_optimization ... ok
+test cma::neural::tests::test_neural_quantum_state ... ok
+test active_inference::policy_selection::tests::test_efe_is_finite ... ok
+test active_inference::policy_selection::tests::test_information_gain_is_nonnegative ... ok
+test cma::causal_discovery::tests::test_dimension_estimation ... ok
+test active_inference::policy_search_gpu::tests::test_forward_simulation ... ok
+test cma::causal_discovery::tests::test_causal_discovery_creation ... ok
+test active_inference::policy_search_gpu::tests::test_efe_computation ... FAILED
+test cma::tests::test_cma_creation ... ok
+test cma::transfer_entropy_ksg::tests::test_digamma_approximation ... ok
+test cma::transfer_entropy_ksg::tests::test_embedding_dimension_validation ... ok
+test cma::transfer_entropy_ksg::tests::test_ksg_estimator_creation ... ok
+test cma::transfer_entropy_ksg::tests::test_mismatched_length_validation ... ok
+test active_inference::policy_selection::tests::test_efe_components ... ok
+test active_inference::transition_model::tests::test_multi_step_prediction ... ok
+test cma::transfer_entropy_ksg::tests::test_time_series_creation ... ok
+test cma::causal_discovery::tests::test_metric_tensor_positive_definite ... ok
+test cma::quantum::pimc_gpu::tests::test_gpu_pimc_optimization ... ok
+test cma::transfer_entropy_gpu::tests::test_gpu_ksg_creation ... ok
+test cma::quantum::pimc_gpu::tests::test_gpu_pimc_creation ... ok
+test cma::quantum_annealer::tests::test_quantum_annealer_creation ... ok
+test cma::quantum_annealer::tests::test_basis_to_solution ... ok
+test gpu::active_memory_pool::tests::test_memory_savings_estimate ... FAILED
+test gpu::active_memory_pool::tests::test_pool_allocation_reuse ... FAILED
+test gpu::active_memory_pool::tests::test_pool_eviction ... FAILED
+test gpu::active_memory_pool::tests::test_pool_hit_rate ... FAILED
+test gpu::active_memory_pool::tests::test_size_to_class ... ok
+test cma::quantum_annealer::tests::test_spectral_gap_estimation ... ok
+test active_inference::policy_selection::tests::test_control_action_generation ... ok
+test gpu::kernel_autotuner::tests::test_autotuner_creation ... ok
+test gpu::kernel_autotuner::tests::test_autotuner_get_config ... ok
+test gpu::kernel_autotuner::tests::test_autotuner_needs_tuning ... ok
+test gpu::kernel_autotuner::tests::test_autotuner_record_execution ... ok
+test gpu::kernel_autotuner::tests::test_kernel_id_bucketing ... ok
+test gpu::kernel_autotuner::tests::test_launch_config ... ok
+test gpu::kernel_autotuner::tests::test_launch_config_for_size ... ok
+test active_inference::policy_selection::tests::test_policy_selection ... ok
+test gpu::kernel_executor::tests::test_matrix_multiply ... ok
+test gpu::memory_pool::tests::test_fragmentation_estimate ... ok
+test gpu::memory_pool::tests::test_memory_pool_creation ... ok
+test gpu::memory_pool::tests::test_memory_pool_tracking ... ok
+test gpu::memory_pool::tests::test_memory_tracking ... ok
+test gpu::memory_pool::tests::test_reuse_potential ... ok
+test information_theory::adaptive_embedding::tests::test_adaptive_embedding_creation ... ok
+test information_theory::adaptive_embedding::tests::test_autocorrelation_delay ... ok
+test information_theory::adaptive_embedding::tests::test_average_mutual_information ... ok
+test information_theory::adaptive_embedding::tests::test_caos_method ... ok
+test information_theory::adaptive_embedding::tests::test_discretization ... ok
+test information_theory::adaptive_embedding::tests::test_find_optimal_delay_sine ... ok
+test information_theory::adaptive_embedding::tests::test_find_optimal_embedding ... ok
+test information_theory::adaptive_embedding::tests::test_short_series ... FAILED
+test information_theory::advanced_transfer_entropy::tests::test_kozachenko_leonenko ... ok
+test information_theory::advanced_transfer_entropy::tests::test_renyi_transfer_entropy ... ok
+test information_theory::advanced_transfer_entropy::tests::test_symbolic_transfer_entropy ... ok
+test information_theory::bootstrap_ci::tests::test_bca_bootstrap ... ok
+test information_theory::bootstrap_ci::tests::test_block_bootstrap ... ok
+test information_theory::bootstrap_ci::tests::test_bootstrap_percentile ... ok
+test information_theory::bootstrap_ci::tests::test_inverse_normal_cdf ... FAILED
+test information_theory::bootstrap_ci::tests::test_normal_cdf ... ok
+test information_theory::conditional_te::tests::test_conditional_te_creation ... ok
+test active_inference::generative_model::tests::test_multi_step_run ... ok
+test cma::transfer_entropy_ksg::tests::test_te_computation_independent_series ... ok
+test information_theory::conditional_te::tests::test_partial_correlation ... ok
+test information_theory::gpu_entropy::tests::test_entropy_calculator_consistency ... ok
+test information_theory::gpu_entropy::tests::test_kl_divergence_different ... ok
+test information_theory::gpu_entropy::tests::test_kl_divergence_identical ... ok
+test information_theory::gpu_entropy::tests::test_kl_divergence_normalization ... ok
+test information_theory::gpu_entropy::tests::test_shannon_entropy_deterministic ... ok
+test information_theory::gpu_entropy::tests::test_shannon_entropy_raw_data ... ok
+test information_theory::gpu_entropy::tests::test_shannon_entropy_uniform ... FAILED
+test information_theory::gpu_transfer_entropy::tests::test_gpu_availability ... FAILED
+test information_theory::gpu_transfer_entropy::tests::test_gpu_fallback ... ok
+test cma::transfer_entropy_ksg::tests::test_te_computation_coupled_series ... ok
+test cma::transfer_entropy_gpu::tests::test_gpu_te_computation ... ok
+test finance::portfolio_forecaster::tests::test_portfolio_forecaster_creation ... ok
+test information_theory::incremental_te::tests::test_exponential_decay ... ok
+test information_theory::incremental_te::tests::test_incremental_te_calculation ... ok
+test information_theory::incremental_te::tests::test_incremental_te_initialization ... ok
+test information_theory::incremental_te::tests::test_incremental_updates ... ok
+test information_theory::incremental_te::tests::test_reset ... ok
+test information_theory::kdtree::tests::test_empty_tree ... ok
+test information_theory::kdtree::tests::test_high_dimensional ... ok
+test information_theory::kdtree::tests::test_kdtree_construction ... ok
+test information_theory::kdtree::tests::test_knn_search ... ok
+test information_theory::kdtree::tests::test_linf_distance ... ok
+test information_theory::kdtree::tests::test_range_search ... ok
+test information_theory::kdtree::tests::test_single_point ... ok
+test information_theory::ksg_estimator::tests::test_digamma_function ... ok
+test information_theory::ksg_estimator::tests::test_false_nearest_neighbors ... ok
+test finance::portfolio_optimizer::tests::test_covariance_matrix_computation ... ok
+test information_theory::ksg_estimator::tests::test_ksg_estimator_creation ... ok
+
+thread 'information_theory::gpu_transfer_entropy::tests::test_gpu_te_batch' has overflowed its stack
+fatal runtime error: stack overflow, aborting
+error: test failed, to rerun pass `--lib`
+
+Caused by:
+  process didn't exit successfully: `/home/diddy/Desktop/PRISM-AI-DoD/03-Source-Code/target/debug/deps/prism_ai-79f31b75c16a6472` (signal: 6, SIGABRT: process abort signal)

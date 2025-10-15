@@ -19,7 +19,7 @@ use std::collections::HashMap;
 use std::time::{SystemTime, Duration};
 use super::gnn_integration::E3EquivariantGNN;
 use super::neural_quantum::Device;
-use crate::cma::{CausalManifold, CausalEdge, Ensemble, Solution};
+use crate::cma::{CausalManifold, CausalEdge, Ensemble};
 
 /// Training configuration for GNN training loops.
 ///
@@ -972,13 +972,15 @@ impl GpuBatchGNNTrainer {
 mod tests {
     use super::*;
     use ndarray::Array2;
+    use crate::cma::Solution;
 
     fn create_test_ensemble(n: usize) -> Ensemble {
-        let solutions = (0..n).map(|i| Solution {
-            data: vec![i as f64, (i * 2) as f64],
-            cost: i as f64 * 0.1,
-        }).collect();
-        Ensemble { solutions }
+        Ensemble {
+            solutions: (0..n).map(|i| Solution {
+                data: vec![i as f64, (i * 2) as f64],
+                cost: i as f64 * 0.1,
+            }).collect()
+        }
     }
 
     fn create_test_manifold(n: usize) -> CausalManifold {

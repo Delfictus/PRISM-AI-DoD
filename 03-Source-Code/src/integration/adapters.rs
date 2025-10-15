@@ -11,7 +11,7 @@ use anyhow::Result;
 use cudarc::driver::CudaContext;
 
 use neuromorphic_engine::GpuReservoirComputer;
-use crate::statistical_mechanics::{ThermodynamicNetwork, ThermodynamicState};
+use crate::statistical_mechanics::ThermodynamicState;
 use super::ports::{NeuromorphicPort, InformationFlowPort, ThermodynamicPort, QuantumPort, ActiveInferencePort};
 use super::quantum_mlir_integration::{QuantumMlirIntegration, QuantumGate};
 

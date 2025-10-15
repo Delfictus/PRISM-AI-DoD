@@ -9,10 +9,8 @@
 //! - Adaptive for non-stationary data (Article IV)
 
 use std::collections::BTreeSet;
-use ndarray::{arr1, Array1, Array2, Axis};
+use ndarray::Array1;
 use anyhow::{Result, anyhow};
-use rand::seq::SliceRandom;
-use rand::thread_rng;
 
 /// Conformal prediction configuration
 #[derive(Clone, Debug)]
@@ -574,6 +572,7 @@ impl MondrianConformalPredictor {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use ndarray::arr1;
 
     struct SimpleModel {
         noise: f64,

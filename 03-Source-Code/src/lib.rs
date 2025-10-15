@@ -34,7 +34,7 @@ pub mod optimization;
 pub mod pwsa;
 
 // Mission Charlie: Thermodynamic LLM Intelligence Fusion
-#[cfg(feature = "mission_charlie")]
+// NOTE: Local LLM module always available even without mission_charlie feature
 pub mod orchestration;
 
 // Unified PRISM-AI Platform Integration
@@ -65,6 +65,21 @@ pub mod phase6;
 // CMA: Causal Manifold Annealing (includes GNN)
 pub mod cma;
 
+// Worker 7: Domain-Specific Applications (Robotics, Scientific Discovery, Drug Discovery)
+pub mod applications;
+
+// Worker 7: Chemistry - RDKit Integration (Rust-only, no C++)
+pub mod chemistry;
+
+// Worker 1: Time Series Forecasting (ARIMA, LSTM, Uncertainty Quantification)
+pub mod time_series;
+
+// Worker 3: Finance - Portfolio Optimization
+pub mod finance;
+
+// Worker 8: API Server
+pub mod api_server;
+
 // Re-export key components
 pub use mathematics::{
     MathematicalStatement, ProofResult, Assumption,
@@ -73,6 +88,16 @@ pub use mathematics::{
 pub use information_theory::{
     TransferEntropy, TransferEntropyResult, CausalDirection,
     detect_causal_direction,
+    // Phase 1 enhancements
+    KdTree, Neighbor, KsgEstimator, ConditionalTe,
+    BootstrapResampler, BootstrapCi, BootstrapMethod,
+    TransferEntropyGpu,
+    // Phase 2 enhancements
+    IncrementalTe, SparseHistogram, CountMinSketch, CompressedKey, CompressedHistogram,
+    AdaptiveEmbedding, EmbeddingParams, SymbolicTe,
+    // Phase 3 enhancements
+    PartialInfoDecomp, PidResult, PidMethod,
+    MultipleTestingCorrection, CorrectedPValues, CorrectionMethod,
 };
 
 pub use statistical_mechanics::{
@@ -109,6 +134,19 @@ pub use phase6::{
     MetaLearningCoordinator, ModulatedHamiltonian,
     Phase6Integration, AdaptiveSolver, AdaptiveSolution,
 };
+
+// Worker 7 Applications exports
+pub use applications::{
+    // Robotics
+    RoboticsController, RoboticsConfig, MotionPlanner, MotionPlan,
+    // Scientific Discovery
+    ScientificDiscovery, ScientificConfig,
+    // Drug Discovery
+    DrugDiscoveryController, DrugDiscoveryConfig,
+};
+
+// PRISM Assistant - Fully Offline Autonomous AI
+pub mod assistant;
 
 /// Platform version information
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");

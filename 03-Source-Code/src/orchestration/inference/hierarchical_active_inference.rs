@@ -7,7 +7,8 @@
 use crate::orchestration::OrchestrationError;
 use nalgebra::{DMatrix, DVector};
 use std::collections::{HashMap, VecDeque};
-use rand::distributions::{Distribution, Normal};
+use rand::distributions::Distribution;
+use rand_distr::Normal;
 
 /// Hierarchical Active Inference system with multiple levels
 pub struct HierarchicalActiveInference {

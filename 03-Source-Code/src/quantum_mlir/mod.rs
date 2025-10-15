@@ -19,10 +19,9 @@ pub mod runtime;
 pub mod cuda_kernels;
 pub mod gpu_memory;
 
-use anyhow::{Result, Context};
+use anyhow::Result;
 use std::sync::Arc;
 use self::runtime::QuantumGpuRuntime;
-use self::gpu_memory::GpuMemoryManager;
 
 /// The Quantum MLIR compiler pipeline - NOW WITH REAL GPU EXECUTION!
 pub struct QuantumCompiler {

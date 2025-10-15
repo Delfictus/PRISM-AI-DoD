@@ -1,0 +1,100 @@
+# Role-Based Access Control for API Server
+
+# Role for API server operations
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: prism-api-role
+  namespace: prism-ai
+rules:
+# Read ConfigMaps and Secrets
+- apiGroups: [""]
+  resources: ["configmaps", "secrets"]
+  verbs: ["get", "list", "watch"]
+
+# Read Services
+- apiGroups: [""]
+  resources: ["services"]
+  verbs: ["get", "list"]
+
+# Read Pods (for health monitoring)
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list"]
+
+---
+# RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: prism-api-rolebinding
+  namespace: prism-ai
+subjects:
+- kind: ServiceAccount
+  name: prism-api-sa
+  namespace: prism-ai
+roleRef:
+  kind: Role
+  name: prism-api-role
+  apiGroup: rbac.authorization.k8s.io
+
+---
+# NetworkPolicy for security
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: prism-api-netpol
+  namespace: prism-ai
+spec:
+  podSelector:
+    matchLabels:
+      app: prism-api-server
+  policyTypes:
+  - Ingress
+  - Egress
+
+  ingress:
+  # Allow from ingress controller
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: ingress-nginx
+    ports:
+    - protocol: TCP
+      port: 8080
+
+  # Allow from same namespace
+  - from:
+    - podSelector: {}
+    ports:
+    - protocol: TCP
+      port: 8080
+
+  egress:
+  # Allow DNS
+  - to:
+    - namespaceSelector: {}
+      podSelector:
+        matchLabels:
+          k8s-app: kube-dns
+    ports:
+    - protocol: UDP
+      port: 53
+
+  # Allow Redis
+  - to:
+    - podSelector:
+        matchLabels:
+          app: redis
+    ports:
+    - protocol: TCP
+      port: 6379
+
+  # Allow external HTTPS (for LLM APIs)
+  - to:
+    - namespaceSelector: {}
+    ports:
+    - protocol: TCP
+      port: 443
+    - protocol: TCP
+      port: 80

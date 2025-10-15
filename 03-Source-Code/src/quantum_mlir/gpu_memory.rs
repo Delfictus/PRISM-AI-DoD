@@ -3,7 +3,6 @@
 //! Handles GPU memory allocation and data transfer using cudarc
 
 use cudarc::driver::{CudaContext, CudaSlice, DevicePtr};
-use cudarc::driver::result::DriverError;
 use std::sync::Arc;
 use anyhow::Result;
 

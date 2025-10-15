@@ -6,6 +6,7 @@ authors = ["Prism-AI Research Team"]
 description = "PRISM: Predictive Reasoning via Information-theoristic Statistical Manifolds - GPU-accelerated neuromorphic and quantum computing analogues"
 license = "MIT"
 build = "build.rs"
+autobins = false  # Disable autodiscovery - explicitly list binaries below
 
 [workspace]
 members = [
@@ -48,6 +49,7 @@ tokio = { version = "1.0", features = ["full"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 anyhow = "1.0"
+thiserror = "1.0"
 rayon = "1.10"
 ndarray = { version = "0.15", default-features = false, features = ["std"] }
 approx = "0.5"
@@ -88,6 +90,18 @@ async-trait = "0.1"  # Async trait support
 futures = "0.3"  # Async utilities
 zstd = "0.13"  # Kolmogorov complexity estimation
 toml = "0.8"  # Configuration file support
+half = "2.4"  # F16 support for GGUF quantization
+
+# Worker 7: Chemistry - RDKit Integration (Rust-only, no C++)
+# rdkit-sys = "0.4.12"  # DISABLED: Requires RDKit system libraries (sudo apt-get install librdkit-dev)
+# TODO: Enable after installing RDKit system libraries
+
+# Worker 8: API Server dependencies
+axum = { version = "0.7", features = ["ws"] }  # Web framework with WebSocket support
+tower = "0.4"  # Service middleware
+tower-http = { version = "0.5", features = ["trace", "cors"] }  # HTTP middleware
+async-graphql = "7.0"  # GraphQL server
+async-graphql-axum = "7.0"  # GraphQL integration for Axum
 
 [[example]]
 name = "platform_demo"
@@ -205,17 +219,23 @@ path = "src/bin/prism.rs"
 name = "test_llm"
 path = "src/bin/test_llm.rs"
 
-[[bin]]
-name = "test_gpu"
-path = "src/bin/test_gpu.rs"
+# TEMPORARILY DISABLED: File missing (test_gpu.rs doesn't exist)
+# [[bin]]
+# name = "test_gpu"
+# path = "src/bin/test_gpu.rs"
 
-[[bin]]
-name = "benchmark_pwsa_gpu"
-path = "src/bin/benchmark_pwsa_gpu.rs"
+# TEMPORARILY DISABLED: Requires mission_charlie feature for orchestration module
+# [[bin]]
+# name = "benchmark_pwsa_gpu"
+# path = "src/bin/benchmark_pwsa_gpu.rs"
 
 [[bin]]
 name = "test_gpu_real"
 path = "src/bin/test_gpu_real.rs"
+
+[[bin]]
+name = "api_server"
+path = "src/bin/api_server.rs"
 
 [[test]]
 name = "transfer_entropy"
@@ -233,6 +253,10 @@ harness = false
 name = "pwsa_benchmarks"
 harness = false
 required-features = ["pwsa"]
+
+[[bench]]
+name = "worker7_performance"
+harness = false
 
 # ═══════════════════════════════════════════════════════════════════════════
 # CUDA 13 SUPPORT

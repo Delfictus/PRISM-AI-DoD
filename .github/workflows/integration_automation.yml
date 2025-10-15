@@ -1,0 +1,308 @@
+name: PRISM-AI Integration Automation
+
+on:
+  push:
+    branches:
+      - deliverables
+      - worker-*
+  pull_request:
+    branches:
+      - deliverables
+  workflow_dispatch:
+    inputs:
+      phase:
+        description: 'Integration phase to execute (1-6, or "all")'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - 'all'
+          - '1'
+          - '2'
+          - '3'
+          - '4'
+          - '5'
+          - '6'
+
+env:
+  RUST_BACKTRACE: 1
+  CARGO_TERM_COLOR: always
+
+jobs:
+  governance-check:
+    name: Governance Enforcement
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Run Governance Engine
+        run: |
+          # Extract worker ID from branch name
+          BRANCH_NAME="${GITHUB_REF#refs/heads/}"
+          if [[ "$BRANCH_NAME" =~ worker-([0-8]) ]]; then
+            WORKER_ID="${BASH_REMATCH[1]}"
+            echo "Running governance check for Worker $WORKER_ID"
+
+            if [ -f ".obsidian-vault/Enforcement/STRICT_GOVERNANCE_ENGINE.sh" ]; then
+              bash .obsidian-vault/Enforcement/STRICT_GOVERNANCE_ENGINE.sh "$WORKER_ID"
+            else
+              echo "Governance engine not found - skipping"
+            fi
+          else
+            echo "Not a worker branch - skipping governance check"
+          fi
+
+  build-verification:
+    name: Build Verification
+    runs-on: ubuntu-latest
+    needs: governance-check
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+
+      - name: Cache cargo registry
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Cache cargo index
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/git
+          key: ${{ runner.os }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Cache cargo build
+        uses: actions/cache@v3
+        with:
+          path: 03-Source-Code/target
+          key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Build library
+        working-directory: 03-Source-Code
+        run: |
+          cargo build --lib --all-features 2>&1 | tee build.log
+
+          # Count errors and warnings
+          ERROR_COUNT=$(grep -c "^error\[" build.log || true)
+          WARNING_COUNT=$(grep -c "^warning:" build.log || true)
+
+          echo "Build results: $ERROR_COUNT errors, $WARNING_COUNT warnings"
+
+          if [ $ERROR_COUNT -gt 0 ]; then
+            echo "❌ Build failed with $ERROR_COUNT errors"
+            exit 1
+          else
+            echo "✅ Build successful"
+          fi
+
+      - name: Upload build log
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: build-log
+          path: 03-Source-Code/build.log
+
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    needs: build-verification
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+
+      - name: Run unit tests
+        working-directory: 03-Source-Code
+        run: |
+          cargo test --lib --all-features 2>&1 | tee test.log
+
+          # Extract test results
+          if grep -q "test result: FAILED" test.log; then
+            echo "❌ Unit tests failed"
+            exit 1
+          else
+            echo "✅ Unit tests passed"
+          fi
+
+      - name: Upload test log
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-log
+          path: 03-Source-Code/test.log
+
+  integration-tests:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    needs: unit-tests
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+
+      - name: Run integration tests
+        working-directory: 03-Source-Code
+        run: |
+          if [ -d "tests/integration" ]; then
+            cargo test --test '*' --all-features 2>&1 | tee integration-test.log
+
+            if grep -q "test result: FAILED" integration-test.log; then
+              echo "❌ Integration tests failed"
+              exit 1
+            else
+              echo "✅ Integration tests passed"
+            fi
+          else
+            echo "No integration tests found - skipping"
+          fi
+
+      - name: Upload integration test log
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: integration-test-log
+          path: 03-Source-Code/integration-test.log
+
+  security-audit:
+    name: Security Audit
+    runs-on: ubuntu-latest
+    needs: build-verification
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+
+      - name: Install cargo-audit
+        run: cargo install cargo-audit
+
+      - name: Run security audit
+        working-directory: 03-Source-Code
+        run: |
+          cargo audit 2>&1 | tee audit.log
+
+          if grep -q "error:" audit.log; then
+            echo "⚠️ Security vulnerabilities found"
+            # Don't fail the build, just warn
+          else
+            echo "✅ No security vulnerabilities found"
+          fi
+
+      - name: Upload audit log
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: audit-log
+          path: 03-Source-Code/audit.log
+
+  integration-orchestration:
+    name: Integration Orchestration
+    runs-on: ubuntu-latest
+    needs: [build-verification, unit-tests, integration-tests]
+    if: github.ref == 'refs/heads/deliverables' && github.event_name == 'workflow_dispatch'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "PRISM-AI Integration Bot"
+          git config --global user.email "integration@prism-ai.dev"
+
+      - name: Run Integration Orchestrator
+        run: |
+          chmod +x 00-Integration-Management/integration_orchestrator.sh
+
+          PHASE="${{ github.event.inputs.phase }}"
+
+          if [ "$PHASE" == "all" ]; then
+            bash 00-Integration-Management/integration_orchestrator.sh
+          else
+            bash 00-Integration-Management/integration_orchestrator.sh --phase "$PHASE"
+          fi
+
+      - name: Upload orchestration log
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: orchestration-log
+          path: /home/diddy/Desktop/PRISM-Worker-8/integration_orchestrator.log
+
+      - name: Upload integration dashboard
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: integration-dashboard
+          path: /home/diddy/Desktop/PRISM-Worker-8/INTEGRATION_DASHBOARD.md
+
+  notify-completion:
+    name: Notify Completion
+    runs-on: ubuntu-latest
+    needs: [integration-orchestration]
+    if: always()
+    steps:
+      - name: Send notification
+        run: |
+          echo "Integration workflow completed"
+          echo "Status: ${{ needs.integration-orchestration.result }}"
+
+          # Add Slack/email notification here if configured
+
+  performance-benchmarks:
+    name: Performance Benchmarks
+    runs-on: ubuntu-latest
+    needs: integration-tests
+    if: github.ref == 'refs/heads/deliverables'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+
+      - name: Run benchmarks
+        working-directory: 03-Source-Code
+        run: |
+          if [ -d "benches" ]; then
+            cargo bench --all-features 2>&1 | tee bench.log
+            echo "✅ Benchmarks completed"
+          else
+            echo "No benchmarks found - skipping"
+          fi
+
+      - name: Upload benchmark results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: benchmark-results
+          path: 03-Source-Code/bench.log

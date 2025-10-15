@@ -9,7 +9,7 @@ use parking_lot::Mutex;
 
 use super::gpu_memory::GpuMemoryManager;
 use super::cuda_kernels::{QuantumGpuKernels, CudaComplex};
-use super::{Complex64, QuantumOp, Hamiltonian, QuantumState};
+use super::{QuantumOp, Hamiltonian, QuantumState};
 #[cfg(feature = "cuda")]
 use cudarc::driver::CudaSlice;
 

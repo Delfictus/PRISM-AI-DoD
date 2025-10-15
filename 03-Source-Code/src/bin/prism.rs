@@ -1,9 +1,9 @@
 use std::io::{self, Write};
 use prism_ai::{
     information_theory::{TransferEntropy, detect_causal_direction},
-    active_inference::{GenerativeModel, HierarchicalModel},
+    active_inference::GenerativeModel,
     statistical_mechanics::{ThermodynamicNetwork, NetworkConfig},
-    phase6::{AdaptiveSolver},
+    phase6::AdaptiveSolver,
 };
 use ndarray::{Array1, Array2};
 
@@ -61,7 +61,7 @@ fn run_transfer_entropy(cmd: &str) {
     println!("\n🧮 Computing Transfer Entropy for {} samples...", n);
 
     let source = Array1::linspace(0.0, 10.0, n);
-    let target = source.mapv(|x| (x * 1.5).sin() + x.cos() * 0.5);
+    let target = source.mapv(|x: f64| (x * 1.5).sin() + x.cos() * 0.5);
 
     let te = TransferEntropy::default();
     let result = te.calculate(&source, &target);
@@ -81,23 +81,23 @@ fn run_causal_analysis(cmd: &str) {
     // Create causally related signals
     let x = Array1::linspace(0.0, 20.0, n);
     let noise = Array1::from_vec(vec![0.1; n]);
-    let y = x.mapv(|v| v.sin()) + noise; // Y depends on X
+    let y = x.mapv(|v: f64| v.sin()) + noise; // Y depends on X
 
-    let direction = detect_causal_direction(&x, &y, 10);
+    let (direction, te_xy, te_yx) = detect_causal_direction(&x, &y, 10);
 
     println!("✅ Causal Analysis Complete:");
     match direction {
-        prism_ai::information_theory::CausalDirection::XCausesY(strength) => {
+        prism_ai::information_theory::CausalDirection::XtoY => {
             println!("   Direction: X → Y");
-            println!("   Strength: {:.4}", strength);
+            println!("   Strength: {:.4}", te_xy);
         }
-        prism_ai::information_theory::CausalDirection::YCausesX(strength) => {
+        prism_ai::information_theory::CausalDirection::YtoX => {
             println!("   Direction: Y → X");
-            println!("   Strength: {:.4}", strength);
+            println!("   Strength: {:.4}", te_yx);
         }
-        prism_ai::information_theory::CausalDirection::Bidirectional(xy, yx) => {
+        prism_ai::information_theory::CausalDirection::Bidirectional => {
             println!("   Direction: Bidirectional");
-            println!("   X→Y: {:.4}, Y→X: {:.4}", xy, yx);
+            println!("   X→Y: {:.4}, Y→X: {:.4}", te_xy, te_yx);
         }
         prism_ai::information_theory::CausalDirection::Independent => {
             println!("   Direction: Independent (no causation detected)");
@@ -138,10 +138,12 @@ fn run_inference(_cmd: &str) {
     let model = GenerativeModel::new();
     let observations = Array1::linspace(0.0, 1.0, 100);
 
-    let free_energy = model.compute_free_energy(&observations);
+    let free_energy = model.free_energy(&observations);
 
     println!("✅ Active Inference Complete:");
-    println!("   Free Energy: {:.6}", free_energy);
+    println!("   Free Energy: {:.6}", free_energy.total);
+    println!("   Complexity: {:.6}", free_energy.complexity);
+    println!("   Accuracy: {:.6}", free_energy.accuracy);
     println!("   Model complexity: Hierarchical (3 levels)");
 }
 
@@ -195,9 +197,11 @@ fn show_status() {
     // Check GPU
     #[cfg(feature = "cuda")]
     {
-        use prism_ai::gpu_ffi;
-        let gpu_available = gpu_ffi::is_gpu_available();
-        println!("  GPU Acceleration: {}", if gpu_available { "✅ Available" } else { "❌ Not Available" });
+        println!("  GPU Acceleration: ✅ Enabled (CUDA feature)");
+    }
+    #[cfg(not(feature = "cuda"))]
+    {
+        println!("  GPU Acceleration: ❌ Not Available");
     }
         // Check PTX files
     let ptx_files = [

@@ -15,14 +15,12 @@
 //! All pipeline operations optimized for batch GPU execution
 
 use anyhow::{Result, bail};
-use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::fs;
 use super::gnn_integration::E3EquivariantGNN;
 use super::gnn_training::{GNNTrainer, TrainingConfig, LossFunction, TrainingMetrics};
-use super::gnn_transfer_learning::{GNNTransferLearner, DomainConfig, AdaptationStrategy, FineTuningConfig};
 use super::neural_quantum::Device;
-use crate::cma::{CausalManifold, CausalEdge, Ensemble, Solution};
+use crate::cma::{CausalManifold, CausalEdge, Ensemble};
 
 /// Data preprocessing configuration
 #[derive(Debug, Clone)]
@@ -736,6 +734,7 @@ impl GNNTrainingPipeline {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::cma::Solution;
 
     fn create_test_dataset(n: usize) -> GNNDataset {
         let ensembles: Vec<_> = (0..n).map(|i| Ensemble {
