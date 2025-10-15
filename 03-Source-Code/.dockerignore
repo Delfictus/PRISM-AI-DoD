@@ -1,0 +1,50 @@
+# Ignore build artifacts
+target/
+*.so
+*.dylib
+*.dll
+
+# Ignore git files
+.git/
+.gitignore
+.github/
+
+# Ignore IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Ignore documentation (not needed in container)
+docs/
+*.md
+!README.md
+
+# Ignore test files
+tests/
+test_*.sh
+*_test.rs
+
+# Ignore development files
+.env
+.env.local
+*.log
+
+# Ignore CI/CD files
+.gitlab-ci.yml
+.travis.yml
+azure-pipelines.yml
+
+# Ignore cache
+.cargo/
+*.rlib
+
+# Ignore examples (optional)
+examples/
+benches/
+
+# Ignore temporary files
+tmp/
+temp/
+*.tmp

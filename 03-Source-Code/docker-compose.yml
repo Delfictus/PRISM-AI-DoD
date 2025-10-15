@@ -1,0 +1,135 @@
+version: '3.8'
+
+services:
+  # PRISM-AI API Server
+  api-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: prism-ai/api-server:latest
+    container_name: prism-api-server
+    ports:
+      - "8080:8080"
+    environment:
+      - RUST_LOG=${RUST_LOG:-info}
+      - API_HOST=0.0.0.0
+      - API_PORT=8080
+      - DATABASE_URL=${DATABASE_URL:-postgresql://postgres:password@postgres:5432/prism}
+      - REDIS_URL=${REDIS_URL:-redis://redis:6379}
+    volumes:
+      - api-data:/app/data
+      - api-logs:/app/logs
+    networks:
+      - prism-network
+    depends_on:
+      - postgres
+      - redis
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: prism-postgres
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-password}
+      - POSTGRES_DB=${POSTGRES_DB:-prism}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - prism-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: prism-redis
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+    networks:
+      - prism-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # Nginx Reverse Proxy (optional)
+  nginx:
+    image: nginx:alpine
+    container_name: prism-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    networks:
+      - prism-network
+    depends_on:
+      - api-server
+    restart: unless-stopped
+
+  # Prometheus Monitoring (optional)
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prism-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    networks:
+      - prism-network
+    restart: unless-stopped
+
+  # Grafana Dashboards (optional)
+  grafana:
+    image: grafana/grafana:latest
+    container_name: prism-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin}
+      - GF_INSTALL_PLUGINS=redis-datasource
+    volumes:
+      - grafana-data:/var/lib/grafana
+    networks:
+      - prism-network
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+
+volumes:
+  api-data:
+    driver: local
+  api-logs:
+    driver: local
+  postgres-data:
+    driver: local
+  redis-data:
+    driver: local
+  prometheus-data:
+    driver: local
+  grafana-data:
+    driver: local
+
+networks:
+  prism-network:
+    driver: bridge
