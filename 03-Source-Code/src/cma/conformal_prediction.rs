@@ -9,7 +9,7 @@
 //! - Adaptive for non-stationary data (Article IV)
 
 use std::collections::BTreeSet;
-use ndarray::{Array1, Array2, Axis};
+use ndarray::{arr1, Array1, Array2, Axis};
 use anyhow::{Result, anyhow};
 use rand::seq::SliceRandom;
 use rand::thread_rng;

@@ -81,7 +81,12 @@ impl TransferEntropyGpuExt for TransferEntropy {
             // Check for compiled PTX kernel
             std::path::Path::new("src/kernels/ptx/transfer_entropy.ptx").exists()
         }
-            }
+
+        #[cfg(not(feature = "cuda"))]
+        {
+            false
+        }
+    }
 }
 
 #[cfg(test)]
@@ -92,7 +97,7 @@ mod tests {
     fn test_gpu_fallback() {
         let te = TransferEntropy::default();
         let x = Array1::linspace(0.0, 10.0, 100);
-        let y = x.mapv(|v| v.sin());
+        let y = x.mapv(|v: f64| v.sin());
 
         // Should work even without GPU
         let result = te.calculate_auto(&x, &y);

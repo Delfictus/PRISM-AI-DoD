@@ -403,7 +403,8 @@ mod tests {
                     let s = state.unwrap();
                     assert!(s.energy.is_finite());
                     assert!(s.entropy.is_finite());
-                    assert!(s.order_parameter >= 0.0 && s.order_parameter <= 1.0);
+                    // order_parameter is not a field of ThermodynamicState
+                    // It's computed separately via get_kuramoto_state()
                 }
 
                 // Check 2nd law: entropy production ≥ 0
