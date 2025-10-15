@@ -12,7 +12,6 @@
 
 use ndarray::{Array1, Array2};
 use anyhow::{Result, Context, bail};
-use std::collections::HashMap;
 
 /// Quantum-inspired portfolio state representing superposition
 #[derive(Debug, Clone)]

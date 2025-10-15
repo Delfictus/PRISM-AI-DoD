@@ -10,7 +10,7 @@
 //! - Thermal equilibration dynamics
 //! - Energy-based strategy weighting
 
-use ndarray::{Array1, Array2};
+use ndarray::Array1;
 use anyhow::{Result, Context, bail};
 
 /// Thermodynamic portfolio state
@@ -84,7 +84,7 @@ impl ThermodynamicConsensusEngine {
     /// Compute energy landscape from portfolio strategies
     fn compute_energy_landscape(
         &self,
-        portfolio_weights: &[Array1<f64>],
+        _portfolio_weights: &[Array1<f64>],
         expected_returns: &Array1<f64>,
         risks: &Array1<f64>,
     ) -> Result<Array1<f64>> {
