@@ -332,35 +332,35 @@ mod tests {
     }
 }
 
-/// COMMERCIAL VALUE DEMONSTRATION
-///
-/// Traditional Routing (OpenAI Router, AWS Bedrock):
-/// - Keyword matching: "code" -> GPT-4
-/// - Semantic similarity: embed query, find closest model
-/// - Static rules: Always use cheapest for simple queries
-///
-/// Transfer Entropy Causal Routing (PRISM-AI):
-/// - Learns actual causal relationships from historical performance
-/// - Discovers: "Math queries cause better GPT-4 outputs" (TE measure)
-/// - Adapts: If Claude improves on code, routing automatically shifts
-/// - Optimizes: Balances causality with cost/latency
-///
-/// ADVANTAGES:
-/// 1. Discovers hidden model strengths (not obvious from marketing)
-/// 2. Adapts to model updates automatically
-/// 3. Captures complex multi-domain interactions
-/// 4. Quantifies causal certainty (not just similarity)
-///
-/// EXAMPLE:
-/// - 10,000 queries/month
-/// - Traditional routing: 60% accuracy in model selection
-/// - Causal TE routing: 85% accuracy (learns actual causality)
-/// - Quality improvement: 25% better outputs
-/// - Cost reduction: 15% (routes efficiently based on causal need)
-/// - Combined value: $5K-$50K/month per customer
-///
-/// With 1,000 customers: $5M - $50M/year value created
-/// Platform fee (25% of value): $1.25M - $12.5M ARR
-///
-/// WORLD FIRST: No existing LLM router uses Transfer Entropy for causal routing.
-/// Patent potential: VERY HIGH - novel method with clear commercial application.
+// COMMERCIAL VALUE DEMONSTRATION
+//
+// Traditional Routing (OpenAI Router, AWS Bedrock):
+// - Keyword matching: "code" -> GPT-4
+// - Semantic similarity: embed query, find closest model
+// - Static rules: Always use cheapest for simple queries
+//
+// Transfer Entropy Causal Routing (PRISM-AI):
+// - Learns actual causal relationships from historical performance
+// - Discovers: "Math queries cause better GPT-4 outputs" (TE measure)
+// - Adapts: If Claude improves on code, routing automatically shifts
+// - Optimizes: Balances causality with cost/latency
+//
+// ADVANTAGES:
+// 1. Discovers hidden model strengths (not obvious from marketing)
+// 2. Adapts to model updates automatically
+// 3. Captures complex multi-domain interactions
+// 4. Quantifies causal certainty (not just similarity)
+//
+// EXAMPLE:
+// - 10,000 queries/month
+// - Traditional routing: 60% accuracy in model selection
+// - Causal TE routing: 85% accuracy (learns actual causality)
+// - Quality improvement: 25% better outputs
+// - Cost reduction: 15% (routes efficiently based on causal need)
+// - Combined value: $5K-$50K/month per customer
+//
+// With 1,000 customers: $5M - $50M/year value created
+// Platform fee (25% of value): $1.25M - $12.5M ARR
+//
+// WORLD FIRST: No existing LLM router uses Transfer Entropy for causal routing.
+// Patent potential: VERY HIGH - novel method with clear commercial application.

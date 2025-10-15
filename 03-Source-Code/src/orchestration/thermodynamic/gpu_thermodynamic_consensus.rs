@@ -443,25 +443,25 @@ mod tests {
     }
 }
 
-/// COMMERCIAL VALUE DEMONSTRATION
-///
-/// Example: Enterprise with 1M queries/month
-///
-/// WITHOUT Thermodynamic Consensus:
-/// - 50% GPT-4: 500K × $0.03 = $15,000
-/// - 50% GPT-3.5: 500K × $0.002 = $1,000
-/// - Total: $16,000/month
-///
-/// WITH Thermodynamic Consensus:
-/// - Intelligent routing based on complexity
-/// - 20% GPT-4 (complex): 200K × $0.03 = $6,000
-/// - 40% Claude-Sonnet: 400K × $0.003 = $1,200
-/// - 40% GPT-3.5: 400K × $0.002 = $800
-/// - Total: $8,000/month
-///
-/// SAVINGS: $8,000/month = $96,000/year per enterprise
-/// With 1,000 customers: $96M/year in total value created
-///
-/// Platform fee (20% of savings): ~$19M ARR potential
-///
-/// This is a WORLD FIRST innovation with massive commercial potential!
+// COMMERCIAL VALUE DEMONSTRATION
+//
+// Example: Enterprise with 1M queries/month
+//
+// WITHOUT Thermodynamic Consensus:
+// - 50% GPT-4: 500K × $0.03 = $15,000
+// - 50% GPT-3.5: 500K × $0.002 = $1,000
+// - Total: $16,000/month
+//
+// WITH Thermodynamic Consensus:
+// - Intelligent routing based on complexity
+// - 20% GPT-4 (complex): 200K × $0.03 = $6,000
+// - 40% Claude-Sonnet: 400K × $0.003 = $1,200
+// - 40% GPT-3.5: 400K × $0.002 = $800
+// - Total: $8,000/month
+//
+// SAVINGS: $8,000/month = $96,000/year per enterprise
+// With 1,000 customers: $96M/year in total value created
+//
+// Platform fee (20% of savings): ~$19M ARR potential
+//
+// This is a WORLD FIRST innovation with massive commercial potential!

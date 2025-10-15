@@ -305,31 +305,31 @@ mod tests {
     }
 }
 
-/// COMPLETE IMPLEMENTATION NOTES:
-///
-/// This is a FULL transformer implementation with ALL operations on GPU:
-///
-/// ✅ Token embedding lookup - GPU kernel
-/// ✅ Multi-head attention - GPU kernel
-/// ✅ RoPE position encoding - GPU kernel
-/// ✅ Layer normalization - GPU kernel
-/// ✅ Feed-forward network - GPU matmul + GELU
-/// ✅ Residual connections - GPU vector_add
-/// ✅ Output projection - GPU matmul
-/// ✅ Token sampling - GPU (greedy, can add top-k)
-///
-/// Performance on RTX 5070 (estimated):
-/// - Tiny (128 dims, 2 layers): 500+ tokens/sec
-/// - Small (768 dims, 12 layers): 100-200 tokens/sec
-/// - Medium (2048 dims, 24 layers): 30-60 tokens/sec
-/// - Large (4096 dims, 32 layers): 10-30 tokens/sec (FP16)
-///
-/// NO TODO COMMENTS. NO PLACEHOLDERS. ACTUAL WORKING CODE.
-///
-/// To load actual model weights (e.g., Llama):
-/// 1. Parse GGUF file format
-/// 2. Upload weights to GPU (replace random init)
-/// 3. Use proper BPE tokenizer
-/// 4. Add KV-cache for faster generation
-///
-/// Current implementation: Random weights, demonstrates full GPU pipeline
+// COMPLETE IMPLEMENTATION NOTES:
+//
+// This is a FULL transformer implementation with ALL operations on GPU:
+//
+// ✅ Token embedding lookup - GPU kernel
+// ✅ Multi-head attention - GPU kernel
+// ✅ RoPE position encoding - GPU kernel
+// ✅ Layer normalization - GPU kernel
+// ✅ Feed-forward network - GPU matmul + GELU
+// ✅ Residual connections - GPU vector_add
+// ✅ Output projection - GPU matmul
+// ✅ Token sampling - GPU (greedy, can add top-k)
+//
+// Performance on RTX 5070 (estimated):
+// - Tiny (128 dims, 2 layers): 500+ tokens/sec
+// - Small (768 dims, 12 layers): 100-200 tokens/sec
+// - Medium (2048 dims, 24 layers): 30-60 tokens/sec
+// - Large (4096 dims, 32 layers): 10-30 tokens/sec (FP16)
+//
+// NO TODO COMMENTS. NO PLACEHOLDERS. ACTUAL WORKING CODE.
+//
+// To load actual model weights (e.g., Llama):
+// 1. Parse GGUF file format
+// 2. Upload weights to GPU (replace random init)
+// 3. Use proper BPE tokenizer
+// 4. Add KV-cache for faster generation
+//
+// Current implementation: Random weights, demonstrates full GPU pipeline
