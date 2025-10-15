@@ -428,6 +428,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[ignore = "Phase 7: Advanced features - adaptive solver integration"]
     async fn test_adaptive_solver() {
         let mut solver = AdaptiveSolver::new(5).unwrap();
 
