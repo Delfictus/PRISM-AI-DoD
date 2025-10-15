@@ -9,10 +9,9 @@ fn main() {
     // Only compile CUDA if the cuda feature is enabled
     if cfg!(feature = "cuda") {
         println!("cargo:rerun-if-changed=cuda_kernels/tensor_core_matmul.cu");
+        println!("cargo:rerun-if-changed=cuda/neuromorphic_kernels.cu");
 
         let out_dir = PathBuf::from(env::var("OUT_DIR").unwrap());
-        let cuda_source = "cuda_kernels/tensor_core_matmul.cu";
-        let ptx_output = out_dir.join("tensor_core_matmul.ptx");
 
         // Detect CUDA installation
         let nvcc = find_nvcc().expect("nvcc not found. Please install CUDA Toolkit.");
@@ -20,8 +19,6 @@ fn main() {
         println!("cargo:warning=Compiling CUDA kernels with nvcc: {}", nvcc);
 
         // Detect GPU architecture
-        // For RTX 5070 (Ada Lovelace): sm_89
-        // For general compatibility: sm_70 (Volta+, first gen with Tensor Cores)
         let arch = detect_gpu_arch().unwrap_or_else(|| {
             println!("cargo:warning=Could not detect GPU, using sm_89 (Ada Lovelace)");
             "sm_89".to_string()
@@ -29,31 +26,77 @@ fn main() {
 
         println!("cargo:warning=Compiling for GPU architecture: {}", arch);
 
-        // Compile CUDA to PTX
-        let status = Command::new(&nvcc)
-            .args(&[
-                "--ptx",                          // Generate PTX instead of binary
-                cuda_source,
-                "-o", ptx_output.to_str().unwrap(),
-                &format!("-arch={}", arch),       // Target architecture
-                "-O3",                            // Optimization level
-                "--use_fast_math",                // Fast math for better performance
-                "-std=c++17",                     // C++17 for modern CUDA
-                "-I/usr/local/cuda/include",      // CUDA include path
-            ])
-            .status()
-            .expect("Failed to execute nvcc");
+        // Compile Tensor Core kernels to PTX
+        compile_cuda_kernel(
+            &nvcc,
+            "cuda_kernels/tensor_core_matmul.cu",
+            &out_dir.join("tensor_core_matmul.ptx"),
+            &arch,
+        );
 
-        if !status.success() {
-            panic!("nvcc failed to compile CUDA kernels");
-        }
+        println!("cargo:rustc-env=TENSOR_CORE_PTX_PATH={}", out_dir.join("tensor_core_matmul.ptx").display());
 
-        println!("cargo:warning=Successfully compiled Tensor Core kernels to PTX");
-        println!("cargo:warning=PTX file: {}", ptx_output.display());
-
-        // Tell cargo where to find the PTX file
-        println!("cargo:rustc-env=TENSOR_CORE_PTX_PATH={}", ptx_output.display());
+        // Compile Neuromorphic kernels to shared library
+        compile_neuromorphic_kernels(&nvcc, &out_dir, &arch);
     }
+}
+
+fn compile_cuda_kernel(nvcc: &str, source: &str, output: &PathBuf, arch: &str) {
+    println!("cargo:warning=Compiling {}", source);
+
+    let status = Command::new(nvcc)
+        .args(&[
+            "--ptx",                          // Generate PTX instead of binary
+            source,
+            "-o", output.to_str().unwrap(),
+            &format!("-arch={}", arch),       // Target architecture
+            "-O3",                            // Optimization level
+            "--use_fast_math",                // Fast math for better performance
+            "-std=c++17",                     // C++17 for modern CUDA
+            "-I/usr/local/cuda/include",      // CUDA include path
+        ])
+        .status()
+        .expect("Failed to execute nvcc");
+
+    if !status.success() {
+        panic!("nvcc failed to compile {}", source);
+    }
+
+    println!("cargo:warning=Successfully compiled {} to PTX", source);
+}
+
+fn compile_neuromorphic_kernels(nvcc: &str, out_dir: &PathBuf, arch: &str) {
+    println!("cargo:warning=Compiling neuromorphic kernels to shared library");
+
+    let source = "cuda/neuromorphic_kernels.cu";
+    let output = out_dir.join("libneuromorphic_kernels.so");
+
+    let status = Command::new(nvcc)
+        .args(&[
+            "--shared",                       // Build shared library
+            "-Xcompiler", "-fPIC",            // Position independent code
+            source,
+            "-o", output.to_str().unwrap(),
+            &format!("-arch={}", arch),       // Target architecture
+            "-O3",                            // Optimization level
+            "--use_fast_math",                // Fast math for better performance
+            "-std=c++17",                     // C++17 for modern CUDA
+            "-I/usr/local/cuda/include",      // CUDA include path
+        ])
+        .status()
+        .expect("Failed to execute nvcc");
+
+    if !status.success() {
+        panic!("nvcc failed to compile neuromorphic kernels");
+    }
+
+    println!("cargo:warning=Successfully compiled neuromorphic kernels to shared library");
+    println!("cargo:warning=Library: {}", output.display());
+
+    // Tell cargo where to find the library
+    println!("cargo:rustc-link-search=native={}", out_dir.display());
+    println!("cargo:rustc-link-lib=dylib=neuromorphic_kernels");
+    println!("cargo:rustc-env=NEUROMORPHIC_KERNELS_PATH={}", output.display());
 }
 
 fn find_nvcc() -> Option<String> {
