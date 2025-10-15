@@ -16,6 +16,7 @@ pub mod gpu_tensor_optimized;  // FULLY OPTIMIZED: CudaSlice, persistent GPU, fu
 pub mod memory_pool;  // GPU memory pooling tracking and statistics
 pub mod active_memory_pool;  // Active memory pooling with buffer reuse (67.9% savings)
 pub mod kernel_autotuner;  // Kernel auto-tuning for optimal launch configurations
+pub mod neuromorphic_ffi;  // FFI bindings for neuromorphic CUDA kernels
 
 // Use GPU-enabled implementation - NO CPU FALLBACK
 pub use gpu_enabled::{
