@@ -46,7 +46,7 @@ struct LatticeNode {
 
 /// Different redundancy measures from literature
 #[derive(Clone, Debug)]
-enum RedundancyMeasure {
+pub enum RedundancyMeasure {
     /// Minimum mutual information (Williams & Beer 2010)
     Imin,
     /// Maximum entropy optimization (Harder et al. 2013)

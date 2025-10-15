@@ -99,3 +99,6 @@ pub struct ConsensusState {
     pub energy: f64,
     pub converged: bool,
 }
+
+// Type alias for integration compatibility
+pub type QuantumVotingConsensus = QuantumConsensusOptimizer;

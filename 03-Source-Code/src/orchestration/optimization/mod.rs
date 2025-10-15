@@ -7,6 +7,7 @@
 
 pub mod mdl_prompt_optimizer;
 pub mod quantum_prompt_search;
+pub mod geometric_manifold;  // Worker 4 module
 
 pub use mdl_prompt_optimizer::{MDLPromptOptimizer, OptimizedPrompt, QueryType};
 pub use quantum_prompt_search::{QuantumPromptSearch, InformationBottleneckCompressor};

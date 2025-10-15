@@ -44,7 +44,7 @@ pub use advanced_transfer_entropy::{
 // Phase 1 exports
 pub use kdtree::{KdTree, Neighbor};
 pub use ksg_estimator::KsgEstimator;
-pub use conditional_te::ConditionalTe;
+pub use conditional_te::ConditionalTE;  // Fixed: TE not Te
 pub use bootstrap_ci::{BootstrapResampler, BootstrapCi, BootstrapMethod};
 pub use transfer_entropy_gpu::TransferEntropyGpu;
 

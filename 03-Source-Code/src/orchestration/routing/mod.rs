@@ -17,3 +17,6 @@ pub use te_embedding_gpu::GpuTimeDelayEmbedding;
 pub use gpu_kdtree::{GpuNearestNeighbors, DistanceMetric};
 pub use ksg_transfer_entropy_gpu::{KSGTransferEntropyGpu, KSGConfig};
 pub use te_validation::{TEValidator, ValidationResult, SyntheticDataGenerator};
+
+// Type alias for integration compatibility
+pub type TransferEntropyRouter = TransferEntropyPromptRouter;

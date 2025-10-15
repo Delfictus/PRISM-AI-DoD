@@ -89,7 +89,7 @@ pub use information_theory::{
     TransferEntropy, TransferEntropyResult, CausalDirection,
     detect_causal_direction,
     // Phase 1 enhancements
-    KdTree, Neighbor, KsgEstimator, ConditionalTe,
+    KdTree, Neighbor, KsgEstimator, ConditionalTE,  // Fixed: TE not Te
     BootstrapResampler, BootstrapCi, BootstrapMethod,
     TransferEntropyGpu,
     // Phase 2 enhancements

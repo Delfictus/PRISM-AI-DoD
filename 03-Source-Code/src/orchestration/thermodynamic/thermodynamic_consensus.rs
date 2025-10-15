@@ -4,3 +4,6 @@
 //! since they share the same underlying free energy minimization principles.
 
 pub use super::quantum_consensus::*;
+
+// Type alias for integration compatibility
+pub type ThermodynamicConsensus = QuantumConsensusOptimizer;

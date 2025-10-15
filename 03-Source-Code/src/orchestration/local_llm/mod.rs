@@ -5,6 +5,10 @@ pub mod gguf_gpu_loader;
 pub mod kv_cache;
 pub mod bpe_tokenizer;
 pub mod sampling;
+pub mod llm_metrics;
+pub mod attention_analyzer;
+pub mod transfer_entropy_llm;
+pub mod tda_topology_adapter;
 
 pub use gpu_llm_inference::{
     GpuLocalLLMSystem,
@@ -44,3 +48,8 @@ pub use sampling::{
     TokenSampler,
     SamplingConfig,
 };
+
+pub use llm_metrics::LLMMetrics;
+pub use attention_analyzer::AttentionAnalyzer;
+pub use transfer_entropy_llm::TransferEntropyLLM;
+pub use tda_topology_adapter::{TdaTopologyAdapter, TopologyAnalysis};

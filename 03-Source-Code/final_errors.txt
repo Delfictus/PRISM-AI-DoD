@@ -1,0 +1,931 @@
+warning: patch for `cudarc` uses the features mechanism. default-features and features will not take effect because the patch dependency does not support this mechanism
+warning: use of deprecated associated function `gpu_reservoir::GpuReservoirComputer::new`: Use new_shared() with shared CUDA context
+   --> src/neuromorphic/src/gpu_reservoir.rs:662:27
+    |
+662 |     GpuReservoirComputer::new(config, gpu_config)
+    |                           ^^^
+    |
+    = note: `#[warn(deprecated)]` on by default
+
+warning: unused import: `rayon::prelude`
+  --> src/neuromorphic/src/gpu_reservoir.rs:15:5
+   |
+15 | use rayon::prelude::*;
+   |     ^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` on by default
+
+warning: unused variable: `reason`
+   --> src/neuromorphic/src/pattern_detector.rs:357:30
+    |
+357 |     fn record_failure(&self, reason: &str) {
+    |                              ^^^^^^ help: if this is intentional, prefix it with an underscore: `_reason`
+    |
+    = note: `#[warn(unused_variables)]` on by default
+
+warning: unused variable: `bin_source_past`
+   --> src/neuromorphic/src/transfer_entropy.rs:109:17
+    |
+109 |             let bin_source_past = self.discretize_vector(&source_past);
+    |                 ^^^^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_bin_source_past`
+
+warning: type `ReservoirStatistics` is more private than the item `ReservoirComputer::get_statistics`
+   --> src/neuromorphic/src/reservoir.rs:224:5
+    |
+224 |     pub fn get_statistics(&self) -> &ReservoirStatistics {
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ method `ReservoirComputer::get_statistics` is reachable at visibility `pub`
+    |
+note: but type `ReservoirStatistics` is only usable at visibility `pub(self)`
+   --> src/neuromorphic/src/reservoir.rs:108:1
+    |
+108 | struct ReservoirStatistics {
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^
+    = note: `#[warn(private_interfaces)]` on by default
+
+warning: fields `max_pool_size` and `total_allocated_bytes` are never read
+  --> src/neuromorphic/src/gpu_memory.rs:17:5
+   |
+13 | pub struct GpuMemoryPool {
+   |            ------------- fields in this struct
+...
+17 |     max_pool_size: usize,
+   |     ^^^^^^^^^^^^^
+18 |     total_allocated_bytes: Arc<Mutex<usize>>,
+   |     ^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` on by default
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+   --> src/neuromorphic/src/gpu_memory.rs:302:29
+    |
+302 |     pub fn borrow_zero_copy(&mut self) -> Result<GpuBufferBorrow> {
+    |                             ^^^^^^^^^            --------------- the same lifetime is hidden here
+    |                             |
+    |                             the lifetime is elided here
+    |
+    = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+    = note: `#[warn(mismatched_lifetime_syntaxes)]` on by default
+help: use `'_` for type paths
+    |
+302 |     pub fn borrow_zero_copy(&mut self) -> Result<GpuBufferBorrow<'_>> {
+    |                                                                 ++++
+
+warning: `neuromorphic-engine` (lib) generated 7 warnings
+warning: unused import: `Array1`
+  --> src/quantum/src/prct_coloring.rs:12:15
+   |
+12 | use ndarray::{Array1, Array2};
+   |               ^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` on by default
+
+warning: unused import: `Context`
+  --> src/quantum/src/prct_coloring.rs:14:22
+   |
+14 | use anyhow::{Result, Context};
+   |                      ^^^^^^^
+
+warning: unused import: `Hamiltonian`
+  --> src/quantum/src/prct_coloring.rs:17:47
+   |
+17 | use crate::hamiltonian::{PhaseResonanceField, Hamiltonian};
+   |                                               ^^^^^^^^^^^
+
+warning: unused import: `HashMap`
+  --> src/quantum/src/gpu_coloring.rs:10:24
+   |
+10 | use std::collections::{HashMap, HashSet};
+   |                        ^^^^^^^
+
+warning: unused import: `Context`
+ --> src/quantum/src/prct_tsp.rs:8:22
+  |
+8 | use anyhow::{Result, Context};
+  |                      ^^^^^^^
+
+warning: unused import: `Context`
+  --> src/quantum/src/qubo.rs:10:22
+   |
+10 | use anyhow::{anyhow, Context, Result};
+   |                      ^^^^^^^
+
+warning: unused import: `std::sync::Arc`
+  --> src/quantum/src/qubo.rs:12:5
+   |
+12 | use std::sync::Arc;
+   |     ^^^^^^^^^^^^^^
+
+warning: variable does not need to be mutable
+   --> src/quantum/src/gpu_coloring.rs:287:13
+    |
+287 |         let mut gpu_priorities = stream.alloc_zeros::<f32>(n)
+    |             ----^^^^^^^^^^^^^^
+    |             |
+    |             help: remove this `mut`
+    |
+    = note: `#[warn(unused_mut)]` on by default
+
+warning: variable does not need to be mutable
+   --> src/quantum/src/gpu_coloring.rs:289:13
+    |
+289 |         let mut gpu_colors = stream.alloc_zeros::<u32>(n)
+    |             ----^^^^^^^^^^
+    |             |
+    |             help: remove this `mut`
+
+warning: variable does not need to be mutable
+   --> src/quantum/src/gpu_coloring.rs:291:13
+    |
+291 |         let mut gpu_can_color = stream.alloc_zeros::<u32>(n)
+    |             ----^^^^^^^^^^^^^
+    |             |
+    |             help: remove this `mut`
+
+warning: value assigned to `current_energy` is never read
+   --> src/quantum/src/qubo.rs:161:17
+    |
+161 |         let mut current_energy = self.best_energy;
+    |                 ^^^^^^^^^^^^^^
+    |
+    = help: maybe it is overwritten before being read?
+    = note: `#[warn(unused_assignments)]` on by default
+
+warning: variable `tour_gpu` is assigned to, but never used
+  --> src/quantum/src/gpu_k_opt.rs:86:17
+   |
+86 |         let mut tour_gpu = stream.memcpy_stod(&tour_i32)?;
+   |                 ^^^^^^^^
+   |
+   = note: consider using `_tour_gpu` instead
+   = note: `#[warn(unused_variables)]` on by default
+
+warning: unused variable: `dist_gpu`
+  --> src/quantum/src/gpu_k_opt.rs:89:13
+   |
+89 |         let dist_gpu = stream.memcpy_stod(&dist_flat)?;
+   |             ^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_dist_gpu`
+
+warning: unused variable: `best_i_gpu`
+  --> src/quantum/src/gpu_k_opt.rs:92:17
+   |
+92 |         let mut best_i_gpu = stream.alloc_zeros::<i32>(1)?;
+   |                 ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_best_i_gpu`
+
+warning: unused variable: `best_j_gpu`
+  --> src/quantum/src/gpu_k_opt.rs:93:17
+   |
+93 |         let mut best_j_gpu = stream.alloc_zeros::<i32>(1)?;
+   |                 ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_best_j_gpu`
+
+warning: variable `best_delta_gpu` is assigned to, but never used
+  --> src/quantum/src/gpu_k_opt.rs:94:17
+   |
+94 |         let mut best_delta_gpu = stream.memcpy_stod(&[f32::INFINITY])?;
+   |                 ^^^^^^^^^^^^^^
+   |
+   = note: consider using `_best_delta_gpu` instead
+
+warning: value assigned to `tour_gpu` is never read
+   --> src/quantum/src/gpu_k_opt.rs:104:13
+    |
+104 |             tour_gpu = stream.memcpy_stod(&tour_i32)?;
+    |             ^^^^^^^^
+    |
+    = help: maybe it is overwritten before being read?
+
+warning: value assigned to `best_delta_gpu` is never read
+   --> src/quantum/src/gpu_k_opt.rs:108:13
+    |
+108 |             best_delta_gpu = stream.memcpy_stod(&[f32::INFINITY])?;
+    |             ^^^^^^^^^^^^^^
+    |
+    = help: maybe it is overwritten before being read?
+
+warning: unused variable: `block_size`
+   --> src/quantum/src/gpu_k_opt.rs:111:17
+    |
+111 |             let block_size = 16;
+    |                 ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_block_size`
+
+warning: unused variable: `cfg`
+   --> src/quantum/src/gpu_k_opt.rs:112:17
+    |
+112 |             let cfg = LaunchConfig {
+    |                 ^^^ help: if this is intentional, prefix it with an underscore: `_cfg`
+
+warning: variable does not need to be mutable
+  --> src/quantum/src/gpu_k_opt.rs:92:13
+   |
+92 |         let mut best_i_gpu = stream.alloc_zeros::<i32>(1)?;
+   |             ----^^^^^^^^^^
+   |             |
+   |             help: remove this `mut`
+
+warning: variable does not need to be mutable
+  --> src/quantum/src/gpu_k_opt.rs:93:13
+   |
+93 |         let mut best_j_gpu = stream.alloc_zeros::<i32>(1)?;
+   |             ----^^^^^^^^^^
+   |             |
+   |             help: remove this `mut`
+
+warning: methods `generate_chromatic_coloring` and `optimize_tsp_ordering` are never used
+   --> src/quantum/src/hamiltonian.rs:196:8
+    |
+137 | impl PhaseResonanceField {
+    | ------------------------ methods in this implementation
+...
+196 |     fn generate_chromatic_coloring(&mut self, n_atoms: usize) {
+    |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+...
+220 |     fn optimize_tsp_ordering(&mut self, n_atoms: usize) {
+    |        ^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` on by default
+
+warning: fields `masses`, `stencil_order`, and `energy_tolerance` are never read
+   --> src/quantum/src/hamiltonian.rs:529:5
+    |
+522 | pub struct Hamiltonian {
+    |            ----------- fields in this struct
+...
+529 |     masses: Array1<f64>,
+    |     ^^^^^^
+...
+545 |     stencil_order: usize,   // Finite difference stencil order (9-point)
+    |     ^^^^^^^^^^^^^
+...
+575 |     energy_tolerance: f64,
+    |     ^^^^^^^^^^^^^^^^
+    |
+    = note: `Hamiltonian` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: methods `calculate_coupling_strength` and `pauli_dot_product` are never used
+    --> src/quantum/src/hamiltonian.rs:1183:8
+     |
+ 581 | impl Hamiltonian {
+     | ---------------- methods in this implementation
+...
+1183 |     fn calculate_coupling_strength(&self, i: usize, j: usize, _t: f64) -> Complex64 {
+     |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+...
+1194 |     fn pauli_dot_product(&self, _i: usize, _j: usize) -> Complex64 {
+     |        ^^^^^^^^^^^^^^^^^
+
+warning: field `coupling` is never read
+  --> src/quantum/src/prct_coloring.rs:33:5
+   |
+21 | pub struct ChromaticColoring {
+   |            ----------------- field in this struct
+...
+33 |     coupling: Box<Array2<Complex64>>,
+   |     ^^^^^^^^
+   |
+   = note: `ChromaticColoring` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: field `max_k` is never read
+  --> src/quantum/src/gpu_k_opt.rs:14:5
+   |
+12 | pub struct GpuKOpt {
+   |            ------- field in this struct
+13 |     context: Arc<CudaContext>,
+14 |     max_k: usize,
+   |     ^^^^^
+
+warning: `quantum-engine` (lib) generated 27 warnings (run `cargo fix --lib -p quantum-engine` to apply 12 suggestions)
+warning: prism-ai@0.1.0: Compiling CUDA kernels with nvcc: /usr/local/cuda/bin/nvcc
+warning: prism-ai@0.1.0: Detected Compute 12.0, using sm_90
+warning: prism-ai@0.1.0: Compiling for GPU architecture: sm_90
+warning: prism-ai@0.1.0: Compiling cuda_kernels/tensor_core_matmul.cu
+warning: prism-ai@0.1.0: Successfully compiled cuda_kernels/tensor_core_matmul.cu to PTX
+warning: prism-ai@0.1.0: Compiling neuromorphic kernels to shared library
+warning: prism-ai@0.1.0: Successfully compiled neuromorphic kernels to shared library
+warning: prism-ai@0.1.0: Library: /home/diddy/Desktop/PRISM-AI-DoD/03-Source-Code/target/release/build/prism-ai-0a2a4a3f381a983c/out/libneuromorphic_kernels.so
+warning: unused import: `HashMap`
+  --> src/prct-core/src/coloring.rs:10:24
+   |
+10 | use std::collections::{HashMap, HashSet};
+   |                        ^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` on by default
+
+warning: unused import: `rayon::prelude`
+ --> src/prct-core/src/coloring.rs:9:5
+  |
+9 | use rayon::prelude::*;
+  |     ^^^^^^^^^^^^^^
+
+warning: unused variable: `neuro_state`
+   --> src/prct-core/src/drpp_algorithm.rs:194:9
+    |
+194 |         neuro_state: &NeuroState,
+    |         ^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_neuro_state`
+    |
+    = note: `#[warn(unused_variables)]` on by default
+
+warning: unused variable: `quantum_state`
+   --> src/prct-core/src/drpp_algorithm.rs:195:9
+    |
+195 |         quantum_state: &QuantumState,
+    |         ^^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_quantum_state`
+
+warning: unused variable: `phase_field`
+   --> src/prct-core/src/drpp_algorithm.rs:196:9
+    |
+196 |         phase_field: &mut PhaseField,
+    |         ^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_phase_field`
+
+warning: unused variable: `n`
+  --> src/prct-core/src/simulated_annealing.rs:31:9
+   |
+31 |     let n = graph.num_vertices;
+   |         ^ help: if this is intentional, prefix it with an underscore: `_n`
+
+warning: unused variable: `state`
+   --> src/foundation/src/adp/decision_processor.rs:182:34
+    |
+182 |     fn generate_reasoning(&self, state: &State, action: Action, features: &[f64]) -> String {
+    |                                  ^^^^^ help: if this is intentional, prefix it with an underscore: `_state`
+    |
+    = note: `#[warn(unused_variables)]` on by default
+
+warning: field `quantum_hamiltonian` is never read
+  --> src/foundation/src/platform.rs:33:5
+   |
+26 | pub struct NeuromorphicQuantumPlatform {
+   |            --------------------------- field in this struct
+...
+33 |     quantum_hamiltonian: Arc<RwLock<Option<Hamiltonian>>>,
+   |     ^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `NeuromorphicQuantumPlatform` has a derived impl for the trait `Debug`, but this is intentionally ignored during dead code analysis
+   = note: `#[warn(dead_code)]` on by default
+
+warning: field `state_to_reservoir` is never read
+   --> src/foundation/src/platform.rs:101:5
+    |
+ 95 | struct BidirectionalCoupling {
+    |        --------------------- field in this struct
+...
+101 |     state_to_reservoir: f64,
+    |     ^^^^^^^^^^^^^^^^^^
+    |
+    = note: `BidirectionalCoupling` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: methods `ensure_quantum_initialized`, `extract_quantum_features`, and `initialize_quantum_state` are never used
+   --> src/foundation/src/platform.rs:758:14
+    |
+167 | impl NeuromorphicQuantumPlatform {
+    | -------------------------------- methods in this implementation
+...
+758 |     async fn ensure_quantum_initialized(&self, input: &PlatformInput) -> Result<()> {
+    |              ^^^^^^^^^^^^^^^^^^^^^^^^^^
+...
+782 |     async fn extract_quantum_features(&self, _input: &PlatformInput, neuro_results: &NeuromorphicResults) -> Vec<f64> {
+    |              ^^^^^^^^^^^^^^^^^^^^^^^^
+...
+822 |     async fn initialize_quantum_state(&self, hamiltonian: &mut Hamiltonian, features: &[f64]) -> Array1<Complex64> {
+    |              ^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: associated function `ingest_from_source` is never used
+   --> src/foundation/src/ingestion/engine.rs:325:14
+    |
+ 69 | impl IngestionEngine {
+    | -------------------- associated function in this implementation
+...
+325 |     async fn ingest_from_source(
+    |              ^^^^^^^^^^^^^^^^^^
+
+warning: `prct-core` (lib) generated 6 warnings (run `cargo fix --lib -p prct-core` to apply 1 suggestion)
+warning: `platform-foundation` (lib) generated 5 warnings
+   Compiling prism-ai v0.1.0 (/home/diddy/Desktop/PRISM-AI-DoD/03-Source-Code)
+error[E0433]: failed to resolve: unresolved import
+  --> src/orchestration/integration/pwsa_llm_bridge.rs:11:12
+   |
+11 | use crate::pwsa::satellite_adapters::{PwsaFusionPlatform, MissionAwareness, ThreatDetection};
+   |            ^^^^
+   |            |
+   |            unresolved import
+   |            help: a similar path exists: `api_server::routes::pwsa`
+   |
+note: found an item that was configured out
+  --> src/lib.rs:34:9
+   |
+33 | #[cfg(feature = "pwsa")]
+   |       ---------------- the item is gated behind the `pwsa` feature
+34 | pub mod pwsa;
+   |         ^^^^
+
+error[E0432]: unresolved import `crate::orchestration::optimization::geometric_manifold`
+  --> src/orchestration/integration/mission_charlie_integration.rs:17:41
+   |
+17 | use crate::orchestration::optimization::geometric_manifold::GeometricManifoldOptimizer;
+   |                                         ^^^^^^^^^^^^^^^^^^ could not find `geometric_manifold` in `optimization`
+
+error[E0432]: unresolved import `crate::orchestration::local_llm::TdaTopologyAdapter`
+  --> src/orchestration/local_llm/attention_analyzer.rs:24:5
+   |
+24 | use crate::orchestration::local_llm::TdaTopologyAdapter;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ no `TdaTopologyAdapter` in `orchestration::local_llm`
+
+error[E0432]: unresolved import `crate::orchestration::local_llm::TdaTopologyAdapter`
+  --> src/orchestration/local_llm/transfer_entropy_llm.rs:32:5
+   |
+32 | use crate::orchestration::local_llm::TdaTopologyAdapter;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ no `TdaTopologyAdapter` in `orchestration::local_llm`
+
+error[E0432]: unresolved import `super::hamiltonian`
+  --> src/orchestration/consensus/quantum_voting.rs:10:12
+   |
+10 | use super::hamiltonian::InformationHamiltonian;
+   |            ^^^^^^^^^^^ could not find `hamiltonian` in `super`
+
+error[E0432]: unresolved import `optimization::geometric_manifold`
+  --> src/orchestration/mod.rs:54:23
+   |
+54 | pub use optimization::geometric_manifold::GeometricManifoldOptimizer;
+   |                       ^^^^^^^^^^^^^^^^^^ could not find `geometric_manifold` in `optimization`
+
+error[E0432]: unresolved import `chemcore::prelude`
+ --> src/chemistry/rdkit_wrapper.rs:7:15
+  |
+7 | use chemcore::prelude::*;
+  |               ^^^^^^^ could not find `prelude` in `chemcore`
+
+error[E0432]: unresolved import `information_theory::ConditionalTe`
+  --> src/lib.rs:92:37
+   |
+92 |     KdTree, Neighbor, KsgEstimator, ConditionalTe,
+   |                                     ^^^^^^^^^^^^^
+   |                                     |
+   |                                     no `ConditionalTe` in `information_theory`
+   |                                     help: a similar name exists in the module: `ConditionalTE`
+
+error[E0432]: unresolved import `crate::orchestration::cache::quantum_cache::QuantumApproximateCache`
+  --> src/orchestration/integration/mission_charlie_integration.rs:10:5
+   |
+10 | use crate::orchestration::cache::quantum_cache::QuantumApproximateCache;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ no `QuantumApproximateCache` in `orchestration::cache::quantum_cache`
+
+error[E0432]: unresolved import `crate::orchestration::routing::transfer_entropy_router::TransferEntropyRouter`
+  --> src/orchestration/integration/mission_charlie_integration.rs:11:5
+   |
+11 | use crate::orchestration::routing::transfer_entropy_router::TransferEntropyRouter;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^---------------------
+   |     |                                                       |
+   |     |                                                       help: a similar name exists in the module: `TransferEntropy`
+   |     no `TransferEntropyRouter` in `orchestration::routing::transfer_entropy_router`
+
+error[E0432]: unresolved imports `crate::quantum_mlir::QuantumCircuit`, `crate::quantum_mlir::QuantumGate`, `crate::quantum_mlir::GpuBackend`, `crate::quantum_mlir::compile_and_execute`, `crate::quantum_mlir::ExecutionConfig`
+  --> src/orchestration/integration/prism_ai_integration.rs:48:9
+   |
+48 |         QuantumCircuit, QuantumGate, GpuBackend,
+   |         ^^^^^^^^^^^^^^  ^^^^^^^^^^^  ^^^^^^^^^^ no `GpuBackend` in `quantum_mlir`
+   |         |               |
+   |         |               no `QuantumGate` in `quantum_mlir`
+   |         |               help: a similar name exists in the module: `QuantumState`
+   |         no `QuantumCircuit` in `quantum_mlir`
+49 |         compile_and_execute, ExecutionConfig,
+   |         ^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^ no `ExecutionConfig` in `quantum_mlir`
+   |         |
+   |         no `compile_and_execute` in `quantum_mlir`
+   |
+   = help: consider importing this enum through its public re-export instead:
+           crate::integration::QuantumGate
+
+error[E0432]: unresolved import `cache::quantum_cache::QuantumApproximateCache`
+  --> src/orchestration/mod.rs:45:9
+   |
+45 | pub use cache::quantum_cache::QuantumApproximateCache;
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ no `QuantumApproximateCache` in `orchestration::cache::quantum_cache`
+
+error[E0432]: unresolved import `routing::transfer_entropy_router::TransferEntropyRouter`
+  --> src/orchestration/mod.rs:48:9
+   |
+48 | pub use routing::transfer_entropy_router::TransferEntropyRouter;
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^---------------------
+   |         |                                 |
+   |         |                                 help: a similar name exists in the module: `TransferEntropy`
+   |         no `TransferEntropyRouter` in `orchestration::routing::transfer_entropy_router`
+
+warning: unused import: `rand_distr::Normal`
+ --> src/information_theory/advanced_transfer_entropy.rs:9:5
+  |
+9 | use rand_distr::Normal;
+  |     ^^^^^^^^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` on by default
+
+warning: unused import: `std::collections::HashMap`
+  --> src/information_theory/conditional_te.rs:24:5
+   |
+24 | use std::collections::HashMap;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `std::collections::HashMap`
+  --> src/information_theory/multivariate_te.rs:24:5
+   |
+24 | use std::collections::HashMap;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `std::collections::HashMap`
+  --> src/information_theory/time_delayed_te.rs:26:5
+   |
+26 | use std::collections::HashMap;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `Context`
+  --> src/orchestration/llm_clients/claude_client.rs:10:22
+   |
+10 | use anyhow::{Result, Context, bail};
+   |                      ^^^^^^^
+
+warning: unused import: `sleep`
+ --> src/orchestration/llm_clients/gemini_client.rs:7:19
+  |
+7 | use tokio::time::{sleep, timeout, Duration, Instant};
+  |                   ^^^^^
+
+warning: unused import: `Context`
+  --> src/orchestration/llm_clients/grok_client.rs:10:22
+   |
+10 | use anyhow::{Result, Context, bail};
+   |                      ^^^^^^^
+
+warning: unused import: `Duration`
+  --> src/orchestration/llm_clients/ensemble.rs:16:28
+   |
+16 | use tokio::time::{Instant, Duration};
+   |                            ^^^^^^^^
+
+warning: unused import: `anyhow::Result`
+  --> src/orchestration/thermodynamic/hamiltonian.rs:13:5
+   |
+13 | use anyhow::Result;
+   |     ^^^^^^^^^^^^^^
+
+warning: unused imports: `Array1` and `Array2`
+  --> src/orchestration/thermodynamic/advanced_energy.rs:20:15
+   |
+20 | use ndarray::{Array1, Array2};
+   |               ^^^^^^  ^^^^^^
+
+warning: unused import: `Context`
+  --> src/orchestration/thermodynamic/temperature_schedules.rs:17:22
+   |
+17 | use anyhow::{Result, Context};
+   |                      ^^^^^^^
+
+warning: unused import: `Context`
+  --> src/orchestration/thermodynamic/replica_exchange.rs:15:22
+   |
+15 | use anyhow::{Result, Context};
+   |                      ^^^^^^^
+
+warning: unused import: `std::collections::HashMap`
+  --> src/orchestration/thermodynamic/replica_exchange.rs:16:5
+   |
+16 | use std::collections::HashMap;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `Instant`
+  --> src/orchestration/active_inference/hierarchical_client.rs:16:29
+   |
+16 | use tokio::time::{Duration, Instant};
+   |                             ^^^^^^^
+
+warning: unused import: `DMatrix`
+  --> src/orchestration/integration/mission_charlie_integration.rs:20:25
+   |
+20 | use nalgebra::{DVector, DMatrix};
+   |                         ^^^^^^^
+
+warning: unused import: `std::sync::Arc`
+  --> src/orchestration/integration/mission_charlie_integration.rs:22:5
+   |
+22 | use std::sync::Arc;
+   |     ^^^^^^^^^^^^^^
+
+warning: unused import: `parking_lot::RwLock`
+  --> src/orchestration/integration/mission_charlie_integration.rs:23:5
+   |
+23 | use parking_lot::RwLock;
+   |     ^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `nalgebra as na`
+  --> src/orchestration/integration/prism_ai_integration.rs:14:5
+   |
+14 | use nalgebra as na;
+   |     ^^^^^^^^^^^^^^
+
+warning: unused import: `Array2`
+  --> src/orchestration/integration/prism_ai_integration.rs:15:15
+   |
+15 | use ndarray::{Array2, Array1};
+   |               ^^^^^^
+
+warning: unused imports: `ActiveInferenceController`, `CausalDirection`, `CouplingStrength`, `EvolutionResult`, `FreeEnergyComponents`, `GenerativeModel`, `InformationChannel`, `PhaseSynchronizer`, `PolicySelector`, `TransferEntropyResult`, `TransferEntropy`, `VariationalInference`, and `detect_causal_direction`
+  --> src/orchestration/integration/prism_ai_integration.rs:22:9
+   |
+22 |         GenerativeModel, HierarchicalModel, VariationalInference,
+   |         ^^^^^^^^^^^^^^^                     ^^^^^^^^^^^^^^^^^^^^
+23 |         PolicySelector, ActiveInferenceController, FreeEnergyComponents,
+   |         ^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^
+...
+28 |         ThermodynamicMetrics, EvolutionResult,
+   |                               ^^^^^^^^^^^^^^^
+...
+32 |         TransferEntropy, TransferEntropyResult, CausalDirection,
+   |         ^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^
+33 |         detect_causal_direction,
+   |         ^^^^^^^^^^^^^^^^^^^^^^^
+...
+37 |         CrossDomainBridge, DomainState, CouplingStrength,
+   |                                         ^^^^^^^^^^^^^^^^
+38 |         InformationChannel, PhaseSynchronizer, UnifiedPlatform,
+   |         ^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `LLMResponse` and `OrchestrationError`
+  --> src/orchestration/integration/prism_ai_integration.rs:66:32
+   |
+66 |     MissionCharlieIntegration, OrchestrationError, LLMResponse,
+   |                                ^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^
+
+warning: unused import: `anyhow::Result`
+  --> src/orchestration/optimization/mdl_prompt_optimizer.rs:13:5
+   |
+13 | use anyhow::Result;
+   |     ^^^^^^^^^^^^^^
+
+warning: unused import: `std::io::Write`
+  --> src/orchestration/optimization/mdl_prompt_optimizer.rs:51:13
+   |
+51 |         use std::io::Write;
+   |             ^^^^^^^^^^^^^^
+
+warning: unused import: `anyhow::Result`
+  --> src/orchestration/caching/quantum_semantic_cache.rs:16:5
+   |
+16 | use anyhow::Result;
+   |     ^^^^^^^^^^^^^^
+
+warning: unused import: `Array1`
+  --> src/orchestration/routing/te_embedding_gpu.rs:12:15
+   |
+12 | use ndarray::{Array1, Array2};
+   |               ^^^^^^
+
+warning: unused import: `Context as AnyhowContext`
+  --> src/orchestration/routing/ksg_transfer_entropy_gpu.rs:17:22
+   |
+17 | use anyhow::{Result, Context as AnyhowContext};
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `Array1`
+  --> src/orchestration/routing/ksg_transfer_entropy_gpu.rs:18:15
+   |
+18 | use ndarray::{Array1, Array2, Axis};
+   |               ^^^^^^
+
+warning: unused import: `ndarray::Array1`
+ --> src/orchestration/routing/te_validation.rs:7:5
+  |
+7 | use ndarray::Array1;
+  |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `anyhow::Result`
+  --> src/orchestration/validation/info_theoretic_validator.rs:12:5
+   |
+12 | use anyhow::Result;
+   |     ^^^^^^^^^^^^^^
+
+warning: unused imports: `Array1` and `Array2`
+  --> src/orchestration/semantic_analysis/distance_metrics.rs:14:15
+   |
+14 | use ndarray::{Array1, Array2};
+   |               ^^^^^^  ^^^^^^
+
+warning: unused import: `Normal`
+  --> src/orchestration/neuromorphic/unified_neuromorphic.rs:10:41
+   |
+10 | use rand_distr::{Distribution, Poisson, Normal};  // Fixed: rand_distr not rand
+   |                                         ^^^^^^
+
+warning: unused import: `ordered_float::OrderedFloat`
+  --> src/orchestration/neuromorphic/unified_neuromorphic.rs:11:5
+   |
+11 | use ordered_float::OrderedFloat;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::gpu::GpuKernelExecutor`
+ --> src/orchestration/neuromorphic/gpu_neuromorphic.rs:7:5
+  |
+7 | use crate::gpu::GpuKernelExecutor;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `LaunchConfig`
+ --> src/orchestration/neuromorphic/gpu_neuromorphic.rs:9:46
+  |
+9 | use cudarc::driver::{CudaContext, CudaSlice, LaunchConfig};  // Fixed: CudaContext not CudaDevice, removed LaunchAsync
+  |                                              ^^^^^^^^^^^^
+
+warning: unused imports: `DMatrix` and `DVector`
+  --> src/orchestration/neuromorphic/gpu_neuromorphic.rs:10:16
+   |
+10 | use nalgebra::{DMatrix, DVector};
+   |                ^^^^^^^  ^^^^^^^
+
+warning: unused import: `std::sync::Arc`
+  --> src/orchestration/local_llm/gpu_llm_inference.rs:15:5
+   |
+15 | use std::sync::Arc;
+   |     ^^^^^^^^^^^^^^
+
+warning: unused import: `cudarc::driver::CudaContext`
+  --> src/orchestration/local_llm/gpu_llm_inference.rs:16:5
+   |
+16 | use cudarc::driver::CudaContext;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `GpuTransformerLayer`
+  --> src/orchestration/local_llm/gpu_llm_inference.rs:18:30
+   |
+18 | use super::gpu_transformer::{GpuTransformerLayer, GpuLLMInference};
+   |                              ^^^^^^^^^^^^^^^^^^^
+
+warning: variant `Q2_K` should have an upper camel case name
+  --> src/orchestration/local_llm/gguf_loader.rs:45:5
+   |
+45 |     Q2_K = 10,
+   |     ^^^^ help: convert the identifier to upper camel case: `Q2K`
+   |
+   = note: `#[warn(non_camel_case_types)]` on by default
+
+warning: variant `Q3_K` should have an upper camel case name
+  --> src/orchestration/local_llm/gguf_loader.rs:46:5
+   |
+46 |     Q3_K = 11,
+   |     ^^^^ help: convert the identifier to upper camel case: `Q3K`
+
+warning: variant `Q4_K` should have an upper camel case name
+  --> src/orchestration/local_llm/gguf_loader.rs:47:5
+   |
+47 |     Q4_K = 12,
+   |     ^^^^ help: convert the identifier to upper camel case: `Q4K`
+
+warning: variant `Q5_K` should have an upper camel case name
+  --> src/orchestration/local_llm/gguf_loader.rs:48:5
+   |
+48 |     Q5_K = 13,
+   |     ^^^^ help: convert the identifier to upper camel case: `Q5K`
+
+warning: variant `Q6_K` should have an upper camel case name
+  --> src/orchestration/local_llm/gguf_loader.rs:49:5
+   |
+49 |     Q6_K = 14,
+   |     ^^^^ help: convert the identifier to upper camel case: `Q6K`
+
+warning: variant `Q8_K` should have an upper camel case name
+  --> src/orchestration/local_llm/gguf_loader.rs:50:5
+   |
+50 |     Q8_K = 15,
+   |     ^^^^ help: convert the identifier to upper camel case: `Q8K`
+
+warning: unused import: `anyhow::Result`
+  --> src/orchestration/local_llm/attention_analyzer.rs:23:5
+   |
+23 | use anyhow::Result;
+   |     ^^^^^^^^^^^^^^
+
+warning: unused import: `std::collections::HashMap`
+  --> src/orchestration/local_llm/transfer_entropy_llm.rs:31:5
+   |
+31 | use std::collections::HashMap;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `anyhow::Result`
+  --> src/orchestration/cache/quantum_cache.rs:16:5
+   |
+16 | use anyhow::Result;
+   |     ^^^^^^^^^^^^^^
+
+warning: unused import: `BTreeMap`
+ --> src/orchestration/decomposition/pid_synergy.rs:9:42
+  |
+9 | use std::collections::{HashMap, HashSet, BTreeMap};
+  |                                          ^^^^^^^^
+
+warning: unused import: `VecDeque`
+ --> src/orchestration/inference/hierarchical_active_inference.rs:9:33
+  |
+9 | use std::collections::{HashMap, VecDeque};
+  |                                 ^^^^^^^^
+
+warning: unused import: `rand_distr::Normal`
+  --> src/orchestration/inference/hierarchical_active_inference.rs:11:5
+   |
+11 | use rand_distr::Normal;
+   |     ^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `SVD`
+ --> src/orchestration/causality/bidirectional_causality.rs:8:34
+  |
+8 | use nalgebra::{DMatrix, DVector, SVD};
+  |                                  ^^^
+
+warning: unused import: `VecDeque`
+ --> src/orchestration/causality/bidirectional_causality.rs:9:42
+  |
+9 | use std::collections::{HashMap, HashSet, VecDeque};
+  |                                          ^^^^^^^^
+
+warning: unused import: `rand_distr::Normal`
+  --> src/orchestration/causality/bidirectional_causality.rs:12:5
+   |
+12 | use rand_distr::Normal;
+   |     ^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `Complex`
+ --> src/orchestration/quantum/quantum_entanglement_measures.rs:8:34
+  |
+8 | use nalgebra::{DMatrix, DVector, Complex, SymmetricEigen};
+  |                                  ^^^^^^^
+
+warning: unused import: `VecDeque`
+  --> src/orchestration/quantum/quantum_entanglement_measures.rs:10:33
+   |
+10 | use std::collections::{HashMap, VecDeque};
+   |                                 ^^^^^^^^
+
+warning: unused import: `CudaSlice`
+ --> src/chemistry/gpu_docking.rs:6:35
+  |
+6 | use cudarc::driver::{CudaContext, CudaSlice};  // Fixed: CudaContext not CudaDevice
+  |                                   ^^^^^^^^^
+
+warning: unused import: `std::sync::Arc`
+  --> src/assistant/local_llm/gpu_llm_inference.rs:15:5
+   |
+15 | use std::sync::Arc;
+   |     ^^^^^^^^^^^^^^
+
+warning: unused import: `cudarc::driver::CudaContext`
+  --> src/assistant/local_llm/gpu_llm_inference.rs:16:5
+   |
+16 | use cudarc::driver::CudaContext;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `GpuTransformerLayer`
+  --> src/assistant/local_llm/gpu_llm_inference.rs:18:30
+   |
+18 | use super::gpu_transformer::{GpuTransformerLayer, GpuLLMInference};
+   |                              ^^^^^^^^^^^^^^^^^^^
+
+warning: variant `Q2_K` should have an upper camel case name
+  --> src/assistant/local_llm/gguf_loader.rs:45:5
+   |
+45 |     Q2_K = 10,
+   |     ^^^^ help: convert the identifier to upper camel case: `Q2K`
+
+warning: variant `Q3_K` should have an upper camel case name
+  --> src/assistant/local_llm/gguf_loader.rs:46:5
+   |
+46 |     Q3_K = 11,
+   |     ^^^^ help: convert the identifier to upper camel case: `Q3K`
+
+warning: variant `Q4_K` should have an upper camel case name
+  --> src/assistant/local_llm/gguf_loader.rs:47:5
+   |
+47 |     Q4_K = 12,
+   |     ^^^^ help: convert the identifier to upper camel case: `Q4K`
+
+warning: variant `Q5_K` should have an upper camel case name
+  --> src/assistant/local_llm/gguf_loader.rs:48:5
+   |
+48 |     Q5_K = 13,
+   |     ^^^^ help: convert the identifier to upper camel case: `Q5K`
+
+warning: variant `Q6_K` should have an upper camel case name
+  --> src/assistant/local_llm/gguf_loader.rs:49:5
+   |
+49 |     Q6_K = 14,
+   |     ^^^^ help: convert the identifier to upper camel case: `Q6K`
+
+warning: variant `Q8_K` should have an upper camel case name
+  --> src/assistant/local_llm/gguf_loader.rs:50:5
+   |
+50 |     Q8_K = 15,
+   |     ^^^^ help: convert the identifier to upper camel case: `Q8K`
+
+Some errors have detailed explanations: E0432, E0433.
+For more information about an error, try `rustc --explain E0432`.
+warning: `prism-ai` (lib) generated 65 warnings
+warning: prism-ai@0.1.0: Compiling CUDA kernels with nvcc: /usr/local/cuda/bin/nvcc
+warning: prism-ai@0.1.0: Detected Compute 12.0, using sm_90
+warning: prism-ai@0.1.0: Compiling for GPU architecture: sm_90
+warning: prism-ai@0.1.0: Compiling cuda_kernels/tensor_core_matmul.cu
+warning: prism-ai@0.1.0: Successfully compiled cuda_kernels/tensor_core_matmul.cu to PTX
+warning: prism-ai@0.1.0: Compiling neuromorphic kernels to shared library
+warning: prism-ai@0.1.0: Successfully compiled neuromorphic kernels to shared library
+warning: prism-ai@0.1.0: Library: /home/diddy/Desktop/PRISM-AI-DoD/03-Source-Code/target/release/build/prism-ai-0a2a4a3f381a983c/out/libneuromorphic_kernels.so
+error: could not compile `prism-ai` (lib) due to 13 previous errors; 65 warnings emitted

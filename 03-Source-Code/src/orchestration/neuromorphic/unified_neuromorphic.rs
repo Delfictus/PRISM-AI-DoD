@@ -7,7 +7,7 @@
 use crate::orchestration::OrchestrationError;
 use nalgebra::{DMatrix, DVector};
 use std::collections::{HashMap, VecDeque};
-use rand::distributions::{Distribution, Poisson, Normal};
+use rand_distr::{Distribution, Poisson, Normal};  // Fixed: rand_distr not rand
 use ordered_float::OrderedFloat;
 
 /// Unified neuromorphic processing system

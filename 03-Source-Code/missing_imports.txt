@@ -1,0 +1,22 @@
+error[E0432]: unresolved import `crate::orchestration::optimization::geometric_manifold`
+error[E0432]: unresolved imports `rand::distributions::Poisson`, `rand::distributions::Normal`
+error[E0432]: unresolved imports `cudarc::driver::CudaDevice`, `cudarc::driver::LaunchAsync`
+error[E0432]: unresolved import `cudarc::driver::CudaDevice`
+error[E0432]: unresolved imports `crate::orchestration::local_llm::LLMMetrics`, `crate::orchestration::local_llm::AttentionAnalyzer`, `crate::orchestration::local_llm::TransferEntropyLLM`
+error[E0432]: unresolved import `super::hamiltonian`
+error[E0432]: unresolved import `optimization::geometric_manifold`
+error[E0432]: unresolved import `chemcore::prelude`
+error[E0432]: unresolved import `cudarc::driver::CudaDevice`
+error[E0432]: unresolved imports `crate::orchestration::local_llm::LLMMetrics`, `crate::orchestration::local_llm::AttentionAnalyzer`, `crate::orchestration::local_llm::TransferEntropyLLM`
+error[E0432]: unresolved import `conditional_te::ConditionalTe`
+error[E0432]: unresolved import `thermodynamic_consensus::ThermodynamicConsensus`
+error[E0432]: unresolved import `crate::orchestration::consensus::quantum_voting::QuantumVotingConsensus`
+error[E0432]: unresolved import `crate::orchestration::thermodynamic::thermodynamic_consensus::ThermodynamicConsensus`
+error[E0432]: unresolved import `crate::orchestration::cache::quantum_cache::QuantumApproximateCache`
+error[E0432]: unresolved import `crate::orchestration::routing::transfer_entropy_router::TransferEntropyRouter`
+error[E0432]: unresolved imports `crate::quantum_mlir::QuantumCircuit`, `crate::quantum_mlir::QuantumGate`, `crate::quantum_mlir::GpuBackend`, `crate::quantum_mlir::compile_and_execute`, `crate::quantum_mlir::ExecutionConfig`
+error[E0432]: unresolved import `gpu_llm_inference::SimpleTokenizer`
+error[E0432]: unresolved import `cache::quantum_cache::QuantumApproximateCache`
+error[E0432]: unresolved import `consensus::quantum_voting::QuantumVotingConsensus`
+error[E0432]: unresolved import `thermodynamic::thermodynamic_consensus::ThermodynamicConsensus`
+error[E0432]: unresolved import `routing::transfer_entropy_router::TransferEntropyRouter`
