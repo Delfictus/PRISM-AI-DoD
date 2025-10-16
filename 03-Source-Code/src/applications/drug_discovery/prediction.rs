@@ -102,12 +102,13 @@ impl BindingPredictor {
 
     /// Convert binding affinity to IC50
     ///
-    /// Approximate relationship: IC50 (nM) ≈ exp(-ΔG / RT)
-    /// where ΔG is binding affinity in kcal/mol
+    /// Approximate relationship: K_d ≈ exp(ΔG / RT)
+    /// where ΔG is binding affinity in kcal/mol (already negative for favorable binding)
     fn affinity_to_ic50(&self, affinity_kcal_mol: f64) -> f64 {
         // RT ≈ 0.6 kcal/mol at 298K
         let rt = 0.6;
-        let k_d = (-affinity_kcal_mol / rt).exp();
+        // affinity is already negative for favorable binding, so don't negate again
+        let k_d = (affinity_kcal_mol / rt).exp();
 
         // Convert to IC50 (approximately equal to K_d for competitive inhibition)
         k_d * 1e9 // Convert from M to nM

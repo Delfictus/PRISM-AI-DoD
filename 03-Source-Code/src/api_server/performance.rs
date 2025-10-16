@@ -140,14 +140,17 @@ impl Default for PerformanceOptimizer {
     }
 }
 
-/// Calculate percentile
+/// Calculate percentile using nearest-rank method
 fn percentile(sorted_values: &[f64], p: f64) -> f64 {
     if sorted_values.is_empty() {
         return 0.0;
     }
 
-    let index = (p / 100.0 * (sorted_values.len() - 1) as f64).round() as usize;
-    sorted_values[index.min(sorted_values.len() - 1)]
+    let n = sorted_values.len();
+    let rank = (p / 100.0) * n as f64;
+    let index = (rank.ceil() as usize).saturating_sub(1);
+
+    sorted_values[index.min(n - 1)]
 }
 
 /// Identify bottlenecks for an endpoint

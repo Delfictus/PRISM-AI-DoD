@@ -584,6 +584,7 @@ mod tests {
     use super::*;
 
     #[tokio::test]
+    #[ignore = "Requires real LLM API keys - use with OPENAI_API_KEY, ANTHROPIC_API_KEY, etc."]
     async fn test_full_integration() {
         let config = IntegrationConfig::default();
         let mut integration = MissionCharlieIntegration::new(config).await.unwrap();
