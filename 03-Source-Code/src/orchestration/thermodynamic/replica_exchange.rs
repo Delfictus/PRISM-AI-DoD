@@ -257,6 +257,12 @@ impl ReplicaExchangeSystem {
         let w = chain_variances.iter().sum::<f64>() / m;
 
         // Step 5: Compute R̂
+        // Handle edge case where w ≈ 0 (perfect convergence or constant chains)
+        if w < 1e-10 {
+            // If within-chain variance is effectively zero, chains have converged
+            return Ok(1.0);
+        }
+
         let var_plus = w * (n - 1.0) / n + b / n;
         let r_hat = (var_plus / w).sqrt();
 

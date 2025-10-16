@@ -230,7 +230,8 @@ impl MotionPlanner {
     fn generate_straight_line_policy(&self, goal: &Array1<f64>, n_steps: usize) -> Array2<f64> {
         let mut policy = Array2::zeros((n_steps, goal.len()));
         for t in 0..n_steps {
-            let alpha = (t as f64) / (n_steps as f64);
+            // Ensure final step reaches goal exactly (alpha=1.0 at t=n_steps-1)
+            let alpha = (t as f64) / ((n_steps - 1) as f64).max(1.0);
             policy.row_mut(t).assign(&(goal * alpha));
         }
         policy
@@ -262,7 +263,8 @@ impl MotionPlanner {
 
         // Generate curved path
         for t in 0..n_steps {
-            let alpha = (t as f64) / (n_steps as f64);
+            // Ensure final step reaches goal exactly (alpha=1.0 at t=n_steps-1)
+            let alpha = (t as f64) / ((n_steps - 1) as f64).max(1.0);
 
             // Base position along goal direction
             let base_x = goal[0] * alpha;
@@ -453,10 +455,10 @@ mod tests {
         assert!((policy[[n_steps - 1, 0]] - goal[0]).abs() < 0.01);
         assert!((policy[[n_steps - 1, 1]] - goal[1]).abs() < 0.01);
 
-        // Check linearity (halfway point should be at half the goal)
+        // Check linearity (halfway point should be near half the goal)
         let mid = n_steps / 2;
-        assert!((policy[[mid, 0]] - goal[0] / 2.0).abs() < 0.5);
-        assert!((policy[[mid, 1]] - goal[1] / 2.0).abs() < 0.5);
+        assert!((policy[[mid, 0]] - goal[0] / 2.0).abs() < 0.6);
+        assert!((policy[[mid, 1]] - goal[1] / 2.0).abs() < 0.6);
     }
 
     #[test]

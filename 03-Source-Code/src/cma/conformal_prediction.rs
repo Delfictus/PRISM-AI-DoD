@@ -590,14 +590,18 @@ mod tests {
 
     #[test]
     fn test_conformal_calibration() {
-        let config = ConformalConfig::default();
+        let config = ConformalConfig {
+            calibration_size: 100,  // Match available data
+            ..Default::default()
+        };
         let mut cp = ConformalPredictor::new(config);
 
-        // Generate calibration data
+        // Generate calibration data with noise
         let mut calibration_data = Vec::new();
         for i in 0..100 {
             let x = arr1(&[i as f64 / 10.0]);
-            let y = i as f64 / 5.0 + 1.0;
+            // y = 2*x + 1 + noise (model predicts 2*x + 1)
+            let y = x[0] * 2.0 + 1.0 + (i as f64 * 0.01).sin() * 0.2;
             calibration_data.push((x, y));
         }
 
@@ -613,6 +617,7 @@ mod tests {
     fn test_prediction_interval() {
         let config = ConformalConfig {
             coverage_level: 0.9,
+            calibration_size: 100,  // Match available data
             ..Default::default()
         };
         let mut cp = ConformalPredictor::new(config);
