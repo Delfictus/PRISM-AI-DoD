@@ -398,3 +398,142 @@ impl ActiveInferencePort for ActiveInferenceAdapter {
         Ok(action.phase_correction)
     }
 }
+
+// ============================================================================
+// Mock Adapters for Testing - Avoid GPU initialization in test environment
+// ============================================================================
+
+#[cfg(test)]
+pub mod mock_adapters {
+    use anyhow::Result;
+    use ndarray::{Array1, Array2};
+    use shared_types::{PhaseField, KuramotoState};
+    use crate::statistical_mechanics::ThermodynamicState;
+    use super::super::ports::{NeuromorphicPort, InformationFlowPort, ThermodynamicPort, QuantumPort, ActiveInferencePort};
+
+    /// Mock neuromorphic adapter for testing
+    pub struct MockNeuromorphicAdapter {
+        n_dimensions: usize,
+        spike_history: Vec<Array1<bool>>,
+    }
+
+    impl MockNeuromorphicAdapter {
+        pub fn new(n_dimensions: usize) -> Self {
+            Self {
+                n_dimensions,
+                spike_history: Vec::new(),
+            }
+        }
+    }
+
+    impl NeuromorphicPort for MockNeuromorphicAdapter {
+        fn encode_spikes(&mut self, input: &Array1<f64>) -> Result<Array1<bool>> {
+            // Simple threshold encoding
+            let spikes = input.mapv(|x| x > 0.5);
+            self.spike_history.push(spikes.clone());
+            Ok(spikes)
+        }
+
+        fn get_spike_history(&self) -> &[Array1<bool>] {
+            &self.spike_history
+        }
+    }
+
+    /// Mock information flow adapter for testing
+    pub struct MockInformationFlowAdapter;
+
+    impl MockInformationFlowAdapter {
+        pub fn new() -> Self {
+            Self
+        }
+    }
+
+    impl InformationFlowPort for MockInformationFlowAdapter {
+        fn compute_transfer_entropy(&mut self, _source: &Array1<bool>, _target: &Array1<bool>) -> Result<f64> {
+            Ok(0.1) // Mock value
+        }
+
+        fn compute_coupling_matrix(&mut self, _spike_history: &[Array1<bool>]) -> Result<Array2<f64>> {
+            // Return identity matrix
+            Ok(Array2::eye(10))
+        }
+    }
+
+    /// Mock thermodynamic adapter for testing
+    pub struct MockThermodynamicAdapter {
+        n_dimensions: usize,
+    }
+
+    impl MockThermodynamicAdapter {
+        pub fn new(n_dimensions: usize) -> Self {
+            Self { n_dimensions }
+        }
+    }
+
+    impl ThermodynamicPort for MockThermodynamicAdapter {
+        fn evolve(&mut self, _coupling: &Array2<f64>, _dt: f64) -> Result<ThermodynamicState> {
+            // Create a simple thermodynamic state
+            Ok(ThermodynamicState {
+                phases: vec![0.0; self.n_dimensions],
+                velocities: vec![0.0; self.n_dimensions],
+                natural_frequencies: vec![1.0; self.n_dimensions],
+                coupling_matrix: vec![vec![0.0; self.n_dimensions]; self.n_dimensions],
+                time: 0.0,
+                entropy: 0.0,
+                energy: 0.0,
+            })
+        }
+
+        fn entropy_production(&self) -> f64 {
+            0.1 // Always positive for testing
+        }
+
+        fn get_kuramoto_state(&self) -> Option<KuramotoState> {
+            None
+        }
+    }
+
+    /// Mock quantum adapter for testing
+    pub struct MockQuantumAdapter;
+
+    impl MockQuantumAdapter {
+        pub fn new() -> Self {
+            Self
+        }
+    }
+
+    impl QuantumPort for MockQuantumAdapter {
+        fn quantum_process(&mut self, _state: &ThermodynamicState) -> Result<Array1<f64>> {
+            Ok(Array1::zeros(10))
+        }
+
+        fn get_observables(&self) -> Array1<f64> {
+            Array1::zeros(10)
+        }
+
+        fn get_phase_field(&self) -> Option<PhaseField> {
+            None
+        }
+    }
+
+    /// Mock active inference adapter for testing
+    pub struct MockActiveInferenceAdapter {
+        n_dimensions: usize,
+    }
+
+    impl MockActiveInferenceAdapter {
+        pub fn new(n_dimensions: usize) -> Self {
+            Self { n_dimensions }
+        }
+    }
+
+    impl ActiveInferencePort for MockActiveInferenceAdapter {
+        fn infer(&mut self, _observations: &Array1<f64>, _quantum_obs: &Array1<f64>) -> Result<f64> {
+            Ok(10.0) // Finite free energy
+        }
+
+        fn select_action(&mut self, targets: &Array1<f64>) -> Result<Array1<f64>> {
+            Ok(targets.clone() * 0.1) // Simple proportional control
+        }
+    }
+}
