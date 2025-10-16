@@ -194,8 +194,8 @@ mod tests {
     #[test]
     #[cfg_attr(not(feature = "cuda"), ignore = "Requires CUDA")]
     fn test_gpu_availability() {
-        // Should report GPU not available until kernels compiled
-        assert!(!TransferEntropy::gpu_available());
+        // With PTX kernels compiled and in place, GPU should be available
+        assert!(TransferEntropy::gpu_available(), "GPU should be available with compiled PTX kernels");
     }
 
     #[test]

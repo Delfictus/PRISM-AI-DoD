@@ -58,28 +58,36 @@ impl GpuEntropyCalculator {
     /// # Returns
     /// Shannon entropy in bits
     pub fn calculate(&self, data: &Array1<f64>) -> Result<f64> {
+        // Check if input is already a probability distribution
+        let sum: f64 = data.iter().sum();
+        let is_probability_dist = (sum - 1.0).abs() < 1e-6 && data.iter().all(|&x| x >= 0.0 && x <= 1.0);
+
         #[cfg(feature = "cuda")]
         {
             if self.use_gpu {
-                if let Ok(entropy) = self.calculate_gpu(data) {
+                if let Ok(entropy) = self.calculate_gpu(data, is_probability_dist) {
                     return Ok(entropy);
                 }
             }
         }
 
         // Fall back to CPU
-        self.calculate_cpu(data)
+        self.calculate_cpu(data, is_probability_dist)
     }
 
     /// GPU implementation using Worker 2's shannon_entropy kernel
     #[cfg(feature = "cuda")]
-    fn calculate_gpu(&self, data: &Array1<f64>) -> Result<f64> {
+    fn calculate_gpu(&self, data: &Array1<f64>, is_probability_dist: bool) -> Result<f64> {
         let executor = get_global_executor()
             .context("Failed to get GPU executor")?;
         let executor = executor.lock().unwrap();
 
         // Convert to probability distribution if needed
-        let probabilities = self.to_probabilities(data)?;
+        let probabilities = if is_probability_dist {
+            data.clone()
+        } else {
+            self.to_probabilities(data)?
+        };
 
         // Convert to f32 for GPU
         let probs_f32: Vec<f32> = probabilities.iter().map(|&x| x as f32).collect();
@@ -91,8 +99,8 @@ impl GpuEntropyCalculator {
         // Convert nats to bits
         let entropy_bits = (entropy_nats as f64) / std::f64::consts::LN_2;
 
-        // Apply Miller-Madow bias correction if enabled
-        let corrected_entropy = if self.bias_correction {
+        // Apply Miller-Madow bias correction ONLY for discretized data (not given probability distributions)
+        let corrected_entropy = if self.bias_correction && !is_probability_dist {
             let n_nonzero = probs_f32.iter().filter(|&&p| p > 0.0).count();
             let correction = (n_nonzero as f64 - 1.0) / (2.0 * data.len() as f64);
             entropy_bits + correction
@@ -104,8 +112,12 @@ impl GpuEntropyCalculator {
     }
 
     /// CPU fallback implementation
-    fn calculate_cpu(&self, data: &Array1<f64>) -> Result<f64> {
-        let probabilities = self.to_probabilities(data)?;
+    fn calculate_cpu(&self, data: &Array1<f64>, is_probability_dist: bool) -> Result<f64> {
+        let probabilities = if is_probability_dist {
+            data.clone()
+        } else {
+            self.to_probabilities(data)?
+        };
 
         let mut entropy = 0.0;
         for &p in probabilities.iter() {
@@ -114,8 +126,8 @@ impl GpuEntropyCalculator {
             }
         }
 
-        // Miller-Madow bias correction
-        if self.bias_correction {
+        // Miller-Madow bias correction ONLY for discretized data (not given probability distributions)
+        if self.bias_correction && !is_probability_dist {
             let n_nonzero = probabilities.iter().filter(|&&p| p > 0.0).count();
             let correction = (n_nonzero as f64 - 1.0) / (2.0 * data.len() as f64);
             entropy += correction;
