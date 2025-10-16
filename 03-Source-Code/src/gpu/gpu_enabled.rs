@@ -172,19 +172,24 @@ impl GpuTensor {
         GpuTensor::from_cpu(c_data, vec![m, n])
     }
 
-    /// ReLU activation - ACTUAL GPU KERNEL EXECUTION
+    /// ReLU activation - GPU or CPU fallback
     pub fn relu(&mut self) -> Result<()> {
-        println!("  🚀 ReLU (GPU KERNEL EXECUTION)");
-
-        // ACTUAL GPU KERNEL EXECUTION - NO CPU LOOPS!
-        let executor = self.gpu_state.kernel_executor.lock().unwrap();
-        executor.relu_inplace(&mut self.data)?;
-
-        println!("     ✅ GPU kernel executed successfully!");
+        if let Some(ref executor) = self.gpu_state.kernel_executor {
+            println!("  🚀 ReLU (GPU KERNEL EXECUTION)");
+            let executor = executor.lock().unwrap();
+            executor.relu_inplace(&mut self.data)?;
+            println!("     ✅ GPU kernel executed successfully!");
+        } else {
+            println!("  ⚠️ ReLU (CPU FALLBACK)");
+            // CPU fallback implementation
+            for x in &mut self.data {
+                *x = x.max(0.0);
+            }
+        }
         Ok(())
     }
 
-    /// Softmax activation - ACTUAL GPU KERNEL EXECUTION
+    /// Softmax activation - GPU or CPU fallback
     pub fn softmax(&mut self, dim: usize) -> Result<()> {
         if dim != 1 || self.shape.len() != 2 {
             anyhow::bail!("Softmax only supports dim=1 on 2D tensors");
@@ -193,50 +198,82 @@ impl GpuTensor {
         let batch_size = self.shape[0];
         let num_classes = self.shape[1];
 
-        println!("  🚀 Softmax (GPU KERNEL EXECUTION)");
-
-        // ACTUAL GPU KERNEL EXECUTION - NO CPU LOOPS!
-        let executor = self.gpu_state.kernel_executor.lock().unwrap();
-        executor.softmax(&mut self.data, batch_size, num_classes)?;
-
-        println!("     ✅ GPU kernel executed successfully!");
+        if let Some(ref executor) = self.gpu_state.kernel_executor {
+            println!("  🚀 Softmax (GPU KERNEL EXECUTION)");
+            let executor = executor.lock().unwrap();
+            executor.softmax(&mut self.data, batch_size, num_classes)?;
+            println!("     ✅ GPU kernel executed successfully!");
+        } else {
+            println!("  ⚠️ Softmax (CPU FALLBACK)");
+            // CPU fallback implementation
+            for batch in 0..batch_size {
+                let offset = batch * num_classes;
+                let mut max_val = f32::NEG_INFINITY;
+                for i in 0..num_classes {
+                    max_val = max_val.max(self.data[offset + i]);
+                }
+                let mut sum = 0.0;
+                for i in 0..num_classes {
+                    self.data[offset + i] = (self.data[offset + i] - max_val).exp();
+                    sum += self.data[offset + i];
+                }
+                for i in 0..num_classes {
+                    self.data[offset + i] /= sum;
+                }
+            }
+        }
         Ok(())
     }
 
-    /// Sigmoid activation - ACTUAL GPU KERNEL
+    /// Sigmoid activation - GPU or CPU fallback
     pub fn sigmoid(&mut self) -> Result<()> {
-        println!("  🚀 Sigmoid (GPU KERNEL EXECUTION)");
-
-        let executor = self.gpu_state.kernel_executor.lock().unwrap();
-        executor.sigmoid_inplace(&mut self.data)?;
-
-        println!("     ✅ GPU kernel executed successfully!");
+        if let Some(ref executor) = self.gpu_state.kernel_executor {
+            println!("  🚀 Sigmoid (GPU KERNEL EXECUTION)");
+            let executor = executor.lock().unwrap();
+            executor.sigmoid_inplace(&mut self.data)?;
+            println!("     ✅ GPU kernel executed successfully!");
+        } else {
+            println!("  ⚠️ Sigmoid (CPU FALLBACK)");
+            for x in &mut self.data {
+                *x = 1.0 / (1.0 + (-*x).exp());
+            }
+        }
         Ok(())
     }
 
-    /// Tanh activation - ACTUAL GPU KERNEL
+    /// Tanh activation - GPU or CPU fallback
     pub fn tanh(&mut self) -> Result<()> {
-        println!("  🚀 Tanh (GPU KERNEL EXECUTION)");
-
-        let executor = self.gpu_state.kernel_executor.lock().unwrap();
-        executor.tanh_inplace(&mut self.data)?;
-
-        println!("     ✅ GPU kernel executed successfully!");
+        if let Some(ref executor) = self.gpu_state.kernel_executor {
+            println!("  🚀 Tanh (GPU KERNEL EXECUTION)");
+            let executor = executor.lock().unwrap();
+            executor.tanh_inplace(&mut self.data)?;
+            println!("     ✅ GPU kernel executed successfully!");
+        } else {
+            println!("  ⚠️ Tanh (CPU FALLBACK)");
+            for x in &mut self.data {
+                *x = x.tanh();
+            }
+        }
         Ok(())
     }
 
-    /// Element-wise addition - ACTUAL GPU KERNEL
+    /// Element-wise addition - GPU or CPU fallback
     pub fn add(&self, other: &GpuTensor) -> Result<GpuTensor> {
         if self.shape != other.shape {
             anyhow::bail!("Shape mismatch for addition");
         }
 
-        println!("  🚀 Element-wise add (GPU KERNEL EXECUTION)");
+        let result = if let Some(ref executor) = self.gpu_state.kernel_executor {
+            println!("  🚀 Element-wise add (GPU KERNEL EXECUTION)");
+            let executor = executor.lock().unwrap();
+            let result = executor.vector_add(&self.data, &other.data)?;
+            println!("     ✅ GPU kernel executed successfully!");
+            result
+        } else {
+            println!("  ⚠️ Element-wise add (CPU FALLBACK)");
+            self.data.iter().zip(&other.data).map(|(a, b)| a + b).collect()
+        };
 
-        let executor = self.gpu_state.kernel_executor.lock().unwrap();
-        let result = executor.vector_add(&self.data, &other.data)?;
-
-        println!("     ✅ GPU kernel executed successfully!");
         GpuTensor::from_cpu(result, self.shape.clone())
     }
 
@@ -245,44 +282,68 @@ impl GpuTensor {
         &self.shape
     }
 
-    /// Compute KL divergence on GPU
+    /// Compute KL divergence - GPU or CPU fallback
     pub fn kl_divergence(&self, other: &GpuTensor) -> Result<f32> {
         if self.shape != other.shape {
             anyhow::bail!("Tensors must have same shape for KL divergence");
         }
 
-        println!("  🚀 KL Divergence (GPU KERNEL EXECUTION)");
+        let kl = if let Some(ref executor) = self.gpu_state.kernel_executor {
+            println!("  🚀 KL Divergence (GPU KERNEL EXECUTION)");
+            let executor = executor.lock().unwrap();
+            let kl = executor.kl_divergence(&self.data, &other.data)?;
+            println!("     ✅ GPU kernel executed successfully!");
+            kl
+        } else {
+            println!("  ⚠️ KL Divergence (CPU FALLBACK)");
+            let mut kl = 0.0f32;
+            for (p, q) in self.data.iter().zip(&other.data) {
+                if *p > 0.0 && *q > 0.0 {
+                    kl += p * (p / q).ln();
+                }
+            }
+            kl
+        };
 
-        let executor = self.gpu_state.kernel_executor.lock().unwrap();
-        let kl = executor.kl_divergence(&self.data, &other.data)?;
-
-        println!("     ✅ GPU kernel executed successfully!");
         Ok(kl)
     }
 
-    /// Element-wise multiply on GPU
+    /// Element-wise multiply - GPU or CPU fallback
     pub fn multiply(&self, other: &GpuTensor) -> Result<GpuTensor> {
         if self.shape != other.shape {
             anyhow::bail!("Shape mismatch for multiplication");
         }
 
-        println!("  🚀 Element-wise multiply (GPU KERNEL EXECUTION)");
+        let result = if let Some(ref executor) = self.gpu_state.kernel_executor {
+            println!("  🚀 Element-wise multiply (GPU KERNEL EXECUTION)");
+            let executor = executor.lock().unwrap();
+            let result = executor.elementwise_multiply(&self.data, &other.data)?;
+            println!("     ✅ GPU kernel executed successfully!");
+            result
+        } else {
+            println!("  ⚠️ Element-wise multiply (CPU FALLBACK)");
+            self.data.iter().zip(&other.data).map(|(a, b)| a * b).collect()
+        };
 
-        let executor = self.gpu_state.kernel_executor.lock().unwrap();
-        let result = executor.elementwise_multiply(&self.data, &other.data)?;
-
-        println!("     ✅ GPU kernel executed successfully!");
         GpuTensor::from_cpu(result, self.shape.clone())
     }
 
-    /// Normalize to sum to 1.0 on GPU
+    /// Normalize to sum to 1.0 - GPU or CPU fallback
     pub fn normalize(&mut self) -> Result<()> {
-        println!("  🚀 Normalize (GPU KERNEL EXECUTION)");
-
-        let executor = self.gpu_state.kernel_executor.lock().unwrap();
-        executor.normalize_inplace(&mut self.data)?;
-
-        println!("     ✅ GPU kernel executed successfully!");
+        if let Some(ref executor) = self.gpu_state.kernel_executor {
+            println!("  🚀 Normalize (GPU KERNEL EXECUTION)");
+            let executor = executor.lock().unwrap();
+            executor.normalize_inplace(&mut self.data)?;
+            println!("     ✅ GPU kernel executed successfully!");
+        } else {
+            println!("  ⚠️ Normalize (CPU FALLBACK)");
+            let sum: f32 = self.data.iter().sum();
+            if sum > 0.0 {
+                for x in &mut self.data {
+                    *x /= sum;
+                }
+            }
+        }
         Ok(())
     }
 }
@@ -324,10 +385,17 @@ impl GpuLinear {
         let batch_size = output.shape[0];
         let features = output.shape[1];
 
-        // GPU BROADCAST ADD KERNEL
-        {
-            let executor = output.gpu_state.kernel_executor.lock().unwrap();
+        // GPU BROADCAST ADD KERNEL or CPU fallback
+        if let Some(ref executor) = output.gpu_state.kernel_executor {
+            let executor = executor.lock().unwrap();
             executor.broadcast_add_inplace(&mut output.data, &self.bias.data, batch_size, features)?;
+        } else {
+            // CPU fallback for bias addition
+            for batch in 0..batch_size {
+                for feat in 0..features {
+                    output.data[batch * features + feat] += self.bias.data[feat];
+                }
+            }
         }
 
         Ok(output)

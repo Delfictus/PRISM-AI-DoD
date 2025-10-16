@@ -19,6 +19,12 @@ pub mod kernel_autotuner;  // Kernel auto-tuning for optimal launch configuratio
 pub mod neuromorphic_ffi;  // FFI bindings for neuromorphic CUDA kernels
 pub mod cublas_compat;  // CUBLAS compatibility layer for CUDA 12.8
 
+// Production GPU Runtime - Full acceleration for deployment
+#[cfg(feature = "cuda")]
+pub mod production_runtime;
+#[cfg(feature = "cuda")]
+pub mod cudarc_replacement;
+
 // Use GPU-enabled implementation - NO CPU FALLBACK
 pub use gpu_enabled::{
     SimpleGpuContext as GpuMemoryPool,

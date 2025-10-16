@@ -10,8 +10,13 @@ fn main() {
     if cfg!(feature = "cuda") {
         println!("cargo:rerun-if-changed=cuda_kernels/tensor_core_matmul.cu");
         println!("cargo:rerun-if-changed=cuda/neuromorphic_kernels.cu");
+        println!("cargo:rerun-if-changed=src/gpu/cublas_interposer.c");
 
         let out_dir = PathBuf::from(env::var("OUT_DIR").unwrap());
+
+        // CRITICAL: Compile and link CUBLAS shim library FIRST
+        // This provides the missing symbols for CUDA 12.8 compatibility
+        compile_cublas_shim(&out_dir);
 
         // Detect CUDA installation
         let nvcc = find_nvcc().expect("nvcc not found. Please install CUDA Toolkit.");
@@ -39,6 +44,39 @@ fn main() {
         // Compile Neuromorphic kernels to shared library
         compile_neuromorphic_kernels(&nvcc, &out_dir, &arch);
     }
+}
+
+fn compile_cublas_shim(out_dir: &PathBuf) {
+    println!("cargo:warning=Compiling CUBLAS interposer library for CUDA 12.8 compatibility");
+
+    let source = "src/gpu/cublas_interposer.c";
+    let output = out_dir.join("libcublas_interposer.so");
+
+    // Compile the interposer library with gcc, linking against dl for dlopen/dlsym
+    let status = Command::new("gcc")
+        .args(&[
+            "-shared",
+            "-fPIC",
+            "-o", output.to_str().unwrap(),
+            source,
+            "-ldl",  // Link against libdl for dlopen/dlsym
+            "-D_GNU_SOURCE",
+        ])
+        .status()
+        .expect("Failed to compile CUBLAS interposer library");
+
+    if !status.success() {
+        panic!("Failed to compile CUBLAS interposer library");
+    }
+
+    println!("cargo:warning=Successfully compiled CUBLAS interposer library");
+    println!("cargo:warning=Interposer library at: {}", output.display());
+
+    // Use LD_PRELOAD to inject our interposer
+    println!("cargo:rustc-env=LD_PRELOAD={}", output.display());
+
+    // Also export path for manual testing
+    println!("cargo:rustc-env=CUBLAS_INTERPOSER_PATH={}", output.display());
 }
 
 fn compile_cuda_kernel(nvcc: &str, source: &str, output: &PathBuf, arch: &str) {

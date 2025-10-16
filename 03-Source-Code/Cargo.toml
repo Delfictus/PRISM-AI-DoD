@@ -237,6 +237,14 @@ path = "src/bin/test_gpu_real.rs"
 name = "api_server"
 path = "src/bin/api_server.rs"
 
+[[bin]]
+name = "production_gpu_benchmark"
+path = "src/bin/production_gpu_benchmark.rs"
+
+[[bin]]
+name = "production_solution_demo"
+path = "src/bin/production_solution_demo.rs"
+
 [[test]]
 name = "transfer_entropy"
 path = "tests/transfer_entropy_tests.rs"
