@@ -641,6 +641,20 @@ impl PIDSynergyDecomposition {
             }
         }
 
+        // If redundancy is still 0 and we have pairwise redundancies, use their minimum
+        // (redundancy is the information shared by ALL sources)
+        if redundancy == 0.0 && n_sources > 1 {
+            let mut min_pairwise = f64::INFINITY;
+            for i in 0..n_sources {
+                for j in (i+1)..n_sources {
+                    min_pairwise = min_pairwise.min(pairwise_redundancy[(i, j)]);
+                }
+            }
+            if min_pairwise < f64::INFINITY && min_pairwise > 0.0 {
+                redundancy = min_pairwise;
+            }
+        }
+
         // Compute total mutual information
         let total_mi = unique.iter().sum::<f64>() + redundancy + synergy +
                       higher_order.values().sum::<f64>();
@@ -676,14 +690,20 @@ impl PIDSynergyDecomposition {
 
     /// Compute mutual information between distributions
     fn compute_mutual_information(&self, dist1: &DVector<f64>, dist2: &DVector<f64>) -> f64 {
+        // Compute overlap/similarity between distributions as proxy for MI
+        // Use dot product which measures distribution similarity
+        let mut overlap = 0.0;
+        for i in 0..dist1.len().min(dist2.len()) {
+            overlap += dist1[i] * dist2[i];
+        }
+
+        // Scale by entropy to get information-theoretic measure
         let h1 = self.compute_entropy(dist1);
         let h2 = self.compute_entropy(dist2);
+        let avg_entropy = (h1 + h2) / 2.0;
 
-        // Joint entropy (simplified - assuming independence for this example)
-        let joint_entropy = h1 + h2;
-
-        // MI = H(X) + H(Y) - H(X,Y)
-        h1 + h2 - joint_entropy
+        // MI approximation: overlap weighted by average entropy
+        overlap * avg_entropy
     }
 
     /// Compute cache key for distributions

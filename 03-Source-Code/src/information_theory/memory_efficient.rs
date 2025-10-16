@@ -436,7 +436,7 @@ mod tests {
     #[test]
     fn test_memory_comparison() {
         // Compare memory usage: Standard HashMap vs Compressed
-        let n_entries = 1000;
+        let n_entries = 200;  // Keep values within 0-255 range for CompressedKey
 
         // Standard: Vec<i32> keys
         let mut standard: HashMap<Vec<i32>, f64> = HashMap::new();
@@ -444,10 +444,10 @@ mod tests {
             standard.insert(vec![i, i+1, i+2], i as f64);
         }
 
-        // Compressed: CompressedKey
+        // Compressed: CompressedKey (values must be 0-255)
         let mut compressed = CompressedHistogram::new(3);
         for i in 0..n_entries {
-            compressed.add(&[i, i+1, i+2], i as f64).unwrap();
+            compressed.add(&[i, (i+1) % 256, (i+2) % 256], i as f64).unwrap();
         }
 
         println!("Standard HashMap entries: {}", standard.len());
