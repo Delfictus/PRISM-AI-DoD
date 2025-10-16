@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PRISM-AI Ultimate: Explanatory & Therapeutic Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+    <!-- 3DMol.js for better molecular visualization with binding sites -->
+    <script src="https://3Dmol.org/build/3Dmol-min.js"></script>
+    <!-- NGL Viewer as alternative -->
+    <script src="https://cdn.jsdelivr.net/npm/ngl@2.0.0-dev.37/dist/ngl.min.js"></script>
+    <!-- Chart.js and Plotly -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <!-- D3.js for custom visualizations -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 100%);
+        }
+        .quantum-gradient {
+            background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
+        }
+        .therapeutic-gradient {
+            background: linear-gradient(135deg, #10b981 0%, #3b82f6 100%);
+        }
+        .explanation-card {
+            background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+            border-left: 4px solid #8b5cf6;
+        }
+        .critical-residue {
+            background: #dc2626;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .pathway-arrow {
+            stroke: #8b5cf6;
+            stroke-width: 2;
+            fill: none;
+            marker-end: url(#arrowhead);
+        }
+        .binding-site-highlight {
+            background: rgba(34, 197, 94, 0.2);
+            border: 2px solid #22c55e;
+            border-radius: 8px;
+        }
+        .drug-candidate {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            border: 1px solid #374151;
+            transition: all 0.3s;
+        }
+        .drug-candidate:hover {
+            border-color: #8b5cf6;
+            box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-200 min-h-screen flex flex-col">
+
+    <!-- Enhanced Header -->
+    <header class="bg-gray-900/95 backdrop-blur-sm border-b border-gray-700 p-3 sticky top-0 z-50">
+        <div class="flex justify-between items-center">
+            <div class="flex items-center space-x-4">
+                <div class="w-12 h-12 quantum-gradient rounded-lg flex items-center justify-center">
+                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold text-white">PRISM-AI Ultimate Platform</h1>
+                    <p class="text-xs text-gray-400">Explanatory Folding • De Novo Design • Therapeutic Discovery</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-6">
+                <div class="px-3 py-1 bg-purple-900/50 rounded-lg">
+                    <span class="text-xs text-purple-400">Quantum Enhanced</span>
+                </div>
+                <div class="text-center">
+                    <div class="text-xs text-gray-400">API Status</div>
+                    <span id="api-status" class="text-sm font-bold text-green-400">Connected</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Navigation Tabs -->
+    <div class="bg-gray-800 border-b border-gray-700">
+        <div class="flex">
+            <button onclick="showMainTab('explain')" class="main-tab-btn bg-purple-600 text-white px-6 py-3 font-semibold">
+                🔍 Explain Folding
+            </button>
+            <button onclick="showMainTab('design')" class="main-tab-btn bg-gray-700 text-gray-300 px-6 py-3 font-semibold hover:bg-gray-600">
+                🧬 De Novo Design
+            </button>
+            <button onclick="showMainTab('upload')" class="main-tab-btn bg-gray-700 text-gray-300 px-6 py-3 font-semibold hover:bg-gray-600">
+                📁 Upload PDB
+            </button>
+            <button onclick="showMainTab('therapeutic')" class="main-tab-btn bg-gray-700 text-gray-300 px-6 py-3 font-semibold hover:bg-gray-600">
+                💊 Drug Discovery
+            </button>
+        </div>
+    </div>
+
+    <main class="flex-grow flex">
+        <!-- Explain Folding Tab -->
+        <div id="explain-tab" class="main-tab-content w-full p-6">
+            <div class="grid grid-cols-3 gap-6">
+                <!-- Input Panel -->
+                <div class="col-span-1">
+                    <div class="bg-gray-800 rounded-lg p-4 border border-gray-700">
+                        <h3 class="text-lg font-bold mb-3">Protein Analysis</h3>
+                        <textarea id="explain-sequence" placeholder="Enter protein sequence..."
+                                  class="w-full h-32 bg-gray-900 border border-gray-600 rounded p-2 text-sm font-mono mb-3"></textarea>
+
+                        <select id="example-sequences" class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-sm mb-3">
+                            <option value="">Select example sequence...</option>
+                        </select>
+
+                        <div class="space-y-2 mb-3">
+                            <label class="flex items-center text-sm">
+                                <input type="checkbox" checked class="mr-2">
+                                <span>Explain stability mechanisms</span>
+                            </label>
+                            <label class="flex items-center text-sm">
+                                <input type="checkbox" checked class="mr-2">
+                                <span>Identify critical residues</span>
+                            </label>
+                            <label class="flex items-center text-sm">
+                                <input type="checkbox" checked class="mr-2">
+                                <span>Predict beneficial mutations</span>
+                            </label>
+                            <label class="flex items-center text-sm">
+                                <input type="checkbox" checked class="mr-2">
+                                <span>Show quantum effects</span>
+                            </label>
+                        </div>
+
+                        <button onclick="explainFolding()" class="w-full quantum-gradient text-white font-bold py-2 px-4 rounded-lg">
+                            Explain Why It Folds This Way
+                        </button>
+                    </div>
+
+                    <!-- Critical Residues -->
+                    <div class="bg-gray-800 rounded-lg p-4 border border-gray-700 mt-4">
+                        <h3 class="text-lg font-bold mb-3">Critical Residues</h3>
+                        <div id="critical-residues" class="space-y-2 text-sm">
+                            <p class="text-gray-400">Analysis will appear here...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Folding Pathway Visualization -->
+                <div class="col-span-2">
+                    <div class="bg-gray-800 rounded-lg p-4 border border-gray-700">
+                        <h3 class="text-lg font-bold mb-3">Folding Mechanism Explanation</h3>
+
+                        <!-- Energy Landscape -->
+                        <div class="mb-4">
+                            <h4 class="text-md font-semibold mb-2">Energy Landscape & Folding Pathway</h4>
+                            <div id="energy-landscape" class="h-64 bg-gray-900 rounded"></div>
+                        </div>
+
+                        <!-- Folding Steps -->
+                        <div class="mb-4">
+                            <h4 class="text-md font-semibold mb-2">Folding Steps</h4>
+                            <div id="folding-steps" class="space-y-3">
+                                <!-- Steps will be inserted here -->
+                            </div>
+                        </div>
+
+                        <!-- Causal Relationships -->
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="explanation-card p-3 rounded">
+                                <h5 class="text-sm font-semibold mb-2 text-purple-400">Causal Chain</h5>
+                                <div id="causal-chain" class="text-xs space-y-1"></div>
+                            </div>
+                            <div class="explanation-card p-3 rounded">
+                                <h5 class="text-sm font-semibold mb-2 text-purple-400">Quantum Effects</h5>
+                                <div id="quantum-effects" class="text-xs space-y-1"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Mutation Predictions -->
+                    <div class="bg-gray-800 rounded-lg p-4 border border-gray-700 mt-4">
+                        <h3 class="text-lg font-bold mb-3">Predicted Beneficial Mutations</h3>
+                        <div id="mutation-predictions" class="overflow-x-auto">
+                            <table class="w-full text-sm">
+                                <thead class="bg-gray-700">
+                                    <tr>
+                                        <th class="px-3 py-2 text-left">Position</th>
+                                        <th class="px-3 py-2 text-left">Original</th>
+                                        <th class="px-3 py-2 text-left">Suggested</th>
+                                        <th class="px-3 py-2 text-left">Effect</th>
+                                        <th class="px-3 py-2 text-left">ΔStability</th>
+                                        <th class="px-3 py-2 text-left">Confidence</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="mutations-tbody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- De Novo Design Tab -->
+        <div id="design-tab" class="main-tab-content hidden w-full p-6">
+            <div class="grid grid-cols-3 gap-6">
+                <!-- Design Parameters -->
+                <div class="col-span-1">
+                    <div class="bg-gray-800 rounded-lg p-4 border border-gray-700">
+                        <h3 class="text-lg font-bold mb-3">Design Parameters</h3>
+
+                        <div class="mb-3">
+                            <label class="text-sm text-gray-400">Target Function</label>
+                            <select id="target-function" class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-sm">
+                                <option value="antibody">Antibody</option>
+                                <option value="enzyme">Enzyme</option>
+                                <option value="inhibitor">Inhibitor</option>
+                                <option value="scaffold">Structural Scaffold</option>
+                                <option value="sensor">Biosensor</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="text-sm text-gray-400">Length Range</label>
+                            <div class="flex space-x-2">
+                                <input type="number" id="min-length" value="50" class="w-1/2 bg-gray-700 border border-gray-600 rounded px-2 py-1 text-sm">
+                                <input type="number" id="max-length" value="300" class="w-1/2 bg-gray-700 border border-gray-600 rounded px-2 py-1 text-sm">
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="text-sm text-gray-400">Secondary Structure</label>
+                            <select id="ss-preference" class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-sm">
+                                <option value="">No preference</option>
+                                <option value="alpha">α-helix rich</option>
+                                <option value="beta">β-sheet rich</option>
+                                <option value="mixed">Mixed α/β</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="text-sm text-gray-400">Binding Target (Optional)</label>
+                            <input type="text" id="binding-target" placeholder="PDB ID or SMILES"
+                                   class="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-sm">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="text-sm text-gray-400">Therapeutic Application</label>
+                            <select id="therapeutic-app" class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-sm">
+                                <option value="">None</option>
+                                <option value="covid19">COVID-19</option>
+                                <option value="cancer">Cancer</option>
+                                <option value="alzheimers">Alzheimer's</option>
+                                <option value="diabetes">Diabetes</option>
+                            </select>
+                        </div>
+
+                        <div class="space-y-2 mb-3">
+                            <label class="flex items-center text-sm">
+                                <input type="checkbox" checked class="mr-2">
+                                <span>Optimize for stability</span>
+                            </label>
+                            <label class="flex items-center text-sm">
+                                <input type="checkbox" checked class="mr-2">
+                                <span>Optimize for expression</span>
+                            </label>
+                            <label class="flex items-center text-sm">
+                                <input type="checkbox" checked class="mr-2">
+                                <span class="quantum-badge px-2 py-1 rounded text-xs">Use Quantum Design</span>
+                            </label>
+                        </div>
+
+                        <button onclick="designProtein()" class="w-full therapeutic-gradient text-white font-bold py-2 px-4 rounded-lg">
+                            Design De Novo Protein
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Design Results -->
+                <div class="col-span-2">
+                    <div class="bg-gray-800 rounded-lg p-4 border border-gray-700">
+                        <h3 class="text-lg font-bold mb-3">Designed Protein</h3>
+
+                        <!-- Sequence Display -->
+                        <div class="mb-4">
+                            <h4 class="text-md font-semibold mb-2">Generated Sequence</h4>
+                            <div id="designed-sequence" class="bg-gray-900 p-3 rounded font-mono text-xs break-all">
+                                <span class="text-gray-400">Design will appear here...</span>
+                            </div>
+                        </div>
+
+                        <!-- Properties -->
+                        <div class="grid grid-cols-3 gap-4 mb-4">
+                            <div class="bg-gray-900 rounded p-3">
+                                <div class="text-xs text-gray-400">Molecular Weight</div>
+                                <div class="text-lg font-bold" id="design-mw">--</div>
+                            </div>
+                            <div class="bg-gray-900 rounded p-3">
+                                <div class="text-xs text-gray-400">pI</div>
+                                <div class="text-lg font-bold" id="design-pi">--</div>
+                            </div>
+                            <div class="bg-gray-900 rounded p-3">
+                                <div class="text-xs text-gray-400">Predicted Tm</div>
+                                <div class="text-lg font-bold" id="design-tm">--°C</div>
+                            </div>
+                            <div class="bg-gray-900 rounded p-3">
+                                <div class="text-xs text-gray-400">Stability Score</div>
+                                <div class="text-lg font-bold text-green-400" id="design-stability">--</div>
+                            </div>
+                            <div class="bg-gray-900 rounded p-3">
+                                <div class="text-xs text-gray-400">Expression Score</div>
+                                <div class="text-lg font-bold text-blue-400" id="design-expression">--</div>
+                            </div>
+                            <div class="bg-gray-900 rounded p-3">
+                                <div class="text-xs text-gray-400">Quantum Score</div>
+                                <div class="text-lg font-bold text-purple-400" id="design-quantum">--</div>
+                            </div>
+                        </div>
+
+                        <!-- 3D Prediction -->
+                        <div class="mb-4">
+                            <h4 class="text-md font-semibold mb-2">Predicted Structure</h4>
+                            <div id="design-structure" class="h-64 bg-gray-900 rounded"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Upload PDB Tab -->
+        <div id="upload-tab" class="main-tab-content hidden w-full p-6">
+            <div class="grid grid-cols-2 gap-6">
+                <!-- Upload Section -->
+                <div>
+                    <div class="bg-gray-800 rounded-lg p-4 border border-gray-700">
+                        <h3 class="text-lg font-bold mb-3">Upload PDB Structure</h3>
+
+                        <div class="border-2 border-dashed border-gray-600 rounded-lg p-8 text-center">
+                            <input type="file" id="pdb-file" accept=".pdb,.cif" class="hidden">
+                            <svg class="w-12 h-12 mx-auto text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                            </svg>
+                            <p class="text-gray-400 mb-2">Drop PDB file here or click to browse</p>
+                            <button onclick="document.getElementById('pdb-file').click()"
+                                    class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                                Select File
+                            </button>
+                        </div>
+
+                        <div class="mt-4">
+                            <p class="text-sm text-gray-400 mb-2">Or fetch from PDB:</p>
+                            <div class="flex space-x-2">
+                                <input type="text" id="pdb-id" placeholder="Enter PDB ID (e.g., 6Y2E)"
+                                       class="flex-grow bg-gray-700 border border-gray-600 rounded px-3 py-2 text-sm">
+                                <button onclick="fetchPDB()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded text-sm">
+                                    Fetch
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Structure Info -->
+                    <div class="bg-gray-800 rounded-lg p-4 border border-gray-700 mt-4">
+                        <h3 class="text-lg font-bold mb-3">Structure Information</h3>
+                        <div id="structure-info" class="space-y-2 text-sm">
+                            <p class="text-gray-400">Upload a structure to see details...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Visualization & Binding Sites -->
+                <div>
+                    <div class="bg-gray-800 rounded-lg p-4 border border-gray-700">
+                        <h3 class="text-lg font-bold mb-3">3D Structure & Binding Sites</h3>
+
+                        <!-- 3D Viewer -->
+                        <div id="pdb-viewer" class="h-96 bg-gray-900 rounded mb-4"></div>
+
+                        <!-- Binding Sites -->
+                        <h4 class="text-md font-semibold mb-2">Identified Binding Sites</h4>
+                        <div id="binding-sites" class="space-y-3">
+                            <!-- Binding sites will be inserted here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Therapeutic Drug Discovery Tab -->
+        <div id="therapeutic-tab" class="main-tab-content hidden w-full p-6">
+            <div class="grid grid-cols-3 gap-6">
+                <!-- Target Selection -->
+                <div class="col-span-1">
+                    <div class="bg-gray-800 rounded-lg p-4 border border-gray-700">
+                        <h3 class="text-lg font-bold mb-3">Therapeutic Target</h3>
+
+                        <div class="mb-3">
+                            <label class="text-sm text-gray-400">Disease Target</label>
+                            <select id="disease-target" class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-sm">
+                                <option value="covid19">COVID-19</option>
+                                <option value="cancer">Cancer</option>
+                                <option value="alzheimers">Alzheimer's Disease</option>
+                                <option value="parkinsons">Parkinson's Disease</option>
+                                <option value="diabetes">Type 2 Diabetes</option>
+                                <option value="custom">Custom Target</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="text-sm text-gray-400">Target Protein (PDB)</label>
+                            <input type="text" id="target-protein" placeholder="e.g., 6LU7"
+                                   class="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-sm">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="text-sm text-gray-400">Number of Candidates</label>
+                            <input type="number" id="num-candidates" value="100"
+                                   class="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-sm">
+                        </div>
+
+                        <div class="mb-3">
+                            <h4 class="text-sm font-semibold mb-2">Drug Properties (Lipinski's Rule)</h4>
+                            <div class="space-y-2 text-xs">
+                                <div class="flex justify-between">
+                                    <span>MW:</span>
+                                    <input type="text" value="150-500" class="w-20 bg-gray-700 rounded px-1">
+                                </div>
+                                <div class="flex justify-between">
+                                    <span>LogP:</span>
+                                    <input type="text" value="-0.4-5.6" class="w-20 bg-gray-700 rounded px-1">
+                                </div>
+                                <div class="flex justify-between">
+                                    <span>HBD:</span>
+                                    <input type="text" value="0-5" class="w-20 bg-gray-700 rounded px-1">
+                                </div>
+                                <div class="flex justify-between">
+                                    <span>HBA:</span>
+                                    <input type="text" value="0-10" class="w-20 bg-gray-700 rounded px-1">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="space-y-2 mb-3">
+                            <label class="flex items-center text-sm">
+                                <input type="checkbox" checked class="mr-2">
+                                <span>Use Active Inference</span>
+                            </label>
+                            <label class="flex items-center text-sm">
+                                <input type="checkbox" checked class="mr-2">
+                                <span>Use Quantum Docking</span>
+                            </label>
+                        </div>
+
+                        <button onclick="discoverDrugs()" class="w-full therapeutic-gradient text-white font-bold py-2 px-4 rounded-lg">
+                            Discover Therapeutic Drugs
+                        </button>
+                    </div>
+
+                    <!-- Disease Info -->
+                    <div class="bg-gray-800 rounded-lg p-4 border border-gray-700 mt-4">
+                        <h3 class="text-lg font-bold mb-3">Disease Information</h3>
+                        <div id="disease-info" class="text-sm space-y-2">
+                            <p class="text-gray-400">Select a disease target...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Drug Candidates -->
+                <div class="col-span-2">
+                    <div class="bg-gray-800 rounded-lg p-4 border border-gray-700">
+                        <h3 class="text-lg font-bold mb-3">Top Drug Candidates</h3>
+
+                        <div id="drug-candidates" class="space-y-3">
+                            <!-- Drug candidates will be inserted here -->
+                        </div>
+                    </div>
+
+                    <!-- Visualization -->
+                    <div class="bg-gray-800 rounded-lg p-4 border border-gray-700 mt-4">
+                        <h3 class="text-lg font-bold mb-3">Drug-Target Complex</h3>
+                        <div id="drug-complex-viewer" class="h-64 bg-gray-900 rounded"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // API Configuration
+        const API_URL = 'http://localhost:8000';
+        let currentExplanation = null;
+        let currentDesign = null;
+        let uploadedStructure = null;
+        let drugCandidates = [];
+
+        // Initialize 3D viewers
+        let pdbViewer = null;
+        let drugViewer = null;
+        let designViewer = null;
+
+        // Main tab switching
+        function showMainTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.main-tab-content').forEach(tab => {
+                tab.classList.add('hidden');
+            });
+            // Reset button styles
+            document.querySelectorAll('.main-tab-btn').forEach(btn => {
+                btn.className = 'main-tab-btn bg-gray-700 text-gray-300 px-6 py-3 font-semibold hover:bg-gray-600';
+            });
+
+            // Show selected tab
+            document.getElementById(`${tabName}-tab`).classList.remove('hidden');
+            // Highlight button
+            event.target.className = 'main-tab-btn bg-purple-600 text-white px-6 py-3 font-semibold';
+
+            // Initialize viewers if needed
+            if (tabName === 'upload' && !pdbViewer) {
+                initPdbViewer();
+            } else if (tabName === 'therapeutic' && !drugViewer) {
+                initDrugViewer();
+            } else if (tabName === 'design' && !designViewer) {
+                initDesignViewer();
+            }
+        }
+
+        // Initialize PDB viewer with NGL
+        function initPdbViewer() {
+            const container = document.getElementById('pdb-viewer');
+            pdbViewer = new NGL.Stage(container, {
+                backgroundColor: '#111827'
+            });
+        }
+
+        // Initialize drug viewer
+        function initDrugViewer() {
+            const container = document.getElementById('drug-complex-viewer');
+            drugViewer = new NGL.Stage(container, {
+                backgroundColor: '#111827'
+            });
+        }
+
+        // Initialize design viewer
+        function initDesignViewer() {
+            const container = document.getElementById('design-structure');
+            designViewer = $3Dmol.createViewer(container, {
+                backgroundColor: '#111827'
+            });
+        }
+
+        // Explain Folding
+        async function explainFolding() {
+            const sequence = document.getElementById('explain-sequence').value.trim();
+            if (!sequence) {
+                alert('Please enter a protein sequence');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/api/explain`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        sequence: sequence,
+                        explain_stability: true,
+                        explain_dynamics: true,
+                        explain_evolution: true,
+                        identify_critical_residues: true,
+                        predict_mutations: true
+                    })
+                });
+
+                const result = await response.json();
+                currentExplanation = result.explanation;
+                displayExplanation(currentExplanation);
+
+            } catch (error) {
+                console.error('Failed to explain folding:', error);
+                alert('Failed to explain folding. Check console for details.');
+            }
+        }
+
+        // Display folding explanation
+        function displayExplanation(explanation) {
+            // Display critical residues
+            const criticalDiv = document.getElementById('critical-residues');
+            criticalDiv.innerHTML = explanation.critical_residues.map(res =>
+                `<span class="critical-residue">${res}</span>`
+            ).join(' ');
+
+            // Display energy landscape
+            const energyData = [{
+                x: explanation.folding_pathway.map((_, i) => i),
+                y: explanation.energy_barriers,
+                type: 'scatter',
+                mode: 'lines+markers',
+                marker: { color: '#8b5cf6' },
+                line: { color: '#8b5cf6', width: 2 }
+            }];
+
+            const layout = {
+                title: '',
+                xaxis: { title: 'Folding Step' },
+                yaxis: { title: 'Energy (kcal/mol)' },
+                paper_bgcolor: '#111827',
+                plot_bgcolor: '#1f2937',
+                font: { color: '#e5e7eb' }
+            };
+
+            Plotly.newPlot('energy-landscape', energyData, layout);
+
+            // Display folding steps
+            const stepsDiv = document.getElementById('folding-steps');
+            stepsDiv.innerHTML = explanation.folding_pathway.map((step, i) => `
+                <div class="flex items-center space-x-3">
+                    <div class="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center text-white font-bold">
+                        ${i + 1}
+                    </div>
+                    <div class="flex-grow bg-gray-900 rounded p-3">
+                        <div class="font-semibold">${step.name}</div>
+                        <div class="text-xs text-gray-400">${step.description}</div>
+                        <div class="text-xs mt-1">
+                            <span class="text-green-400">ΔG: ${step.energy_change} kcal/mol</span>
+                            <span class="text-purple-400 ml-3">QC: ${step.quantum_coherence}</span>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            // Display causal chain
+            const causalDiv = document.getElementById('causal-chain');
+            causalDiv.innerHTML = explanation.causal_relationships.causal_chain.map(step =>
+                `<div>→ ${step}</div>`
+            ).join('');
+
+            // Display quantum effects
+            const quantumDiv = document.getElementById('quantum-effects');
+            quantumDiv.innerHTML = `
+                <div>Coherence: ${explanation.quantum_effects.quantum_coherence_score}</div>
+                <div>Tunneling events: ${explanation.quantum_effects.tunneling_events}</div>
+                <div>Speedup: ${explanation.quantum_effects.quantum_speedup_factor}x</div>
+            `;
+
+            // Display mutation predictions
+            const mutationsBody = document.getElementById('mutations-tbody');
+            mutationsBody.innerHTML = explanation.mutation_predictions.map(mut => `
+                <tr class="hover:bg-gray-700">
+                    <td class="px-3 py-2">${mut.position}</td>
+                    <td class="px-3 py-2 font-mono">${mut.original}</td>
+                    <td class="px-3 py-2 font-mono font-bold text-green-400">${mut.suggested}</td>
+                    <td class="px-3 py-2">${mut.effect}</td>
+                    <td class="px-3 py-2">+${mut.delta_stability} kcal/mol</td>
+                    <td class="px-3 py-2">${(mut.confidence * 100).toFixed(0)}%</td>
+                </tr>
+            `).join('');
+        }
+
+        // Design de novo protein
+        async function designProtein() {
+            const targetFunction = document.getElementById('target-function').value;
+            const minLength = parseInt(document.getElementById('min-length').value);
+            const maxLength = parseInt(document.getElementById('max-length').value);
+
+            try {
+                const response = await fetch(`${API_URL}/api/design`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        target_function: targetFunction,
+                        length_range: [minLength, maxLength],
+                        secondary_structure_preference: document.getElementById('ss-preference').value || null,
+                        binding_target: document.getElementById('binding-target').value || null,
+                        therapeutic_application: document.getElementById('therapeutic-app').value || null,
+                        optimize_for_stability: true,
+                        optimize_for_expression: true,
+                        use_quantum_design: true
+                    })
+                });
+
+                const result = await response.json();
+                currentDesign = result.design;
+                displayDesign(currentDesign);
+
+            } catch (error) {
+                console.error('Failed to design protein:', error);
+                alert('Failed to design protein. Check console for details.');
+            }
+        }
+
+        // Display designed protein
+        function displayDesign(design) {
+            // Display sequence
+            document.getElementById('designed-sequence').innerHTML = design.sequence;
+
+            // Display properties
+            document.getElementById('design-mw').textContent = (design.properties.molecular_weight / 1000).toFixed(1) + ' kDa';
+            document.getElementById('design-pi').textContent = design.properties.isoelectric_point.toFixed(1);
+            document.getElementById('design-tm').textContent = design.properties.predicted_tm.toFixed(1) + '°C';
+            document.getElementById('design-stability').textContent = (design.stability_score * 100).toFixed(0) + '%';
+            document.getElementById('design-expression').textContent = (design.expression_score * 100).toFixed(0) + '%';
+            document.getElementById('design-quantum').textContent = design.quantum_metrics.coherence_score.toFixed(2);
+
+            // Display 3D structure (simplified)
+            if (designViewer) {
+                designViewer.clear();
+                // Add ribbon representation
+                designViewer.addModel(`ATOM      1  CA  ALA A   1       0.000   0.000   0.000  1.00  0.00           C`, 'pdb');
+                designViewer.setStyle({}, {cartoon: {color: 'spectrum'}});
+                designViewer.zoomTo();
+                designViewer.render();
+            }
+        }
+
+        // Upload PDB file
+        document.getElementById('pdb-file').addEventListener('change', async (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const response = await fetch(`${API_URL}/api/upload_pdb`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+                uploadedStructure = result;
+                displayUploadedStructure(result);
+
+            } catch (error) {
+                console.error('Failed to upload PDB:', error);
+                alert('Failed to upload PDB. Check console for details.');
+            }
+        });
+
+        // Display uploaded structure
+        function displayUploadedStructure(structure) {
+            // Display structure info
+            const infoDiv = document.getElementById('structure-info');
+            infoDiv.innerHTML = `
+                <div>File: ${structure.structure_info.filename}</div>
+                <div>Atoms: ${structure.structure_info.num_atoms}</div>
+                <div>Residues: ${structure.structure_info.num_residues}</div>
+                <div>Binding Sites: ${structure.structure_info.binding_sites.length}</div>
+            `;
+
+            // Display in 3D viewer
+            if (pdbViewer) {
+                pdbViewer.removeAllComponents();
+                pdbViewer.loadFile(new Blob([structure.pdb_data]), { ext: 'pdb' }).then(component => {
+                    component.addRepresentation('cartoon', { color: 'chainindex' });
+                    component.autoView();
+                });
+            }
+
+            // Display binding sites
+            const bindingDiv = document.getElementById('binding-sites');
+            bindingDiv.innerHTML = structure.structure_info.binding_sites.map(site => `
+                <div class="binding-site-highlight p-3 rounded">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="font-bold">${site.site_id}</span>
+                        <span class="text-xs bg-green-600 px-2 py-1 rounded">
+                            Druggability: ${(site.druggability_score * 100).toFixed(0)}%
+                        </span>
+                    </div>
+                    <div class="text-xs space-y-1">
+                        <div>Volume: ${site.volume.toFixed(1)} Å³</div>
+                        <div>Residues: ${site.residues.join(', ')}</div>
+                        <div>Predicted ligands: ${site.predicted_ligands.join(', ')}</div>
+                        <div class="text-purple-400">Quantum signature: ${site.quantum_signature.toFixed(2)}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Discover therapeutic drugs
+        async function discoverDrugs() {
+            const diseaseTarget = document.getElementById('disease-target').value;
+            const targetProtein = document.getElementById('target-protein').value;
+
+            if (!targetProtein) {
+                alert('Please enter a target protein PDB ID');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/api/drug_discovery`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        target_pdb: targetProtein,
+                        therapeutic_target: diseaseTarget,
+                        num_candidates: parseInt(document.getElementById('num-candidates').value),
+                        use_active_inference: true,
+                        use_quantum_docking: true
+                    })
+                });
+
+                const result = await response.json();
+                drugCandidates = result.top_candidates;
+                displayDrugCandidates(drugCandidates);
+
+            } catch (error) {
+                console.error('Failed to discover drugs:', error);
+                alert('Failed to discover drugs. Check console for details.');
+            }
+        }
+
+        // Display drug candidates
+        function displayDrugCandidates(candidates) {
+            const candidatesDiv = document.getElementById('drug-candidates');
+            candidatesDiv.innerHTML = candidates.map((drug, i) => `
+                <div class="drug-candidate p-4 rounded cursor-pointer" onclick="selectDrug(${i})">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="font-bold text-lg">${drug.id}</span>
+                        <span class="text-sm bg-purple-600 px-3 py-1 rounded">
+                            Rank #${i + 1}
+                        </span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                            <div class="text-gray-400">Mechanism</div>
+                            <div class="font-semibold">${drug.mechanism}</div>
+                        </div>
+                        <div>
+                            <div class="text-gray-400">Activity</div>
+                            <div class="font-semibold text-green-400">${drug.predicted_activity}</div>
+                        </div>
+                        <div>
+                            <div class="text-gray-400">Quantum Docking</div>
+                            <div class="font-semibold text-purple-400">${drug.quantum_docking_score.toFixed(1)}</div>
+                        </div>
+                        <div>
+                            <div class="text-gray-400">IC50</div>
+                            <div class="font-semibold">${(drug.predicted_ic50 * 1e9).toFixed(1)} nM</div>
+                        </div>
+                    </div>
+                    <div class="mt-2 text-xs">
+                        <div class="text-gray-400">ADMET: ${drug.admet_profile.toxicity.mutagenicity}</div>
+                        <div class="text-gray-400">Clinical: ${drug.clinical_potential.clinical_phase_prediction}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Select drug for visualization
+        function selectDrug(index) {
+            const drug = drugCandidates[index];
+
+            // Highlight selected
+            document.querySelectorAll('.drug-candidate').forEach((el, i) => {
+                if (i === index) {
+                    el.classList.add('border-purple-500');
+                } else {
+                    el.classList.remove('border-purple-500');
+                }
+            });
+
+            // Visualize drug-target complex
+            if (drugViewer) {
+                // This would show the actual docked complex
+                console.log('Visualizing drug:', drug);
+            }
+        }
+
+        // Load example sequences
+        async function loadExamples() {
+            try {
+                const response = await fetch(`${API_URL}/api/example_sequences`);
+                const examples = await response.json();
+
+                const select = document.getElementById('example-sequences');
+                examples.forEach(ex => {
+                    const option = document.createElement('option');
+                    option.value = ex.sequence;
+                    option.textContent = ex.name;
+                    select.appendChild(option);
+                });
+
+                select.onchange = () => {
+                    document.getElementById('explain-sequence').value = select.value;
+                };
+
+            } catch (error) {
+                console.error('Failed to load examples:', error);
+            }
+        }
+
+        // Update disease info
+        document.getElementById('disease-target').addEventListener('change', (e) => {
+            const diseaseInfo = {
+                covid19: 'Target: SARS-CoV-2 main protease and spike protein',
+                cancer: 'Target: Oncogenic kinases and growth factor receptors',
+                alzheimers: 'Target: Beta-amyloid and tau protein aggregation',
+                parkinsons: 'Target: Alpha-synuclein aggregation and LRRK2',
+                diabetes: 'Target: DPP-4, SGLT2, and insulin signaling'
+            };
+
+            document.getElementById('disease-info').innerHTML = `
+                <p>${diseaseInfo[e.target.value] || 'Custom target protein'}</p>
+            `;
+        });
+
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', () => {
+            loadExamples();
+        });
+    </script>
+</body>
+</html>

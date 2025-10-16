@@ -25,6 +25,12 @@ pub mod production_runtime;
 #[cfg(feature = "cuda")]
 pub mod cudarc_replacement;
 
+// INNOVATION: Multi-GPU and Quantum-GPU Fusion - ONLY ADVANCE!
+#[cfg(feature = "cuda")]
+pub mod multi_gpu_orchestrator;
+#[cfg(feature = "cuda")]
+pub mod quantum_gpu_fusion;
+
 // Use GPU-enabled implementation - NO CPU FALLBACK
 pub use gpu_enabled::{
     SimpleGpuContext as GpuMemoryPool,
