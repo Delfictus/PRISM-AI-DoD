@@ -133,10 +133,9 @@ impl SymbolicTe {
     /// Uses factorial number system (Lehmer code)
     fn ordinal_to_symbol(ordinal: &[usize]) -> usize {
         let mut symbol = 0;
-        let mut factorial = 1;
 
         for i in 0..ordinal.len() {
-            // Count inversions
+            // Count inversions (how many elements to the right are smaller)
             let mut inversions = 0;
             for j in (i + 1)..ordinal.len() {
                 if ordinal[j] < ordinal[i] {
@@ -144,8 +143,9 @@ impl SymbolicTe {
                 }
             }
 
+            // Multiply by factorial of remaining positions
+            let factorial = Self::factorial(ordinal.len() - 1 - i);
             symbol += inversions * factorial;
-            factorial *= i + 1;
         }
 
         symbol

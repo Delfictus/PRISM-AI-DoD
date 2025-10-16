@@ -191,6 +191,11 @@ impl AdaptiveEmbedding {
     ///
     /// AMI(τ) = Σ p(x_t, x_t+τ) log[p(x_t, x_t+τ) / (p(x_t) p(x_t+τ))]
     fn average_mutual_information(&self, series: &Array1<f64>, delay: usize) -> Result<f64> {
+        // Check if delay is too large for the series
+        if delay >= series.len() {
+            return Ok(0.0);  // Return 0 MI for invalid delay
+        }
+
         let n = series.len() - delay;
         let n_bins = 10;
 
