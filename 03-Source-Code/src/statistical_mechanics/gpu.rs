@@ -375,6 +375,10 @@ mod tests {
                 coupling_strength: 0.5,
                 enable_information_gating: false,
                 seed: 42,
+                num_agents: 10,
+                interaction_strength: 0.5,
+                external_field: 0.0,
+                use_gpu: true,
             };
 
             let thermo_gpu = ThermodynamicGpu::new(context, config);
@@ -393,6 +397,10 @@ mod tests {
                 coupling_strength: 0.5,
                 enable_information_gating: false,
                 seed: 42,
+                num_agents: 10,
+                interaction_strength: 0.5,
+                external_field: 0.0,
+                use_gpu: true,
             };
 
             if let Ok(mut thermo_gpu) = ThermodynamicGpu::new(context, config) {

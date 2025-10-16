@@ -463,6 +463,7 @@ mod tests {
             ..Default::default()
         };
 
+        let final_temp = config.final_temp; // Save before moving
         let mut schedule = TemperatureSchedule::new(ScheduleType::Logarithmic, config);
 
         schedule.step();
@@ -475,7 +476,7 @@ mod tests {
 
         let t100 = schedule.current_temperature();
         assert!(t100 < t1);
-        assert!(t100 > config.final_temp);
+        assert!(t100 > final_temp);
     }
 
     #[test]
@@ -518,6 +519,7 @@ mod tests {
             ..Default::default()
         };
 
+        let final_temp = config.final_temp; // Save before moving
         let mut schedule = TemperatureSchedule::new(ScheduleType::FokkerPlanck, config);
 
         let t0 = schedule.current_temperature();
@@ -530,7 +532,7 @@ mod tests {
 
         // Should decrease on average
         assert!(t100 < t0);
-        assert!(t100 >= config.final_temp);
+        assert!(t100 >= final_temp);
     }
 
     #[test]

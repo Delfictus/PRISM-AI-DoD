@@ -330,7 +330,7 @@ mod tests {
 
     #[test]
     fn test_kv_cache_stats() {
-        let context = Arc::new(CudaContext::new(0).unwrap());
+        let context = CudaContext::new(0).unwrap();
         let cache = TransformerKVCache::new(12, 1, 512, 768, context).unwrap();
 
         let stats = cache.stats();
@@ -342,7 +342,7 @@ mod tests {
 
     #[test]
     fn test_multi_layer_cache_access() {
-        let context = Arc::new(CudaContext::new(0).unwrap());
+        let context = CudaContext::new(0).unwrap();
         let cache = TransformerKVCache::new(4, 1, 512, 768, context).unwrap();
 
         assert_eq!(cache.num_layers(), 4);
