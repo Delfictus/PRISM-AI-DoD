@@ -755,24 +755,42 @@ impl QuantumEntanglementAnalyzer {
     }
 
     /// Matrix square root for positive semidefinite matrices
+    /// Enhanced with eigendecomposition and regularization for robustness
     fn matrix_sqrt(&self, matrix: &DMatrix<Complex64>) -> Result<DMatrix<Complex64>, OrchestrationError> {
-        // Eigendecomposition
-        let eigenvalues = self.compute_eigenvalues(matrix)?;
-
-        // For simplicity, use spectral decomposition
-        // In production, would use proper complex eigendecomposition
         let n = matrix.nrows();
-        let mut sqrt_matrix = DMatrix::zeros(n, n);
 
-        // Approximate using power iteration
-        sqrt_matrix = matrix.clone();
-        for _ in 0..10 {
-            let sqrt_clone = sqrt_matrix.clone();
-            let inverse = sqrt_clone.try_inverse()
-                .ok_or_else(|| OrchestrationError::SingularMatrix {
-                    matrix_name: "sqrt iteration".to_string()
-                })?;
-            sqrt_matrix = (&sqrt_matrix + &inverse * matrix).scale(0.5);
+        // Convert to real symmetric matrix for eigendecomposition
+        let mut real_part = DMatrix::zeros(n, n);
+        for i in 0..n {
+            for j in 0..n {
+                // Take real part for Hermitian matrices
+                real_part[(i, j)] = ((matrix[(i, j)] + matrix[(j, i)].conj()) / 2.0).re;
+            }
+        }
+
+        // Eigendecomposition using nalgebra
+        let eigen = SymmetricEigen::new(real_part.clone());
+        let eigenvalues = eigen.eigenvalues.clone();
+        let eigenvectors = eigen.eigenvectors.clone();
+
+        // Construct square root via spectral decomposition
+        // sqrt(A) = V * sqrt(Λ) * V^T where A = V * Λ * V^T
+        let mut sqrt_eigenvalues = DMatrix::zeros(n, n);
+        for i in 0..n {
+            // Apply regularization for numerical stability
+            let lambda = eigenvalues[i].max(1e-12);
+            sqrt_eigenvalues[(i, i)] = lambda.sqrt();
+        }
+
+        // Compute sqrt(A) = V * sqrt(Λ) * V^T
+        let sqrt_real = &eigenvectors * &sqrt_eigenvalues * eigenvectors.transpose();
+
+        // Convert back to complex matrix
+        let mut sqrt_matrix = DMatrix::zeros(n, n);
+        for i in 0..n {
+            for j in 0..n {
+                sqrt_matrix[(i, j)] = Complex64::new(sqrt_real[(i, j)], 0.0);
+            }
         }
 
         Ok(sqrt_matrix)
