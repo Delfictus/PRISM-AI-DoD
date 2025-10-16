@@ -227,8 +227,8 @@ impl QuantumVotingConsensus {
     fn extract_options(&self, responses: &[String]) -> Vec<String> {
         // Enhanced: Deduplicate similar responses to get unique options
         // This ensures quantum interference properly reinforces similar responses
-        let mut unique_options = Vec::new();
-        let mut seen = std::collections::HashSet::new();
+        let mut unique_options: Vec<String> = Vec::new();
+        let mut seen = std::collections::HashSet::<String>::new();
 
         for response in responses {
             // Normalize the response to identify common options
