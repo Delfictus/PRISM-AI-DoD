@@ -225,9 +225,35 @@ impl QuantumVotingConsensus {
     }
 
     fn extract_options(&self, responses: &[String]) -> Vec<String> {
-        // For now: Each response is an option
-        // In full implementation: Parse structured responses
-        responses.to_vec()
+        // Enhanced: Deduplicate similar responses to get unique options
+        // This ensures quantum interference properly reinforces similar responses
+        let mut unique_options = Vec::new();
+        let mut seen = std::collections::HashSet::new();
+
+        for response in responses {
+            // Normalize the response to identify common options
+            let normalized = response.to_lowercase();
+
+            // If this is sufficiently different from seen options, add it
+            let mut is_unique = true;
+            for existing in &unique_options {
+                if self.text_similarity(response, existing) > 0.8 {
+                    is_unique = false;
+                    break;
+                }
+            }
+
+            if is_unique && seen.insert(normalized.clone()) {
+                unique_options.push(response.clone());
+            }
+        }
+
+        // If all responses are too similar, keep at least the first one
+        if unique_options.is_empty() && !responses.is_empty() {
+            unique_options.push(responses[0].clone());
+        }
+
+        unique_options
     }
 
     fn text_similarity(&self, text1: &str, text2: &str) -> f64 {
