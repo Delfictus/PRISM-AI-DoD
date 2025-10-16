@@ -4,37 +4,69 @@
 
 use anyhow::{Result, Context as AnyhowContext};
 use std::sync::{Arc, Mutex, OnceLock};
-use cudarc::driver::CudaContext;
+use super::cublas_compat::{CudaCompatContext, is_cuda_available};
 use super::kernel_executor::GpuKernelExecutor;
 
 /// Global GPU context and executor (shared across all tensors)
 static GPU_STATE: OnceLock<Arc<GpuState>> = OnceLock::new();
 
 struct GpuState {
-    cuda_context: Arc<CudaContext>,
-    kernel_executor: Arc<Mutex<GpuKernelExecutor>>,
+    cuda_context: Option<Arc<CudaCompatContext>>,
+    kernel_executor: Option<Arc<Mutex<GpuKernelExecutor>>>,
     device_ordinal: usize,
+    cpu_fallback: bool,
 }
 
 impl GpuState {
     fn initialize() -> Result<Arc<Self>> {
-        // Create CUDA context
-        let cuda_context = CudaContext::new(0)
-            .context("Failed to create CUDA context - GPU REQUIRED!")?;
-        let device_ordinal = cuda_context.ordinal();
+        // Check if we should use CPU fallback mode
+        let compat_ctx = CudaCompatContext::new(0)?;
 
-        // Create kernel executor
-        let mut kernel_executor = GpuKernelExecutor::new(0)?;
-        kernel_executor.register_standard_kernels()?;
+        if compat_ctx.is_cpu_fallback() {
+            // CPU fallback mode - don't initialize CUDA
+            println!("⚠️ CPU FALLBACK MODE: Bypassing GPU initialization (CUBLAS compatibility)");
 
-        println!("🚀 GPU INITIALIZED: Real kernel execution enabled!");
-        println!("   Device ordinal: {}", device_ordinal);
-        println!("   NO CPU FALLBACK - GPU ONLY!");
+            return Ok(Arc::new(Self {
+                cuda_context: Some(Arc::new(compat_ctx)),
+                kernel_executor: None,
+                device_ordinal: 0,
+                cpu_fallback: true,
+            }));
+        }
+
+        // Normal GPU mode - but avoid direct CudaContext to prevent CUBLAS loading
+        let device_ordinal = compat_ctx.ordinal();
+
+        // Create kernel executor (this might still trigger CUBLAS, so wrap in fallback check)
+        let kernel_executor = if is_cuda_available() {
+            match GpuKernelExecutor::new(0) {
+                Ok(mut executor) => {
+                    executor.register_standard_kernels()?;
+                    Some(Arc::new(Mutex::new(executor)))
+                }
+                Err(e) => {
+                    eprintln!("⚠️ Failed to create kernel executor: {}. Using CPU fallback.", e);
+                    None
+                }
+            }
+        } else {
+            None
+        };
+
+        let cpu_fallback = kernel_executor.is_none();
+
+        if !cpu_fallback {
+            println!("🚀 GPU INITIALIZED: Real kernel execution enabled!");
+            println!("   Device ordinal: {}", device_ordinal);
+        } else {
+            println!("⚠️ Running in CPU fallback mode");
+        }
 
         Ok(Arc::new(Self {
-            cuda_context,
-            kernel_executor: Arc::new(Mutex::new(kernel_executor)),
+            cuda_context: Some(Arc::new(compat_ctx)),
+            kernel_executor,
             device_ordinal,
+            cpu_fallback,
         }))
     }
 
@@ -49,25 +81,30 @@ impl GpuState {
     }
 }
 
-/// GPU context that REQUIRES GPU
+/// GPU context that MAY use CPU fallback for CUBLAS compatibility
 pub struct GpuContext {
     gpu_state: Arc<GpuState>,
 }
 
 impl GpuContext {
-    /// Create new GPU context - GPU REQUIRED, NO FALLBACK
+    /// Create new GPU context - may use CPU fallback if needed
     pub fn new() -> Result<Self> {
         let gpu_state = GpuState::get()?;
         Ok(Self { gpu_state })
     }
 
-    /// Always returns true - we don't work without GPU
+    /// Returns true if GPU is available (false in fallback mode)
     pub fn is_gpu_available(&self) -> bool {
-        true // NO CPU FALLBACK - always true or we fail
+        !self.gpu_state.cpu_fallback
     }
 
     pub fn device_ordinal(&self) -> usize {
         self.gpu_state.device_ordinal
+    }
+
+    /// Check if running in CPU fallback mode
+    pub fn is_cpu_fallback(&self) -> bool {
+        self.gpu_state.cpu_fallback
     }
 }
 
@@ -104,7 +141,7 @@ impl GpuTensor {
         Ok(self.data.clone())
     }
 
-    /// Matrix multiply - ACTUAL GPU KERNEL EXECUTION
+    /// Matrix multiply - GPU or CPU fallback
     pub fn matmul(&self, other: &GpuTensor) -> Result<GpuTensor> {
         if self.shape.len() != 2 || other.shape.len() != 2 {
             anyhow::bail!("matmul requires 2D tensors");
@@ -118,13 +155,19 @@ impl GpuTensor {
             anyhow::bail!("Shape mismatch for matmul");
         }
 
-        println!("  🚀 Matrix multiply (GPU KERNEL EXECUTION, {}x{}x{})", m, k, n);
-
-        // ACTUAL GPU KERNEL EXECUTION - NO CPU COMPUTATION!
-        let executor = self.gpu_state.kernel_executor.lock().unwrap();
-        let c_data = executor.matrix_multiply(&self.data, &other.data, m, k, n)?;
-
-        println!("     ✅ GPU kernel executed successfully!");
+        // Check if we have GPU executor or need CPU fallback
+        let c_data = if let Some(ref executor) = self.gpu_state.kernel_executor {
+            println!("  🚀 Matrix multiply (GPU KERNEL EXECUTION, {}x{}x{})", m, k, n);
+            let executor = executor.lock().unwrap();
+            let result = executor.matrix_multiply(&self.data, &other.data, m, k, n)?;
+            println!("     ✅ GPU kernel executed successfully!");
+            result
+        } else {
+            println!("  ⚠️ Matrix multiply (CPU FALLBACK, {}x{}x{})", m, k, n);
+            // CPU fallback implementation
+            use super::cublas_compat::matmul_without_cublas;
+            matmul_without_cublas(&self.data, &other.data, m, k, n)?
+        };
 
         GpuTensor::from_cpu(c_data, vec![m, n])
     }
