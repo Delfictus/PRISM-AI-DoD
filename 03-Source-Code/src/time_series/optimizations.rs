@@ -162,9 +162,13 @@ impl ArimaCoefficientCache {
                 cached.last_used = std::time::Instant::now();
 
                 // Reconstruct model from cached coefficients
-                let model = ArimaGpu::new(config)?;
-                // Note: Would need to expose a way to set coefficients directly
-                // For now, this demonstrates the caching concept
+                let mut model = ArimaGpu::new(config)?;
+                model.set_coefficients(
+                    cached.ar_coefficients.clone(),
+                    cached.ma_coefficients.clone(),
+                    cached.constant,
+                    data.to_vec()  // Store training data for forecasting
+                );
                 return Ok(model);
             }
         }
