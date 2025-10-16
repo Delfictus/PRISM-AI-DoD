@@ -26,7 +26,7 @@ pub struct DockingPose {
 impl GpuMolecularDocker {
     pub fn new(force_field: ForceFieldType) -> Result<Self> {
         let device = CudaContext::new(0)?;
-        Ok(Self { device: Arc::new(device), force_field })
+        Ok(Self { device, force_field })
     }
 
     /// Dock ligand to protein using chemcore + GPU parallelization

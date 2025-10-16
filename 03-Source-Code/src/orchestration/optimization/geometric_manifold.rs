@@ -744,9 +744,10 @@ impl GeometricManifoldOptimizer {
             iter += 1;
         }
 
+        let optimal_value = objective(&x);
         Ok(OptimizationResult {
             optimal_point: x,
-            optimal_value: objective(&x),
+            optimal_value,
             iterations: iter,
             converged,
             final_gradient_norm: self.history.convergence.back()
@@ -1388,14 +1389,24 @@ impl GeometricManifoldOptimizer {
         // Encode responses as points on manifold
         let encoded = self.encode_responses_on_manifold(responses)?;
 
-        // Define objective function
-        let objective = |x: &DVector<f64>| {
-            let response = self.decode_from_manifold(x);
+        // Compute initial point before creating closure
+        let initial = self.compute_mean_on_manifold(&encoded)?;
+
+        // Define objective function - clone self.manifold for use in closure
+        let manifold_dimension = self.manifold.dimension;
+        let objective = move |x: &DVector<f64>| {
+            // Decode point from manifold to response
+            let mut response = String::new();
+            for value in x.iter() {
+                let byte = (value * 255.0).clamp(0.0, 255.0) as u8;
+                if byte.is_ascii() {
+                    response.push(byte as char);
+                }
+            }
             -quality_fn(&response)  // Minimize negative quality
         };
 
         // Find optimal point on manifold
-        let initial = self.compute_mean_on_manifold(&encoded)?;
         let result = self.optimize(objective, initial)?;
 
         // Decode optimal response

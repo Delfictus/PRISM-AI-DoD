@@ -277,7 +277,8 @@ impl HierarchicalActiveInference {
         let error = observation - prediction;
 
         // Precision-weighted error
-        let weighted_error = &precision.pi_z * error;
+        let error_clone = error.clone();
+        let weighted_error = &precision.pi_z * error_clone;
 
         // Store for message passing
         self.message_passing.bottom_up.insert(level_idx, error.clone());
@@ -368,25 +369,25 @@ impl HierarchicalActiveInference {
 
     /// Update beliefs using precision-weighted prediction errors
     fn update_beliefs(&mut self, level_idx: usize) -> Result<(), OrchestrationError> {
-        let level = &mut self.levels[level_idx];
-        let precision = &self.precisions[level_idx];
         let learning_rate = self.learning_rates.eta_mu;
 
         // Get prediction errors
         let bottom_up_error = self.message_passing.bottom_up.get(&level_idx)
             .ok_or_else(|| OrchestrationError::MissingData {
                 field: "bottom_up_error".to_string()
-            })?;
+            })?.clone();
 
         // Variational update (gradient descent on free energy)
-        let grad_F = self.compute_free_energy_gradient(level_idx, bottom_up_error)?;
-
-        // Update mean
-        level.mu -= &grad_F * learning_rate;
+        let grad_F = self.compute_free_energy_gradient(level_idx, &bottom_up_error)?;
 
         // Update covariance using Laplace approximation
         let hessian = self.compute_hessian(level_idx)?;
-        if let Some(inv_hessian) = self.safe_inverse(&hessian) {
+        let inv_hessian_opt = self.safe_inverse(&hessian);
+
+        // Now update level with all computed values
+        let level = &mut self.levels[level_idx];
+        level.mu -= &grad_F * learning_rate;
+        if let Some(inv_hessian) = inv_hessian_opt {
             level.sigma = inv_hessian;
         }
 
@@ -637,29 +638,36 @@ impl HierarchicalActiveInference {
     /// Update model parameters through learning
     fn update_model_parameters(&mut self, observations: &[DVector<f64>]) -> Result<(), OrchestrationError> {
         for level_idx in 0..self.levels.len() {
-            let level = &mut self.levels[level_idx];
             let learning_rate = self.learning_rates.eta_theta;
+
+            // Clone data we need before mutating
+            let mu_clone = self.levels[level_idx].mu.clone();
+            let A_clone = self.levels[level_idx].A.clone();
+            let B_clone = self.levels[level_idx].B.clone();
+            let D_clone = self.levels[level_idx].D.clone();
 
             // Update observation model A
             if level_idx == 0 && !observations.is_empty() {
-                let prediction_error = &observations[0] - &(&level.A * &level.mu);
-                let dA = prediction_error * level.mu.transpose() * learning_rate;
-                level.A += dA;
+                let prediction_error = &observations[0] - &(&A_clone * &mu_clone);
+                let dA = prediction_error * mu_clone.transpose() * learning_rate;
+                self.levels[level_idx].A += dA;
             }
 
             // Update transition model B
-            if level.mu.norm() > 0.0 {
-                let next_state = &level.B * &level.mu;
-                let transition_error = &level.mu - next_state;
-                let dB = transition_error * level.mu.transpose() * learning_rate;
-                level.B += dB;
+            if mu_clone.norm() > 0.0 {
+                let next_state = &B_clone * &mu_clone;
+                let transition_error = &mu_clone - next_state;
+                let dB = transition_error * mu_clone.transpose() * learning_rate;
+                self.levels[level_idx].B += dB;
 
                 // Ensure B remains a valid transition matrix
-                self.normalize_transition_matrix(&mut level.B);
+                let mut B_to_normalize = self.levels[level_idx].B.clone();
+                self.normalize_transition_matrix(&mut B_to_normalize);
+                self.levels[level_idx].B = B_to_normalize;
             }
 
             // Update priors
-            level.D = &level.D * 0.99 + &level.mu * 0.01;
+            self.levels[level_idx].D = &D_clone * 0.99 + &mu_clone * 0.01;
         }
 
         // Meta-learning: adjust learning rates based on performance

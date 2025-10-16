@@ -332,7 +332,7 @@ impl GpuTransformerLayer {
         let kernel = exec.get_kernel("multi_head_attention")?;
 
         let cfg = LaunchConfig {
-            grid_dim: (1, (seq_len + 15) / 16, self.n_heads as u32),
+            grid_dim: (1, ((seq_len + 15) / 16) as u32, self.n_heads as u32),
             block_dim: (16, 16, 1),
             shared_mem_bytes: 0,
         };

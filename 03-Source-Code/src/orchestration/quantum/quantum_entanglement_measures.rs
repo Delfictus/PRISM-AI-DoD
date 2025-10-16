@@ -767,7 +767,8 @@ impl QuantumEntanglementAnalyzer {
         // Approximate using power iteration
         sqrt_matrix = matrix.clone();
         for _ in 0..10 {
-            let inverse = sqrt_matrix.try_inverse()
+            let sqrt_clone = sqrt_matrix.clone();
+            let inverse = sqrt_clone.try_inverse()
                 .ok_or_else(|| OrchestrationError::SingularMatrix {
                     matrix_name: "sqrt iteration".to_string()
                 })?;
@@ -964,7 +965,7 @@ impl QuantumEntanglementAnalyzer {
         witness = self.partial_transpose(&witness)?;
 
         // Compute expectation value
-        let expectation = (witness * &self.density_matrix.rho).trace().re;
+        let expectation = (&witness * &self.density_matrix.rho).trace().re;
 
         // Check if entanglement detected
         let threshold = 0.5;  // Simplified threshold

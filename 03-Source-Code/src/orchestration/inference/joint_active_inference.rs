@@ -853,7 +853,7 @@ impl JointActiveInference {
         let mut prepare_count = 0;
         for agent in &self.agents {
             // Verify proposal (simplified)
-            if (agent.beliefs.mu - &proposal).norm() < 1.0 {
+            if (&agent.beliefs.mu - &proposal).norm() < 1.0 {
                 prepare_count += 1;
             }
         }
@@ -883,7 +883,7 @@ impl JointActiveInference {
         // Compute divergence
         let mut divergence = 0.0;
         for agent in &self.agents {
-            divergence += (agent.beliefs.mu - &self.collective_belief.aggregate).norm_squared();
+            divergence += (&agent.beliefs.mu - &self.collective_belief.aggregate).norm_squared();
         }
         self.collective_belief.divergence = divergence.sqrt() / n as f64;
 

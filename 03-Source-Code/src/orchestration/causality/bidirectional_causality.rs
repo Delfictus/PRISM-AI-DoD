@@ -318,7 +318,7 @@ impl BidirectionalCausalityAnalyzer {
         self.time_series_buffer.series.insert(y_name.to_string(), y_data.clone());
 
         // 1. Convergent Cross Mapping
-        let ccm_result = self.convergent_cross_mapping(x_data, y_data)?;
+        let mut ccm_result = self.convergent_cross_mapping(x_data, y_data)?;
 
         // 2. Transfer Entropy (both directions)
         let te_x_to_y = self.transfer_entropy(x_data, y_data)?;
@@ -344,6 +344,9 @@ impl BidirectionalCausalityAnalyzer {
         // 7. Test significance with surrogates
         let significance = self.test_significance_surrogates(x_data, y_data, &causal_strength)?;
 
+        // Determine direction before moving ccm_result
+        let causal_direction = self.determine_direction(te_x_to_y, te_y_to_x, &ccm_result);
+
         Ok(CausalityResult {
             ccm: ccm_result,
             transfer_entropy: TransferEntropyResult {
@@ -356,7 +359,7 @@ impl BidirectionalCausalityAnalyzer {
                 f_statistic_y_to_x: granger_y_to_x,
                 significant: granger_x_to_y > 3.84 || granger_y_to_x > 3.84,  // Chi-square critical value
             },
-            causal_direction: self.determine_direction(te_x_to_y, te_y_to_x, &ccm_result),
+            causal_direction,
             strength: causal_strength,
             confidence: significance.confidence,
             graph_structure: pc_result,
@@ -1550,12 +1553,15 @@ impl BidirectionalCausalityAnalyzer {
         // Find root causes
         let root_causes = self.find_root_causes(&causal_matrix);
 
+        // Clone causal_matrix before moving it
+        let causal_matrix_clone = causal_matrix.clone();
+
         Ok(LLMCausalityAnalysis {
             causal_matrix,
             influence_scores,
             causal_chains: chains,
             root_causes,
-            consensus_mechanism: self.determine_consensus_mechanism(&causal_matrix),
+            consensus_mechanism: self.determine_consensus_mechanism(&causal_matrix_clone),
         })
     }
 

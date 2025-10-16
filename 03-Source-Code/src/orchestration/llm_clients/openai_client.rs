@@ -15,6 +15,7 @@ use serde::{Deserialize, Serialize};
 use tokio::time::{sleep, timeout, Duration, Instant};
 use dashmap::DashMap;
 use parking_lot::Mutex;
+use tokio::sync::Mutex as TokioMutex;
 use anyhow::{Result, Context, bail};
 use std::sync::Arc;
 use std::time::SystemTime;
@@ -110,19 +111,19 @@ pub struct LLMResponse {
 /// Rate limiter (token bucket algorithm)
 pub struct RateLimiter {
     max_rate: f64,  // requests per second
-    last_request: Mutex<Instant>,
+    last_request: TokioMutex<Instant>,
 }
 
 impl RateLimiter {
     pub fn new(requests_per_minute: f64) -> Self {
         Self {
             max_rate: requests_per_minute / 60.0,
-            last_request: Mutex::new(Instant::now()),
+            last_request: TokioMutex::new(Instant::now()),
         }
     }
 
     pub async fn wait_if_needed(&self) -> Result<()> {
-        let mut last = self.last_request.lock();
+        let mut last = self.last_request.lock().await;
         let elapsed = last.elapsed();
         let min_interval = Duration::from_secs_f64(1.0 / self.max_rate);
 
@@ -132,7 +133,7 @@ impl RateLimiter {
             sleep(wait_time).await;
         }
 
-        *self.last_request.lock() = Instant::now();
+        *self.last_request.lock().await = Instant::now();
         Ok(())
     }
 }

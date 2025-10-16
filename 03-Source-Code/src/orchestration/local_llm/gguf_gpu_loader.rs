@@ -20,7 +20,7 @@ impl GgufGpuLoader {
         let loader = GgufLoader::load(path)?;
         let context = CudaContext::new(device_id)?;
 
-        Ok(Self { loader, context: Arc::new(context) })
+        Ok(Self { loader, context })
     }
 
     /// Load tensor to GPU memory as f32

@@ -128,7 +128,7 @@ impl GpuMonitor {
             start_time: Instant::now(),
 
             #[cfg(feature = "cuda")]
-            device: device.map(Arc::new),
+            device,
         })
     }
 

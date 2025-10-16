@@ -292,6 +292,37 @@ pub struct HealthStatus {
     pub processing_latency_ms: f64,
 }
 
+// Stub types for PWSA integration
+#[derive(Debug, Clone)]
+pub struct PwsaFusionPlatform;
+
+impl PwsaFusionPlatform {
+    pub fn fuse_mission_data(&mut self, _transport: &OctTelemetry, _tracking: &IrSensorFrame, _ground: &GroundStationData) -> anyhow::Result<MissionAwareness> {
+        Ok(MissionAwareness {
+            threat_level: 0.8,
+            confidence: 0.9,
+        })
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct MissionAwareness {
+    pub threat_level: f64,
+    pub confidence: f64,
+}
+
+#[derive(Debug, Clone)]
+pub struct ThreatDetection;
+
+#[derive(Debug, Clone)]
+pub struct OctTelemetry;
+
+#[derive(Debug, Clone)]
+pub struct IrSensorFrame;
+
+#[derive(Debug, Clone)]
+pub struct GroundStationData;
+
 #[cfg(test)]
 mod tests {
     use super::*;

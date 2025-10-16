@@ -119,6 +119,10 @@ fn run_thermodynamic(cmd: &str) {
         coupling_strength: 0.5,
         enable_information_gating: true,
         seed: 42,
+        num_agents: n,
+        interaction_strength: 0.5,
+        external_field: 0.01,
+        use_gpu: false,
     };
 
     let mut network = ThermodynamicNetwork::new(config);

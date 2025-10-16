@@ -263,7 +263,13 @@ impl PrismAIOrchestrator {
         let inference_result = {
             let mut active_inf = self.active_inference.write();
             let observations = self.query_to_observations(query);
-            let vi = VariationalInference::new(10, 1, 1); // bins, k, embedding_dimension
+
+            // Create observation and transition models for inference
+            use crate::active_inference::{ObservationModel, TransitionModel};
+            let obs_model = ObservationModel::new(100, 900, 8.0, 0.01);
+            let trans_model = TransitionModel::default_timescales();
+            let vi = VariationalInference::new(obs_model, trans_model, &active_inf);
+
             vi.update_beliefs(&mut active_inf, &observations);
             FreeEnergyComponents {
                 total: active_inf.compute_free_energy(&observations),
@@ -423,8 +429,14 @@ impl PrismAIOrchestrator {
         circuit.execute(&ops)?;
         let result = circuit.compile(&ops)?.get_state()?;
 
+        // Convert quantum_mlir::Complex64 to num_complex::Complex64
+        let amplitudes: Vec<num_complex::Complex64> = result.amplitudes
+            .iter()
+            .map(|c| num_complex::Complex64::new(c.real, c.imag))
+            .collect();
+
         Ok(Some(QuantumEnhancement {
-            amplitudes: result.amplitudes.iter().map(|c| *c).collect(),
+            amplitudes,
             entanglement: 0.0, // Would compute from state
             speedup: 1.0, // Would measure actual speedup
         }))
