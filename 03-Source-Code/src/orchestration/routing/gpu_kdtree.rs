@@ -190,15 +190,35 @@ impl GpuNearestNeighbors {
             // (&*stream).launch(&**kernel, cfg, (...args...))?;
         }
 
-        // CPU fallback for distance computation
+        // CPU fallback for distance computation with proper metric handling
         let mut distances_f32 = vec![0.0f32; n_points];
         for i in 0..n_points {
-            let mut sum = 0.0f32;
-            for d in 0..n_dims {
-                let diff = dataset_f32[i * n_dims + d] - query_f32[d];
-                sum += diff * diff;
-            }
-            distances_f32[i] = sum.sqrt();
+            distances_f32[i] = match metric {
+                DistanceMetric::Euclidean => {
+                    let mut sum = 0.0f32;
+                    for d in 0..n_dims {
+                        let diff = dataset_f32[i * n_dims + d] - query_f32[d];
+                        sum += diff * diff;
+                    }
+                    sum.sqrt()
+                }
+                DistanceMetric::Manhattan => {
+                    let mut sum = 0.0f32;
+                    for d in 0..n_dims {
+                        let diff = dataset_f32[i * n_dims + d] - query_f32[d];
+                        sum += diff.abs();
+                    }
+                    sum
+                }
+                DistanceMetric::Chebyshev | DistanceMetric::MaxNorm => {
+                    let mut max_diff = 0.0f32;
+                    for d in 0..n_dims {
+                        let diff = (dataset_f32[i * n_dims + d] - query_f32[d]).abs();
+                        max_diff = max_diff.max(diff);
+                    }
+                    max_diff
+                }
+            };
         }
 
         // Upload result to device

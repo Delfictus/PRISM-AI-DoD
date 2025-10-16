@@ -270,13 +270,13 @@ fn test_worker3_uncertainty_gpu_adoption() -> Result<()> {
     println!("\n🔬 Test 8: Worker 3 Uncertainty GPU Adoption");
 
     use prism_ai::time_series::uncertainty_gpu_optimized::UncertaintyGpuOptimized;
-    use prism_ai::time_series::UncertaintyConfig;
+    use prism_ai::time_series::{UncertaintyConfig, UncertaintyMethod};
 
     // Test uncertainty quantification with GPU acceleration
     let config = UncertaintyConfig {
         confidence_level: 0.95,
         num_bootstrap_samples: 100,
-        method: "residual".to_string(),
+        method: UncertaintyMethod::Residual,
     };
 
     let uncertainty = UncertaintyGpuOptimized::new(config)?;

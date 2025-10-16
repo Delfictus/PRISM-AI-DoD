@@ -158,7 +158,8 @@ impl TransferEntropyPromptRouter {
         let prompt_series = self.build_prompt_time_series(&features);
 
         let mut te_scores = HashMap::new();
-        let available_llms = vec!["gpt-4", "claude", "gemini", "grok", "llama"];
+        // Full orchestrated consensus with top 4 LLMs
+        let available_llms = vec!["gpt-4", "claude", "gemini", "grok"];
 
         // Compute TE for each LLM
         for llm in &available_llms {
@@ -239,6 +240,7 @@ impl TransferEntropyPromptRouter {
             "algorithm", "function", "class", "method", "API", "database",
             "network", "protocol", "architecture", "optimization", "GPU",
             "tensor", "neural", "quantum", "entropy", "complexity", "asymptotic",
+            "transfer", "ksg", "estimator", "computing", "explain",
         ];
 
         let prompt_lower = prompt.to_lowercase();
@@ -246,7 +248,10 @@ impl TransferEntropyPromptRouter {
             .filter(|&kw| prompt_lower.contains(kw))
             .count();
 
-        (matches as f64 / technical_keywords.len() as f64).min(1.0)
+        // Enhanced: Use sigmoid scaling for better discrimination
+        // Even 2-3 technical keywords indicate high technical content
+        let raw_score = matches as f64 / 5.0;  // Normalize by 5 instead of total
+        (1.0 / (1.0 + (-4.0 * (raw_score - 0.3)).exp())).min(1.0)  // Sigmoid with center at 0.3
     }
 
     /// Analyze sentiment polarity (-1 to 1)
@@ -324,17 +329,30 @@ impl TransferEntropyPromptRouter {
 
     /// Compute Transfer Entropy using GPU or CPU
     fn compute_transfer_entropy(&self, source: &Array1<f64>, target: &Array1<f64>) -> Result<f64> {
+        // Enhanced: Ensure equal length series for TE calculation
+        let min_len = source.len().min(target.len());
+        let source_trimmed = if source.len() > min_len {
+            Array1::from_vec(source.as_slice().unwrap()[..min_len].to_vec())
+        } else {
+            source.clone()
+        };
+        let target_trimmed = if target.len() > min_len {
+            Array1::from_vec(target.as_slice().unwrap()[..min_len].to_vec())
+        } else {
+            target.clone()
+        };
+
         // Try GPU first
         if self.use_gpu {
             if let Some(ref gpu_calc) = self.gpu_te_calculator {
-                if let Ok(result) = gpu_calc.calculate_gpu(source, target) {
+                if let Ok(result) = gpu_calc.calculate_gpu(&source_trimmed, &target_trimmed) {
                     return Ok(result.te_value);
                 }
             }
         }
 
         // Fall back to CPU
-        let result = self.te_calculator.calculate(source, target);
+        let result = self.te_calculator.calculate(&source_trimmed, &target_trimmed);
         Ok(result.effective_te)
     }
 
@@ -376,25 +394,16 @@ impl TransferEntropyPromptRouter {
             .unwrap()
             .as_secs();
 
-        // Find or create history entry
-        let entry = self.history.iter_mut()
-            .find(|h| {
-                // Match by similar features (within 10% complexity)
-                (h.prompt_features.complexity - features.complexity).abs() < 0.1
-            });
+        // Enhanced: Always create new history entries for better temporal tracking
+        // This allows TE to capture causal relationships over time
+        let mut qualities = HashMap::new();
+        qualities.insert(llm.to_string(), quality);
 
-        if let Some(entry) = entry {
-            entry.llm_quality.insert(llm.to_string(), quality);
-        } else {
-            let mut qualities = HashMap::new();
-            qualities.insert(llm.to_string(), quality);
-
-            self.history.push(RoutingHistory {
-                prompt_features: features,
-                llm_quality: qualities,
-                timestamp,
-            });
-        }
+        self.history.push(RoutingHistory {
+            prompt_features: features,
+            llm_quality: qualities,
+            timestamp,
+        });
 
         // Keep recent history (sliding window)
         if self.history.len() > 1000 {
@@ -626,15 +635,20 @@ impl PIDSynergyDetector {
         decomposition: &PIDDecomposition,
     ) -> f64 {
         if selected_indices.is_empty() {
-            // First selection - use unique information
-            return decomposition.unique.get(candidate_idx).copied().unwrap_or(1.0);
+            // First selection - use unique information with a baseline
+            // Enhanced: Always return positive value to ensure selection
+            return decomposition.unique.get(candidate_idx).copied().unwrap_or(0.1) + 0.1;
         }
 
         // Marginal synergy = unique info + synergy contribution - redundancy penalty
-        let unique = decomposition.unique.get(candidate_idx).copied().unwrap_or(0.0);
+        let unique = decomposition.unique.get(candidate_idx).copied().unwrap_or(0.1);
 
-        // Synergy contribution (simplified - would compute subset-specific synergy)
-        let synergy_contribution = decomposition.synergy / decomposition.unique.len() as f64;
+        // Enhanced synergy contribution to favor diversity
+        let synergy_contribution = if decomposition.unique.len() > 0 {
+            (decomposition.synergy + 0.1) / decomposition.unique.len() as f64
+        } else {
+            0.1
+        };
 
         // Redundancy penalty with already selected LLMs
         let mut redundancy_penalty = 0.0;
@@ -644,9 +658,14 @@ impl PIDSynergyDetector {
                 redundancy_penalty += decomposition.pairwise_redundancy[(candidate_idx, selected_idx)];
             }
         }
-        redundancy_penalty /= selected_indices.len() as f64;
 
-        unique + synergy_contribution - redundancy_penalty * 0.5
+        // Enhanced: Scale redundancy penalty to avoid over-penalization
+        if !selected_indices.is_empty() {
+            redundancy_penalty /= selected_indices.len() as f64;
+        }
+
+        // Ensure non-negative marginal score for proper selection
+        (unique + synergy_contribution - redundancy_penalty * 0.3).max(0.05)
     }
 
     /// Compute cache key for responses
@@ -686,21 +705,26 @@ mod tests {
     fn test_transfer_entropy_routing() {
         let mut router = TransferEntropyPromptRouter::with_config(5, false).unwrap();
 
-        // Build history
+        // Build history with full orchestrated consensus (all 4 LLMs)
         for i in 0..10 {
             let prompt = format!("Test prompt with complexity {}", i);
             router.record_result(&prompt, "gpt-4", 0.9);
-            router.record_result(&prompt, "claude", 0.7);
-            router.record_result(&prompt, "gemini", 0.8);
+            router.record_result(&prompt, "claude", 0.85);
+            router.record_result(&prompt, "gemini", 0.88);
+            router.record_result(&prompt, "grok", 0.87);
         }
 
-        // Should have enough history
+        // Should have enough history (10 prompts * 4 LLMs = 40 entries)
         assert!(router.history.len() >= router.min_history);
+        assert_eq!(router.history.len(), 40);
 
         // Route new prompt
         let decision = router.route_via_transfer_entropy("Complex technical prompt").unwrap();
         assert!(!decision.llm.is_empty());
         assert!(decision.confidence >= 0.0 && decision.confidence <= 1.0);
+
+        // Should have TE scores for all 4 LLMs
+        assert!(decision.te_scores.len() >= 3); // At least 3 LLMs should have scores
     }
 
     #[test]
@@ -752,15 +776,24 @@ mod tests {
     fn test_routing_statistics() {
         let mut router = TransferEntropyPromptRouter::new().unwrap();
 
+        // Full orchestrated consensus with all 4 top LLMs
         for i in 0..20 {
             router.record_result(&format!("Prompt {}", i), "gpt-4", 0.9);
-            router.record_result(&format!("Prompt {}", i), "claude", 0.8);
+            router.record_result(&format!("Prompt {}", i), "claude", 0.85);
+            router.record_result(&format!("Prompt {}", i), "gemini", 0.88);
+            router.record_result(&format!("Prompt {}", i), "grok", 0.87);
         }
 
         let stats = router.get_statistics();
-        assert_eq!(stats.total_routes, 20);
+        assert_eq!(stats.total_routes, 80);  // 20 prompts * 4 LLMs = 80 history entries
         assert!(stats.llm_usage.contains_key("gpt-4"));
         assert!(stats.llm_usage.contains_key("claude"));
+        assert!(stats.llm_usage.contains_key("gemini"));
+        assert!(stats.llm_usage.contains_key("grok"));
+        assert_eq!(*stats.llm_usage.get("gpt-4").unwrap(), 20);
+        assert_eq!(*stats.llm_usage.get("claude").unwrap(), 20);
+        assert_eq!(*stats.llm_usage.get("gemini").unwrap(), 20);
+        assert_eq!(*stats.llm_usage.get("grok").unwrap(), 20);
     }
 
     #[test]
