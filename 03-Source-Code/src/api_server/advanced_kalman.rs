@@ -280,12 +280,13 @@ impl UnscentedKalmanFilter {
             cov[i][i] = initial_uncertainty * initial_uncertainty;
         }
 
+        let n = 6.0;
         Self {
             state,
             covariance: cov,
-            alpha: 1e-3,
-            beta: 2.0,
-            kappa: 0.0,
+            alpha: 1.0,           // Spread parameter (0.001 to 1.0, use 1.0 for stability)
+            beta: 2.0,            // Incorporates prior knowledge (2.0 optimal for Gaussian)
+            kappa: 3.0 - n,       // Secondary scaling parameter (typical: 3-n)
         }
     }
 

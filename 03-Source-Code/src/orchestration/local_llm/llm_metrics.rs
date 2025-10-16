@@ -142,7 +142,7 @@ impl LLMMetrics {
         for (pi, qi) in p.iter().zip(q.iter()) {
             // Skip if either probability is too small to avoid numerical issues
             if *pi > 1e-10 && *qi > 1e-10 {
-                kl_div += pi * (pi / qi).ln();
+                kl_div += pi * (pi / qi).log2();  // Use log2 for bits (threshold calibration)
             }
         }
 
@@ -207,7 +207,7 @@ impl LLMMetrics {
 
         for (pi, qi) in p.iter().zip(q.iter()) {
             if *pi > 1e-10 && *qi > 1e-10 {
-                cross_ent -= pi * qi.ln();
+                cross_ent -= pi * qi.log2();  // Use log2 to match entropy function
             }
         }
 
@@ -248,12 +248,12 @@ impl LLMMetrics {
         if let Some(ref_probs) = self.reference_distributions.get(&layer) {
             let kl_div = self.kl_divergence(&current_probs, ref_probs)?;
 
-            if kl_div > 2.0 {
+            if kl_div >= 2.0 {
                 Ok(DistributionHealth::Critical(format!(
                     "High KL divergence: {:.3} (threshold: 2.0)",
                     kl_div
                 )))
-            } else if kl_div > 0.5 {
+            } else if kl_div >= 0.5 {
                 Ok(DistributionHealth::Warning(format!(
                     "Moderate KL divergence: {:.3} (threshold: 0.5)",
                     kl_div

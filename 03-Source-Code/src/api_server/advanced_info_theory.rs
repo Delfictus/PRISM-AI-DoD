@@ -238,13 +238,18 @@ pub fn adaptive_kde(data: &[f64], bandwidth_factor: f64) -> Vec<(f64, f64)> {
     // Create evaluation points
     let min_val = data.iter().cloned().fold(f64::INFINITY, f64::min);
     let max_val = data.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
-    let range = max_val - min_val;
+
+    // Extend range by 3*bandwidth on each side to capture tails
+    let margin = 3.0 * bandwidth;
+    let eval_min = min_val - margin;
+    let eval_max = max_val + margin;
+    let range = eval_max - eval_min;
 
     let num_points = 100;
     let mut density = Vec::with_capacity(num_points);
 
     for i in 0..num_points {
-        let x = min_val + (i as f64) * range / (num_points - 1) as f64;
+        let x = eval_min + (i as f64) * range / (num_points - 1) as f64;
 
         // Gaussian kernel density estimate
         let density_at_x: f64 = data
