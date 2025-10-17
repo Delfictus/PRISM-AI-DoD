@@ -197,6 +197,10 @@ impl ProductionGpuRuntime {
             ("thermodynamic", "target/ptx/thermodynamic.ptx"),
             ("transfer_entropy", "target/ptx/transfer_entropy.ptx"),
             ("active_inference", "target/ptx/active_inference.ptx"),
+            // PhD-Grade Phase 1: Stochastic Thermodynamics (10 kernels)
+            ("stochastic_thermo", "src/kernels/stochastic_thermodynamics.ptx"),
+            // PhD-Grade Phase 2: Quantum Operations (12 kernels)
+            ("quantum_ops", "src/kernels/quantum_operations.ptx"),
         ];
 
         for (name, path) in kernel_paths {
@@ -205,6 +209,50 @@ impl ProductionGpuRuntime {
                     Ok(_) => eprintln!("[Production GPU] Loaded kernel: {}", name),
                     Err(e) => eprintln!("[Production GPU] Failed to load {}: {}", name, e),
                 }
+            }
+        }
+
+        // Load PhD-Grade Phase 1: Stochastic Thermodynamics kernels (10 kernels)
+        if std::path::Path::new("src/kernels/stochastic_thermodynamics.ptx").exists() {
+            let thermo_kernels = vec![
+                "jarzynski_parallel_trajectories_kernel",
+                "autocorrelation_kernel",
+                "work_histogram_kernel",
+                "bennett_acceptance_ratio_kernel",
+                "entropy_production_kernel",
+                "velocity_autocorrelation_kernel",
+                "current_correlation_kernel",
+                "trapezoidal_integration_kernel",
+                "fourier_transform_kernel",
+                "mutual_information_kernel",
+            ];
+            if let Err(e) = self.load_kernels_from_module("src/kernels/stochastic_thermodynamics.ptx", &thermo_kernels) {
+                eprintln!("[Production GPU] Warning: Failed to load stochastic thermo kernels: {}", e);
+            } else {
+                eprintln!("[Production GPU] ✅ Loaded PhD-Grade Phase 1: Stochastic Thermodynamics (10 kernels)");
+            }
+        }
+
+        // Load PhD-Grade Phase 2: Quantum Operations kernels (12 kernels)
+        if std::path::Path::new("src/kernels/quantum_operations.ptx").exists() {
+            let quantum_kernels = vec![
+                "schmidt_svd_kernel",
+                "entanglement_entropy_kernel",
+                "partial_transpose_kernel",
+                "three_tangle_kernel",
+                "mps_contraction_kernel",
+                "surface_code_syndrome_kernel",
+                "syndrome_decoder_kernel",
+                "quantum_hebbian_kernel",
+                "toric_code_anyon_kernel",
+                "hadamard_transform_kernel",
+                "measurement_feedback_kernel",
+                "tomography_reconstruction_kernel",
+            ];
+            if let Err(e) = self.load_kernels_from_module("src/kernels/quantum_operations.ptx", &quantum_kernels) {
+                eprintln!("[Production GPU] Warning: Failed to load quantum ops kernels: {}", e);
+            } else {
+                eprintln!("[Production GPU] ✅ Loaded PhD-Grade Phase 2: Quantum Operations (12 kernels)");
             }
         }
 
@@ -393,6 +441,37 @@ impl ProductionGpuRuntime {
 
             if status == 0 {
                 self.kernels.lock().unwrap().insert(kernel_name.to_string(), kernel as usize);
+            }
+
+            Ok(())
+        }
+    }
+
+    /// Load multiple named kernels from a PTX module
+    pub fn load_kernels_from_module(&mut self, path: &str, kernel_names: &[&str]) -> Result<()> {
+        unsafe {
+            let path_cstring = CString::new(path)?;
+            let mut module = ptr::null_mut();
+
+            let status = cuModuleLoad(&mut module, path_cstring.as_ptr());
+            if status != 0 {
+                return Err(anyhow::anyhow!("Module load failed for {}: {}", path, status));
+            }
+
+            self.modules.lock().unwrap().push(module as usize);
+
+            // Load each named kernel from the module
+            for &kernel_name in kernel_names {
+                let kernel_cstring = CString::new(kernel_name)?;
+                let mut kernel = ptr::null_mut();
+                let status = cuModuleGetFunction(&mut kernel, module, kernel_cstring.as_ptr());
+
+                if status == 0 {
+                    self.kernels.lock().unwrap().insert(kernel_name.to_string(), kernel as usize);
+                    eprintln!("[Production GPU] Registered kernel: {}", kernel_name);
+                } else {
+                    eprintln!("[Production GPU] Warning: Kernel '{}' not found in module", kernel_name);
+                }
             }
 
             Ok(())

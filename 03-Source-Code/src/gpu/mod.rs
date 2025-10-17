@@ -23,6 +23,8 @@ pub mod cublas_compat;  // CUBLAS compatibility layer for CUDA 12.8
 #[cfg(feature = "cuda")]
 pub mod production_runtime;
 #[cfg(feature = "cuda")]
+pub use production_runtime::{ProductionGpuRuntime, ProductionGpuTensor};
+#[cfg(feature = "cuda")]
 pub mod cudarc_replacement;
 
 // INNOVATION: Multi-GPU and Quantum-GPU Fusion - ONLY ADVANCE!

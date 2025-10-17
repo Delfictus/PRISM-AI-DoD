@@ -59,6 +59,20 @@ pub mod gpu_coloring;
 // GPU acceleration for neural networks and tensors
 pub mod gpu;
 
+// Re-export PhD-grade Phase 1 & 2 features for easy access
+#[cfg(feature = "cuda")]
+pub use gpu::{
+    // Phase 1: Stochastic Thermodynamics
+    ThermodynamicComputing,
+    ComputeOp,
+    // Phase 2: Neuromorphic-Quantum Hybrid
+    NeuromorphicQuantumHybrid,
+    HybridMetrics,
+    // Production GPU Runtime with all kernels loaded
+    ProductionGpuRuntime,
+    ProductionGpuTensor,
+};
+
 // Phase 6: Adaptive Problem-Space Modeling (NEW!)
 pub mod phase6;
 
