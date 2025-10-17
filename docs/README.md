@@ -12,17 +12,17 @@
 ### 1. Graph Coloring World Record (Alpha)
 - **Target:** ≤82 colors on DSJC1000-5
 - **Current:** 130 colors
-- **Plan:** [06-Plans/ULTRA_TARGETED_WORLD_RECORD_PLAN.md](06-Plans/ULTRA_TARGETED_WORLD_RECORD_PLAN.md)
+- **Plan:** [plans/ULTRA_TARGETED_WORLD_RECORD_PLAN.md](plans/ULTRA_TARGETED_WORLD_RECORD_PLAN.md)
 
 ### 2. PWSA Data Fusion SBIR (Bravo)
 - **Target:** $1.5-2M Phase II funding
 - **Requirement:** <5ms fusion latency
-- **Plan:** [01-Rapid-Implementation/](01-Rapid-Implementation/)
+- **Plan:** [development/rapid-implementation/](development/rapid-implementation/)
 
 ### 3. Thermodynamic LLM Orchestration (Charlie)
 - **Target:** Patent-worthy consensus system
 - **Innovation:** Physics-based multi-LLM orchestration
-- **Plan:** [06-Plans/THERMODYNAMIC_LLM_INTEGRATION.md](06-Plans/THERMODYNAMIC_LLM_INTEGRATION.md)
+- **Plan:** [plans/THERMODYNAMIC_LLM_INTEGRATION.md](plans/THERMODYNAMIC_LLM_INTEGRATION.md)
 
 ---
 
@@ -30,15 +30,14 @@
 
 ```
 DoD/
-├── 00-Constitution/
-│   ├── IMPLEMENTATION_CONSTITUTION.md  # Hard constraints & enforcement
-│   └── GOVERNANCE_ENGINE.md           # Runtime governance implementation
+├── docs/                              # Centralized documentation
+│   ├── getting-started/               # Quick start guides
+│   ├── architecture/                  # System design & missions
+│   ├── governance/                    # Constitutional enforcement
+│   ├── development/                   # Contributing & testing
+│   └── plans/                         # Strategic planning docs
 │
-├── 01-Rapid-Implementation/           # PWSA SBIR 30-day sprint
-│   ├── 30-Day-Sprint.md
-│   └── Week-1-Core-Infrastructure.md
-│
-├── 03-Source-Code/                    # Latest working PRISM-AI code
+├── src/                               # Latest working PRISM-AI code
 │   ├── Cargo.toml
 │   └── src/
 │       ├── core/                      # Shared components (ALL missions)
@@ -46,35 +45,28 @@ DoD/
 │       ├── neuromorphic/              # Spiking networks
 │       └── integration/               # Transfer entropy, active inference
 │
-├── 06-Plans/
-│   ├── ULTRA_TARGETED_WORLD_RECORD_PLAN.md
-│   └── THERMODYNAMIC_LLM_INTEGRATION.md
-│
-└── PHASE_6_EXPANDED_CAPABILITIES.md   # Platform transformation vision
+└── 01-Rapid-Implementation/           # Legacy (moved to docs/development/rapid-implementation/)
 ```
 
 ---
 
 ## Quick Start
 
+See [Getting Started Guide](getting-started/quick-start.md) for detailed instructions.
+
 ### Build & Test
 ```bash
-cd 03-Source-Code
+cd src
 cargo build --release --features constitutional_validation
 cargo test --all-features
 ```
 
-### Run Governance Checks
-```bash
-cargo run --bin governance_validator
-```
-
-### Deploy Mission
+### Deploy Missions
 ```bash
 # Alpha: World Record
 cargo run --release --bin world_record_attempt
 
-# Bravo: PWSA Demo
+# Bravo: PWSA Demo  
 cargo run --release --bin pwsa_demo
 
 # Charlie: LLM Orchestration
@@ -141,11 +133,5 @@ All three missions leverage:
 
 ## Contact
 
-## Documentation
-
-📚 **[Complete Documentation](docs/index.md)** - Comprehensive docs in the `docs/` directory
-
----
-
-**Classification:** UNCLASSIFIED // FOR OFFICIAL USE ONLY  
+**Classification:** UNCLASSIFIED // FOR OFFICIAL USE ONLY
 **Distribution:** PRISM-AI Development Team
