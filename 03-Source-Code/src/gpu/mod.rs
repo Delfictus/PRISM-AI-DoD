@@ -30,7 +30,9 @@ pub mod cudarc_replacement;
 // #[cfg(feature = "cuda")]
 // pub mod multi_gpu_orchestrator;
 // #[cfg(feature = "cuda")]
-// pub mod quantum_gpu_fusion;
+// pub mod quantum_gpu_fusion;  // V1 has Complex64 issues - use V2
+#[cfg(feature = "cuda")]
+pub mod quantum_gpu_fusion_v2;  // Production runtime version
 
 // REVOLUTIONARY: Adaptive Feature Fusion - GPU-Only Feature Optimization
 // V1 disabled due to cudarc API issues - use V2 instead
@@ -74,3 +76,19 @@ pub use active_memory_pool::{ActiveMemoryPool, ActivePoolConfig, ActivePoolStats
 // Export adaptive feature fusion
 #[cfg(feature = "cuda")]
 pub use adaptive_feature_fusion_v2::{AdaptiveFeatureFusionV2, FusionMetrics};
+
+// Export quantum-GPU fusion
+#[cfg(feature = "cuda")]
+pub use quantum_gpu_fusion_v2::{QuantumGpuFusionV2, QuantumMetrics};
+
+// Export thermodynamic computing
+#[cfg(feature = "cuda")]
+pub mod thermodynamic_computing;
+#[cfg(feature = "cuda")]
+pub use thermodynamic_computing::{ThermodynamicComputing, ThermodynamicMetrics, ComputeOp};
+
+// Export neuromorphic-quantum hybrid
+#[cfg(feature = "cuda")]
+pub mod neuromorphic_quantum_hybrid;
+#[cfg(feature = "cuda")]
+pub use neuromorphic_quantum_hybrid::{NeuromorphicQuantumHybrid, HybridMetrics};
