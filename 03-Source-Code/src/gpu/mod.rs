@@ -87,6 +87,12 @@ pub mod thermodynamic_computing;
 #[cfg(feature = "cuda")]
 pub use thermodynamic_computing::{ThermodynamicComputing, ThermodynamicMetrics, ComputeOp};
 
+// Export Python bridge for OTT-JAX and Geomstats
+#[cfg(feature = "cuda")]
+pub mod python_bridge;
+#[cfg(feature = "cuda")]
+pub use python_bridge::{PythonBridge, OptimalTransportResults, InformationGeometryResults, get_python_bridge};
+
 // Export neuromorphic-quantum hybrid
 #[cfg(feature = "cuda")]
 pub mod neuromorphic_quantum_hybrid;

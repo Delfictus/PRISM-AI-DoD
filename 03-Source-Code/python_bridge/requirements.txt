@@ -1,0 +1,16 @@
+# PhD-Grade Stochastic Thermodynamics - Python Dependencies
+# For optimal transport and information geometry
+
+# OTT-JAX: Optimal Transport Tools on GPU
+# Provides Wasserstein distances, Sinkhorn algorithm
+ott-jax>=0.4.0
+jax[cuda12]>=0.4.0  # GPU support for CUDA 12
+jaxlib
+
+# Geomstats: Information Geometry
+# Provides Fisher metrics, Riemannian geometry
+geomstats>=2.7.0
+
+# Core scientific computing
+numpy>=1.24.0
+scipy>=1.11.0
