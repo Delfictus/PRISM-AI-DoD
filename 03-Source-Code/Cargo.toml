@@ -7,6 +7,7 @@ description = "PRISM: Predictive Reasoning via Information-theoristic Statistica
 license = "MIT"
 build = "build.rs"
 autobins = false  # Disable autodiscovery - explicitly list binaries below
+publish = false  # PREVENT PUBLICATION TO CRATES.IO - PRIVATE SYSTEM
 
 [workspace]
 members = [
@@ -102,6 +103,12 @@ tower = "0.4"  # Service middleware
 tower-http = { version = "0.5", features = ["trace", "cors"] }  # HTTP middleware
 async-graphql = "7.0"  # GraphQL server
 async-graphql-axum = "7.0"  # GraphQL integration for Axum
+# Production Server dependencies
+actix-web = "4.4"
+actix-web-httpauth = "0.8"
+actix-governor = "0.5"
+jsonwebtoken = "9.2"
+clap = { version = "4.4", features = ["derive", "env"] }
 
 [[example]]
 name = "platform_demo"
@@ -248,6 +255,10 @@ path = "src/bin/production_solution_demo.rs"
 [[bin]]
 name = "run_feature_benchmarks"
 path = "src/bin/run_feature_benchmarks.rs"
+
+[[bin]]
+name = "prism_server"
+path = "src/bin/prism_server.rs"
 
 [[test]]
 name = "transfer_entropy"

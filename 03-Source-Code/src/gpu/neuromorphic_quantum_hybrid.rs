@@ -15,6 +15,7 @@ use ndarray::{Array1, Array2};
 use anyhow::Result;
 use std::sync::Arc;
 use std::collections::VecDeque;
+use serde::{Serialize, Deserialize};
 
 /// Neuromorphic-Quantum Hybrid System
 ///
@@ -47,7 +48,7 @@ pub struct NeuromorphicQuantumHybrid {
 }
 
 /// Hybrid system metrics
-#[derive(Default, Clone)]
+#[derive(Default, Clone, Serialize, Deserialize)]
 pub struct HybridMetrics {
     pub spike_rate: f32,
     pub quantum_entanglement: f32,

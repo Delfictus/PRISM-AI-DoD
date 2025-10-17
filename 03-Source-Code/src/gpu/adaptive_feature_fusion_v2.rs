@@ -9,6 +9,7 @@ use anyhow::{Result, Context};
 use std::sync::Arc;
 use std::collections::HashMap;
 use std::ffi::{CString, c_void};
+use serde::{Serialize, Deserialize};
 
 /// Adaptive Feature Fusion Engine V2
 ///
@@ -34,7 +35,7 @@ struct FusionParameters {
 }
 
 /// Performance metrics
-#[derive(Default, Clone)]
+#[derive(Default, Clone, Serialize, Deserialize)]
 pub struct FusionMetrics {
     pub information_retention: f32,
     pub compute_throughput: f32,

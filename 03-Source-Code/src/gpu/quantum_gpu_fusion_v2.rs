@@ -10,6 +10,7 @@ use ndarray::{Array1, Array2};
 use anyhow::Result;
 use std::sync::Arc;
 use std::f64::consts::PI;
+use serde::{Serialize, Deserialize};
 
 /// GPU-compatible complex number representation
 #[derive(Clone, Copy, Debug)]
@@ -68,7 +69,7 @@ pub struct QuantumGpuFusionV2 {
 }
 
 /// Quantum computation metrics
-#[derive(Default, Clone)]
+#[derive(Default, Clone, Serialize, Deserialize)]
 pub struct QuantumMetrics {
     pub circuit_depth: usize,
     pub gate_count: usize,

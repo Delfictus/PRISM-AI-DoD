@@ -13,6 +13,7 @@ use ndarray::{Array1, Array2};
 use anyhow::Result;
 use std::sync::Arc;
 use std::f32::consts::E;
+use serde::{Serialize, Deserialize};
 
 /// Thermodynamic Computing Engine
 ///
@@ -44,7 +45,7 @@ pub struct ThermodynamicComputing {
 }
 
 /// Thermodynamic computation metrics
-#[derive(Default, Clone)]
+#[derive(Default, Clone, Serialize, Deserialize)]
 pub struct ThermodynamicMetrics {
     pub energy: f32,
     pub entropy: f32,

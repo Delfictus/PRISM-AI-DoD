@@ -80,6 +80,9 @@ pub mod finance;
 // Worker 8: API Server
 pub mod api_server;
 
+// Production API for revolutionary systems
+pub mod api;
+
 // Re-export key components
 pub use mathematics::{
     MathematicalStatement, ProofResult, Assumption,
@@ -147,6 +150,9 @@ pub use applications::{
 
 // PRISM Assistant - Fully Offline Autonomous AI
 pub mod assistant;
+
+// Production API exports
+pub use api::{PrismApi, PrismRequest, PrismResponse};
 
 /// Platform version information
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
