@@ -1,26 +1,76 @@
-# Obsidian workspace settings (user-specific)
-.obsidian/workspace.json
-.obsidian/workspace-mobile.json
+# Rust/Cargo
+target/
+Cargo.lock
+*.pdb
 
-# Ignore nested DoD folders (old vault structure)
-DoD/
+# Build artifacts
+build/
+dist/
+*.so
+*.dll
+*.dylib
+*.exe
 
-# Obsidian cache
-.obsidian/cache
+# Logs and temporary files
+*.log
+*.tmp
+*~
+*.bak
+*.swp
+*.swo
 
-# Plugin data that should not be synced
-.obsidian/plugins/*/data.json
+# IDE and editor files
+.vscode/
+.idea/
+*.sublime-*
 
-# Trash
-.trash/
-
-# macOS
+# OS generated files
 .DS_Store
-
-# Windows
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
 desktop.ini
 
-# Temporary files
-*.tmp
-*~
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+.env
+
+# CUDA/GPU
+*.ptx
+*.cubin
+*.fatbin
+
+# Obsidian workspace settings (user-specific)
+.obsidian/workspace.json
+.obsidian/workspace-mobile.json
+.obsidian/cache
+.obsidian/plugins/*/data.json
+
+# User-specific configurations
+.claude/settings.local.json
+
+# Temporary and cache directories
+.trash/
+cache/
+tmp/
+
+# Documentation build outputs
+docs/_site/
+docs/.jekyll-cache/
+
+# Development logs and outputs
+scripts/*.log
+phase*.log
+test_*.log
+*_errors.log
+benchmark_*.txt
+performance_*.txt
