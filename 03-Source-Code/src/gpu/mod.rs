@@ -26,10 +26,20 @@ pub mod production_runtime;
 pub mod cudarc_replacement;
 
 // INNOVATION: Multi-GPU and Quantum-GPU Fusion - ONLY ADVANCE!
+// Temporarily disabled to fix compilation errors
+// #[cfg(feature = "cuda")]
+// pub mod multi_gpu_orchestrator;
+// #[cfg(feature = "cuda")]
+// pub mod quantum_gpu_fusion;
+
+// REVOLUTIONARY: Adaptive Feature Fusion - GPU-Only Feature Optimization
+// V1 disabled due to cudarc API issues - use V2 instead
+// #[cfg(feature = "cuda")]
+// pub mod adaptive_feature_fusion;
 #[cfg(feature = "cuda")]
-pub mod multi_gpu_orchestrator;
+pub mod adaptive_feature_fusion_v2;  // Production runtime version
 #[cfg(feature = "cuda")]
-pub mod quantum_gpu_fusion;
+pub mod feature_optimization_benchmark;  // Comprehensive benchmarks
 
 // Use GPU-enabled implementation - NO CPU FALLBACK
 pub use gpu_enabled::{
@@ -60,3 +70,7 @@ pub use kernel_autotuner::{KernelAutoTuner, LaunchConfig, KernelId, AutoTunerCon
 
 // Export active memory pool
 pub use active_memory_pool::{ActiveMemoryPool, ActivePoolConfig, ActivePoolStats};
+
+// Export adaptive feature fusion
+#[cfg(feature = "cuda")]
+pub use adaptive_feature_fusion_v2::{AdaptiveFeatureFusionV2, FusionMetrics};

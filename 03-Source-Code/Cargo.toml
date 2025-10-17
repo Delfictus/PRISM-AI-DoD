@@ -245,6 +245,10 @@ path = "src/bin/production_gpu_benchmark.rs"
 name = "production_solution_demo"
 path = "src/bin/production_solution_demo.rs"
 
+[[bin]]
+name = "run_feature_benchmarks"
+path = "src/bin/run_feature_benchmarks.rs"
+
 [[test]]
 name = "transfer_entropy"
 path = "tests/transfer_entropy_tests.rs"
