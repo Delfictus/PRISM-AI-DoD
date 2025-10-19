@@ -65,6 +65,13 @@ pub mod phase6;
 // CMA: Causal Manifold Annealing (includes GNN)
 pub mod cma;
 
+// Data handling (DIMACS parser, dataset generation)
+pub mod data;
+
+// CUDA GPU acceleration (adaptive coloring kernels)
+#[cfg(feature = "cuda")]
+pub mod cuda;
+
 // Re-export key components
 pub use mathematics::{
     MathematicalStatement, ProofResult, Assumption,

@@ -1,0 +1,15 @@
+# Don't include these in Docker image
+checkpoints/
+logs/
+*.pt
+*.pth
+*.onnx
+__pycache__/
+*.pyc
+.git/
+.gitignore
+README.md
+package_for_runpod.sh
+
+# Training data will be uploaded separately to RunPod
+../../training_data/

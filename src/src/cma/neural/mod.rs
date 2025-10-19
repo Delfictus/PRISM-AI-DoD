@@ -19,10 +19,14 @@ use self::neural_quantum::Device;
 pub mod gnn_integration;   // REAL GNN implementation (Sprint 2.1)
 pub mod diffusion;          // REAL diffusion model (Sprint 2.2)
 pub mod neural_quantum;     // REAL neural quantum states (Sprint 2.3)
+pub mod coloring_gnn;       // Graph coloring GNN with ONNX Runtime (PLACEHOLDER)
+pub mod onnx_gnn;           // REAL ONNX Runtime CUDA inference
 
 pub use gnn_integration::E3EquivariantGNN;
 pub use diffusion::ConsistencyDiffusion;
 pub use neural_quantum::{NeuralQuantumState as NeuralQuantumStateImpl, VariationalMonteCarlo};
+pub use coloring_gnn::{ColoringGNN, GnnPrediction, compute_node_features};
+pub use onnx_gnn::{OnnxGNN, OnnxGnnPrediction};
 
 /// Geometric manifold learner using REAL E(3)-equivariant GNN
 /// Sprint 2.1: Full implementation with geometric deep learning

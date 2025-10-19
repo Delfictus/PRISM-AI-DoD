@@ -268,7 +268,7 @@ impl Phase6Integration {
         hamiltonian: &ModulatedHamiltonian,
     ) -> Result<ThermoResult> {
         // Set temperature from Hamiltonian (simplified - would update config in production)
-        let avg_temp = hamiltonian.local_temperature.mean().unwrap_or(1.0);
+        let avg_temp: f64 = hamiltonian.local_temperature.mean().unwrap_or(1.0);
 
         // Run evolution steps
         let result = self.thermodynamic.write().evolve(100);

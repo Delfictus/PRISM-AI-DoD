@@ -1,26 +1,30 @@
-# Obsidian workspace settings (user-specific)
-.obsidian/workspace.json
-.obsidian/workspace-mobile.json
+# Training data (too large for GitHub)
+training_data/
+*.tar.gz
 
-# Ignore nested DoD folders (old vault structure)
-DoD/
+# Trained models (will be generated)
+models/*.onnx
+models/*.pt
 
-# Obsidian cache
-.obsidian/cache
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
 
-# Plugin data that should not be synced
-.obsidian/plugins/*/data.json
+# Training outputs
+python/gnn_training/checkpoints/
+python/gnn_training/logs/
 
-# Trash
-.trash/
+# Rust build artifacts
+src/target/
+**/target/
 
-# macOS
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
 .DS_Store
-
-# Windows
 Thumbs.db
-desktop.ini
-
-# Temporary files
-*.tmp
-*~
